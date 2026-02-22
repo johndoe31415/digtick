@@ -1,5 +1,5 @@
 #	digtool - Tool to compute and simplify problems in digital systems
-#	Copyright (C) 2022-2022 Johannes Bauer
+#	Copyright (C) 2022-2023 Johannes Bauer
 #
 #	This file is part of digtool.
 #
@@ -28,6 +28,7 @@ from .ActionQMC import ActionQMC
 from .ActionCanonicalize import ActionCanonicalize
 from .ActionRandom import ActionRandom
 from .ActionDigitalTimingDiagram import ActionDigitalTimingDiagram
+from .ActionTransform import ActionTransform
 from .MultiCommand import MultiCommand
 
 def main():
@@ -87,6 +88,12 @@ def main():
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increases verbosity. Can be specified multiple times to increase.")
 		parser.add_argument("param", metavar = "signame=value", nargs = "*", help = "Predefine some signals, e.g., 'C=10100010'. By default, those are randomly generated.")
 	mc.register("dtd", "Generate a digital timing diagram", genparser, action = ActionDigitalTimingDiagram)
+
+	def genparser(parser):
+		parser.add_argument("-l", "--logic", choices = [ "nand", "nor", "xor" ], default = "nand", help = "Logic type to transform to. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increases verbosity. Can be specified multiple times to increase.")
+		parser.add_argument("expression", help = "Input expression to transform")
+	mc.register("transform", "Transform a boolean expression", genparser, action = ActionTransform)
 
 	sys.exit(mc.run(sys.argv[1:]) or 0)
 

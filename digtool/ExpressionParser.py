@@ -1,5 +1,5 @@
 #	digtool - Tool to compute and simplify problems in digital systems
-#	Copyright (C) 2022-2022 Johannes Bauer
+#	Copyright (C) 2022-2026 Johannes Bauer
 #
 #	This file is part of digtool.
 #
@@ -77,7 +77,10 @@ class Constant():
 
 class UnaryOperator():
 	def __init__(self, op, rhs):
-		self._op = Operator.lookup(op)
+		if isinstance(op, Operator):
+			self._op = op
+		else:
+			self._op = Operator.lookup(op)
 		self._rhs = rhs
 
 	@property
@@ -98,7 +101,10 @@ class UnaryOperator():
 class BinaryOperator():
 	def __init__(self, lhs, op, rhs):
 		self._lhs = lhs
-		self._op = Operator.lookup(op)
+		if isinstance(op, Operator):
+			self._op = op
+		else:
+			self._op = Operator.lookup(op)
 		self._rhs = rhs
 
 	@property
@@ -237,7 +243,8 @@ if __name__ == "__main__":
 			"A B C + !A !B !C + A !B C Foo",
 			"A ^ !B",
 			"!(A ^ B)",
-			]
+			"A + 1 + 0",
+	]
 	for input_value in testcases:
 		try:
 			parsed = parser(input_value)
