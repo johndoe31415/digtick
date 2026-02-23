@@ -152,7 +152,7 @@ class ValueTable():
 		if row_heavy:
 			x_var_cnt = len(variables) // 2
 		else:
-			x_var_cnt = len(variables + 1) // 2
+			x_var_cnt = (len(variables) + 1) // 2
 		x_vars = variables[:x_var_cnt]
 		y_vars = variables[x_var_cnt:]
 
