@@ -1,5 +1,5 @@
 #	digtool - Tool to compute and simplify problems in digital systems
-#	Copyright (C) 2022-2022 Johannes Bauer
+#	Copyright (C) 2022-2026 Johannes Bauer
 #
 #	This file is part of digtool.
 #
@@ -43,8 +43,6 @@ class ExpressionFormatterTex():
 		if isinstance(expr, Variable):
 			return f"\\textnormal{{{expr.varname}}}"
 		elif isinstance(expr, BinaryOperator):
-#			if prev is not None:
-#				print(prev.op, "*******", expr.op)
 			if (prev is None) or ((prev is not None) and ((prev.op == expr.op) or ((prev.op, expr.op) == (Operator.Or, Operator.And)))):
 				return f"{self._fmt(expr.lhs, expr)} {self._op(expr.op)} {self._fmt(expr.rhs, expr)}"
 			else:
@@ -59,7 +57,7 @@ class ExpressionFormatterTex():
 		raise NotImplementedError(expr)
 
 	def __str__(self):
-		return self._fmt(self._expr.expr)
+		return self._fmt(self._expr.expr).replace("  ", " ")
 
 class ExpressionFormatterText():
 	def __init__(self, expr, neg_overline = True, implicit_and = True):

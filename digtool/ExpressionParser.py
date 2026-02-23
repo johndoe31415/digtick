@@ -96,7 +96,7 @@ class UnaryOperator():
 		return int(not self.rhs.evaluate(var_dict))
 
 	def __repr__(self):
-		return f"{self.op.value}({self.rhs})"
+		return f"{self.op.value}{self.rhs}"
 
 class BinaryOperator():
 	def __init__(self, lhs, op, rhs):
@@ -132,7 +132,21 @@ class BinaryOperator():
 		return fnc(lhs, rhs)
 
 	def __repr__(self):
-		return f"({self.lhs} {self.op.value} {self.rhs})"
+		return f"{self.lhs} {self.op.value} {self.rhs}"
+
+class Parenthesis():
+	def __init__(self, inner):
+		self._inner = inner
+
+	@property
+	def inner(self):
+		return self._inner
+
+	def evaluate(self, var_dict):
+		return self._inner.evaluate(var_dict)
+
+	def __repr__(self):
+		return f"({self.inner})"
 
 class ExpressionParser(tpg.Parser):
 	r"""
@@ -167,7 +181,7 @@ class ExpressionParser(tpg.Parser):
 				variable/a
 			|	const/a					$ a = Constant(int(a))
 			|	neg_op/op Atom/a		$ a = UnaryOperator(op, a)
-			|   '\(' Expr/a '\)'
+			| '\(' Expr/inner '\)'		$ a = Parenthesis(inner)
 		;
 
 	"""
@@ -227,7 +241,6 @@ def parse_expression(expr):
 	parser = ExpressionParser()
 	return ParsedExpression(parser(expr))
 
-
 if __name__ == "__main__":
 	parser = ExpressionParser()
 
@@ -242,6 +255,8 @@ if __name__ == "__main__":
 			"A ^ B + C",
 			"A B C + !A !B !C + A !B C Foo",
 			"A ^ !B",
+			"A ^ !B + C",
+			"A ^ !(B + C)",
 			"!(A ^ B)",
 			"A + 1 + 0",
 	]
