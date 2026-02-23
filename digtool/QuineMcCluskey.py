@@ -21,6 +21,7 @@
 
 import collections
 import itertools
+from .ExpressionParser import parse_expression
 
 class QuineMcCluskey():
 	Implicant = collections.namedtuple("Implicant", [ "minterms", "value", "mask" ])
@@ -191,15 +192,20 @@ class QuineMcCluskey():
 				optimal_solution = implicants
 		return optimal_solution
 
-	def _format_implicant(self, implicant):
+	def _format_implicant(self, implicant: Implicant, cnf: bool = False):
 		terms = [ ]
 		for (no, var_name) in enumerate(reversed(self._vt.input_variable_names)):
 			if ((1 << no) & implicant.mask) == 0:
 				inverted = ((1 << no) & implicant.value) == 0
-				terms.append(f"{'-' if inverted else ''}{var_name}")
-		if len(terms) == 0:
-			return "1"
-		return " ".join(reversed(terms))
+				terms.append(f"{'-' if (inverted ^ cnf) else ''}{var_name}")
+		if cnf:
+			if len(terms) == 0:
+				return "0"
+			return "+".join(reversed(terms))
+		else:
+			if len(terms) == 0:
+				return "1"
+			return " ".join(reversed(terms))
 
 	def _dump_implicants(self, text, implicants):
 		print(f"{text}:")
@@ -219,20 +225,24 @@ class QuineMcCluskey():
 				print(f"    {implicant.minterms}")
 			print()
 
-	def optimize(self):
+	def optimize(self, emit_dnf: bool = True):
+		# When we emit CNF, we add minterms for the inverse function and emit a
+		# differnet equation in the end.
+
 		expr_minterms = set()
 		dc_minterms = set()
 		for (input_values, output) in self._vt:
 			index = self._vt.input_dict_to_index(input_values, self._vt.input_variable_names)
 			if output is None:
 				dc_minterms.add(index)
-			elif output == 1:
+			elif (emit_dnf and (output == 1)) or (not emit_dnf and (output == 0)):
 				expr_minterms.add(index)
 
 		minterms = expr_minterms | dc_minterms
 		grouped_minterms = self._group_by_bitcount(minterms)
 		prime_implicants = self._create_prime_implicants(grouped_minterms)
 		if len(prime_implicants) == 0:
+			TODO #WHAT SHIT IS THIS
 			# Constant zero function
 			print("0")
 			return 0
@@ -264,4 +274,8 @@ class QuineMcCluskey():
 		optimal_solution = self._find_minimal_expression(remaining_minterms, grouped_implicants)
 
 		solution_implicants = set(required_implicants) | set(optimal_solution)
-		return " + ".join(self._format_implicant(implicant) for implicant in sorted(solution_implicants))
+
+		if emit_dnf:
+			return parse_expression("+".join(self._format_implicant(implicant) for implicant in sorted(solution_implicants)))
+		else:
+			return parse_expression("+".join(self._format_implicant(implicant, cnf = True) for implicant in sorted(solution_implicants)))
