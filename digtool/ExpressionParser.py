@@ -270,7 +270,7 @@ class ParsedExpression():
 def parse_expression(expr: str, default_empty: str | None = None):
 	if (expr == ""):
 		if default_empty is None:
-			raise ValueError(f"Expression may not be empty unless default empty is given.")
+			raise ValueError("Expression may not be empty unless default empty is given.")
 		else:
 			expr = default_empty
 	parser = ExpressionParser()

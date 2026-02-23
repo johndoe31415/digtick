@@ -33,6 +33,5 @@ class ActionEqual(BaseAction):
 				print(f"Not equal: {value_dict} gives {eval1} on LHS but {eval2} on RHS")
 				return 1
 
-		if eq:
-			print("Expressions equal.")
-			return 0
+		print("Expressions equal.")
+		return 0

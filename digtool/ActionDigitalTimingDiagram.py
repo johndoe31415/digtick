@@ -1,5 +1,5 @@
 #	digtool - Tool to compute and simplify problems in digital systems
-#	Copyright (C) 2022-2022 Johannes Bauer
+#	Copyright (C) 2022-2026 Johannes Bauer
 #
 #	This file is part of digtool.
 #
@@ -57,9 +57,6 @@ class SequenceDiagramGenerator():
 				value = int(not value)
 			rndvect.append(value)
 		return self.add_signal(name, rndvect)
-
-	def	add_text_signal(self, name, text):
-		return self.add_signal(name, values)
 
 	def annotate(self, name, index, text = None):
 		self._annotations[name][index] = text
