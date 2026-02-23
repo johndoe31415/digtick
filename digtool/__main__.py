@@ -28,7 +28,7 @@ from .ActionSynthesize import ActionSynthesize
 from .ActionEqual import ActionEqual
 from .ActionQMC import ActionQMC
 from .ActionCanonicalize import ActionCanonicalize
-from .ActionRandom import ActionRandom
+from .ActionRandomExpression import ActionRandomExpression
 from .ActionDigitalTimingDiagram import ActionDigitalTimingDiagram
 from .ActionTransform import ActionTransform
 from .MultiCommand import MultiCommand
@@ -99,8 +99,8 @@ def main():
 	def genparser(parser):
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
 		parser.add_argument("var_count", type = int, help = "Number of variables in expression")
-		parser.add_argument("minterm_count", type = int, help = "Number of minterms in expression")
-	mc.register("random", "Generate a randomized CDNF", genparser, action = ActionRandom)
+		parser.add_argument("complexity", type = int, help = "Number of complexity iteration steps to take")
+	mc.register("random", "Generate a randomized expression", genparser, action = ActionRandomExpression)
 
 	def genparser(parser):
 		parser.add_argument("-s", "--random-seed", help = "Specify a custom seed for reproducible traces. Defaults to a random value.")

@@ -113,7 +113,7 @@ class ExpressionFormatterText():
 	def __str__(self):
 		return self._fmt(self._expr.expr)
 
-def format_expression(expression: ParsedExpression, expression_format: str, implicit_and: bool = True):
+def format_expression(expression: ParsedExpression, expression_format: str = "text", implicit_and: bool = True):
 	assert(isinstance(expression, ParsedExpression))
 	match expression_format:
 		case "internal":

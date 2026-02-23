@@ -1,5 +1,5 @@
 #	digtool - Tool to compute and simplify problems in digital systems
-#	Copyright (C) 2022-2023 Johannes Bauer
+#	Copyright (C) 2022-2026 Johannes Bauer
 #
 #	This file is part of digtool.
 #
@@ -49,7 +49,7 @@ class ExpressionTransformer():
 		elif isinstance(node, Variable):
 			return self._transform_variable(node)
 		else:
-			raise NotImplementedError(type(self._expr))
+			raise NotImplementedError(type(node))
 
 	def run(self):
 		return ParsedExpression(self._transform(self._expr))
