@@ -52,6 +52,6 @@ class ActionSynthesize(BaseAction):
 		print(f"CDNF: {format_expression(expression = cdnf, expression_format = self._args.format, implicit_and = not self._args.no_implicit_and)}")
 		print(f"CCNF: {format_expression(expression = ccnf, expression_format = self._args.format, implicit_and = not self._args.no_implicit_and)}")
 
-		opt_dnf_str = QuineMcCluskey(cdnf, dc_expr, verbosity = self._args.verbose).optimize()
+		opt_dnf_str = QuineMcCluskey(vt, verbosity = self._args.verbose).optimize()
 		opt_dnf = parse_expression(opt_dnf_str)
 		print(f"DNF : {format_expression(expression = opt_dnf, expression_format = self._args.format, implicit_and = not self._args.no_implicit_and)}")

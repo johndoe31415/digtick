@@ -60,7 +60,7 @@ class ValueTable():
 					output_value = None
 				else:
 					output_value = int(output_value)
-				index = self._dict2index(input_value_dict, variables)
+				index = self.input_dict_to_index(input_value_dict, variables)
 				output_values[index] = output_value
 		if (unused_value == -1) and (-1 in output_values):
 			# If strict parsing required, all values must be explicitly set
@@ -132,7 +132,7 @@ class ValueTable():
 		return result
 
 	@staticmethod
-	def _dict2index(input_var_dict: dict, variable_names: list[str]) -> int:
+	def input_dict_to_index(input_var_dict: dict, variable_names: list[str]) -> int:
 		index = 0
 		for (i, varname) in enumerate(variable_names):
 			bitno = len(variable_names) - 1 - i
@@ -141,7 +141,7 @@ class ValueTable():
 		return index
 
 	def at(self, input_var_dict: dict) -> int | None:
-		return self._output_values[self._dict2index(input_var_dict, self.input_variable_names)]
+		return self._output_values[self.input_dict_to_index(input_var_dict, self.input_variable_names)]
 
 	def print_kv(self, variable_order: list[str] | None = None, x_offset: int = 0, y_offset: int = 0, x_invert: bool = False, y_invert: bool = False, row_heavy: bool = True):
 		def _create_kv_dict(var_names: list[str], offset: int = 0, invert_direction: bool = False):

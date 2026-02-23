@@ -1,5 +1,5 @@
 #	digtool - Tool to compute and simplify problems in digital systems
-#	Copyright (C) 2022-2022 Johannes Bauer
+#	Copyright (C) 2022-2026 Johannes Bauer
 #
 #	This file is part of digtool.
 #
@@ -25,14 +25,13 @@ import itertools
 class QuineMcCluskey():
 	Implicant = collections.namedtuple("Implicant", [ "minterms", "value", "mask" ])
 
-	def __init__(self, expression, dc_expression = None, verbosity = 0):
-		self._expr = expression
-		self._dc_expr = dc_expression
+	def __init__(self, value_table: "ValueTable", verbosity = 0):
+		self._vt = value_table
 		self._verbose = verbosity
 
 	def _minterm2int(self, minterm):
 		result = 0
-		for (no, var_name) in enumerate(reversed(self._expr.variables)):
+		for (no, var_name) in enumerate(reversed(self._vt.input_variable_names)):
 			if minterm[var_name]:
 				result |= 1 << no
 		return result
@@ -79,7 +78,7 @@ class QuineMcCluskey():
 		all_implicants = {
 			1: prime_implicants,
 		}
-		for index in range(len(self._expr.variables)):
+		for index in range(len(self._vt.input_variable_names)):
 			prev_implicants = all_implicants[index + 1]
 			merged_implicants = self._merge_implicants(prev_implicants)
 			if len(merged_implicants) == 0:
@@ -194,7 +193,7 @@ class QuineMcCluskey():
 
 	def _format_implicant(self, implicant):
 		terms = [ ]
-		for (no, var_name) in enumerate(reversed(self._expr.variables)):
+		for (no, var_name) in enumerate(reversed(self._vt.input_variable_names)):
 			if ((1 << no) & implicant.mask) == 0:
 				inverted = ((1 << no) & implicant.value) == 0
 				terms.append(f"{'-' if inverted else ''}{var_name}")
@@ -221,13 +220,14 @@ class QuineMcCluskey():
 			print()
 
 	def optimize(self):
-		expr_minterms = set(self._minterm2int(minterm) for minterm in self._expr.minterms())
-		if self._dc_expr is not None:
-			dc_minterms = set(self._minterm2int(minterm) for minterm in self._dc_expr.minterms())
-		else:
-			dc_minterms = set()
-		if len(expr_minterms & dc_minterms) != 0:
-			raise Exception("Some minterms are given as both mandatory and optional.")
+		expr_minterms = set()
+		dc_minterms = set()
+		for (input_values, output) in self._vt:
+			index = self._vt.input_dict_to_index(input_values, self._vt.input_variable_names)
+			if output is None:
+				dc_minterms.add(index)
+			elif output == 1:
+				expr_minterms.add(index)
 
 		minterms = expr_minterms | dc_minterms
 		grouped_minterms = self._group_by_bitcount(minterms)
