@@ -1,5 +1,5 @@
 #	digtool - Tool to compute and simplify problems in digital systems
-#	Copyright (C) 2022-2022 Johannes Bauer
+#	Copyright (C) 2022-2026 Johannes Bauer
 #
 #	This file is part of digtool.
 #
@@ -21,7 +21,7 @@
 
 from .BaseAction import BaseAction
 from .ExpressionParser import parse_expression
-from .Table import Table
+from .TableFormatter import Table
 
 class ActionTable(BaseAction):
 	def _table(self):
@@ -43,24 +43,33 @@ class ActionTable(BaseAction):
 		yield (None, rows[-1])
 
 	def _print_text(self):
-		sep = f"{'-' * (self._maxlen + 2)}"
-		end = "|"
-		cols = len(self._expr.variables) + 1
+		table = Table()
+		print(table)
+		table.print()
 
-		hdr_row = end + end.join(f" {varname:<{self._maxlen}} " for varname in list(self._expr.variables) + [ "=" ]) + end
-		sep_row = end + end.join([ sep ] * cols) + end
-		print(hdr_row)
-		print(sep_row)
+#		fdfd
+#		sep = f"{'-' * (self._maxlen + 2)}"
+#		end = "|"
+#		cols = len(self._expr.variables) + 1
+#
+#		hdr_row = end + end.join(f" {varname:<{self._maxlen}} " for varname in list(self._expr.variables) + [ "=" ]) + end
+#		sep_row = end + end.join([ sep ] * cols) + end
+#		print(hdr_row)
+#		print(sep_row)
 		for (var_dict, evaluation) in self._table():
-			val_row = end + end.join(f" {var_dict[varname]:<{self._maxlen}} " for varname in list(self._expr.variables)) + end + f" {evaluation:<{self._maxlen}} " + end
-			print(val_row)
+			var_dict["="] = evaluation
+			table.add_row(var_dict)
+#			val_row = end + end.join(f" {var_dict[varname]:<{self._maxlen}} " for varname in list(self._expr.variables)) + end + f" {evaluation:<{self._maxlen}} " + end
+#			print(val_row)
 
-	def _print_table(self):
-		print("\t".join(varname for varname in self._expr.variables))
-		for (var_dict, evaluation) in self._table():
-			line = [ str(var_dict[varname]) for varname in self._expr.variables ]
-			line.append(str(evaluation))
-			print("\t".join(line))
+		table.print("A", "B", "C", "D", "=")
+
+#	def _print_table(self):
+#		print("\t".join(varname for varname in self._expr.variables))
+#		for (var_dict, evaluation) in self._table():
+#			line = [ str(var_dict[varname]) for varname in self._expr.variables ]
+#			line.append(str(evaluation))
+#			print("\t".join(line))
 
 	def _print_tex(self):
 		rows = [ ]

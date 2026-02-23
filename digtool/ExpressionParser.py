@@ -119,7 +119,7 @@ class BinaryOperator():
 	def rhs(self):
 		return self._rhs
 
-	def evaluate(self, var_dict):
+	def evaluate(self, var_dict: dict):
 		lhs = self.lhs.evaluate(var_dict)
 		rhs = self.rhs.evaluate(var_dict)
 		fnc = {
@@ -230,6 +230,9 @@ class ParsedExpression():
 		for (value_dict, evaluation) in self.table():
 			if evaluation == 0:
 				yield value_dict
+
+	def evaluate(self, var_dict: dict):
+		return self.expr.evaluate(var_dict)
 
 	def __iter__(self):
 		yield from self._traverse(self._expr)
