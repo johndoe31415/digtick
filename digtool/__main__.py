@@ -40,6 +40,7 @@ def main():
 		parser.add_argument("-F", "--read-as-filename", action = "store_true", help = "Instead of having an expression on the command line, specify a file name that contains multiple expressios and format each one linewise.")
 		parser.add_argument("-n", "--no-implicit-and", action = "store_true", help = "By default, AND operations are implicity expressed (using a space character). This causes an actual operator to be emitted here.")
 		parser.add_argument("-f", "--format", choices = [ "text", "pretty-text", "tex-tech", "tex-math", "internal" ], default = "text", help = "Print the expression in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-e", "--validate-equivalence", action = "store_true", help = "When reading a file, ensures that every parsed equation is semantically identical to that before it. Useful for validation of manual computation.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
 		parser.add_argument("expression", help = "Input expression to parse or filename (if the 'file' option was given)")
 	mc.register("parse", "Parse and reformat Boolean expression(s)", genparser, action = ActionParse)

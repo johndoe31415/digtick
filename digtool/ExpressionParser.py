@@ -236,6 +236,31 @@ class ParsedExpression():
 	def evaluate(self, var_dict: dict):
 		return self.expr.evaluate(var_dict)
 
+	def compare_to_expression(self, other: "ParsedExpression"):
+		e1_vars = set(self.variables)
+		e2_vars = set(other.variables)
+		intersection = e1_vars & e2_vars
+
+		if (intersection != e1_vars) and (intersection != e2_vars):
+			raise ValueError("Cannot compare expressions with different variables.")
+
+		if intersection == e2_vars:
+			# self has more variables
+			(dominant_expr, subordinate_expr) = (self, other)
+		else:
+			# other has more variables
+			(dominant_expr, subordinate_expr) = (other, self)
+
+		for (value_dict, eval1) in dominant_expr.table():
+			eval2 = subordinate_expr.expr.evaluate(value_dict)
+			yield (value_dict, eval1, eval2)
+
+	def is_equivalent_to(self, other: "ParsedExpression"):
+		for (value_dict, eval1, eval2) in self.compare_to_expression(other):
+			if eval1 != eval2:
+				return False
+		return True
+
 	def __iter__(self):
 		yield from self._traverse(self._expr)
 
