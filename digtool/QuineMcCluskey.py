@@ -278,4 +278,4 @@ class QuineMcCluskey():
 		if emit_dnf:
 			return parse_expression("+".join(self._format_implicant(implicant) for implicant in sorted(solution_implicants)))
 		else:
-			return parse_expression("+".join(self._format_implicant(implicant, cnf = True) for implicant in sorted(solution_implicants)))
+			return parse_expression("".join(f"({self._format_implicant(implicant, cnf = True)})" for implicant in sorted(solution_implicants)))
