@@ -91,8 +91,8 @@ def main():
 	mc.register("random-expr", "Generate a randomized expression", genparser, action = ActionRandomExpression)
 
 	def genparser(parser):
-		parser.add_argument("-0", "--zero-percentage", metavar = "percentage", type = float, default = 40, help = "Percentage of values that have result 0. Defaults to %(default:.0f)%%.")
-		parser.add_argument("-1", "--one-percentage", metavar = "percentage", type = float, default = 40, help = "Percentage of values that have result 0. Defaults to %(default:.0f)%%.")
+		parser.add_argument("-0", "--zero-percentage", metavar = "percentage", type = float, default = 40, help = "Percentage of values that have result 0. Defaults to %(default).0f%%.")
+		parser.add_argument("-1", "--one-percentage", metavar = "percentage", type = float, default = 40, help = "Percentage of values that have result 0. Defaults to %(default).0f%%.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
 		parser.add_argument("var_count", type = int, help = "Number of variables in table")
 	mc.register("random-table", "Generate a randomized table", genparser, action = ActionRandomTable)
