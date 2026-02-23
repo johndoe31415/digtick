@@ -26,8 +26,6 @@ from .ActionPrintTable import ActionPrintTable
 from .ActionKVDiagram import ActionKVDiagram
 from .ActionSynthesize import ActionSynthesize
 from .ActionEqual import ActionEqual
-from .ActionQMC import ActionQMC
-from .ActionCanonicalize import ActionCanonicalize
 from .ActionRandomExpression import ActionRandomExpression
 from .ActionRandomTable import ActionRandomTable
 from .ActionDigitalTimingDiagram import ActionDigitalTimingDiagram
@@ -85,18 +83,6 @@ def main():
 		parser.add_argument("expression1", help = "Input expression 1")
 		parser.add_argument("expression2", help = "Input expression 2")
 	mc.register("equal", "Comprare two Boolean expression for equality", genparser, action = ActionEqual)
-
-	def genparser(parser):
-		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
-		parser.add_argument("expression", help = "Expression to minimize")
-		parser.add_argument("dc_expression", nargs = "?", help = "Optional expression that gives all don't care values")
-	mc.register("qmc", "Minimize a Boolean expression using the Quine-McCluskey method", genparser, action = ActionQMC)
-
-	def genparser(parser):
-		parser.add_argument("-c", "--ccnf", action = "store_true", help = "By default, the canonical disjunctive normal form (CDNF) is generated. With this switch, the canonical conjunctive normal form (CCNF) is generated instead.")
-		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
-		parser.add_argument("expression", help = "Input expression to canonicalize")
-	mc.register("canonicalize", "Canonicalize an expression into CDNF or CCNF", genparser, action = ActionCanonicalize)
 
 	def genparser(parser):
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
