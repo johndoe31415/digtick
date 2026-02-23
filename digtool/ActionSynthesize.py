@@ -19,16 +19,16 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
-import re
 from .BaseAction import BaseAction
 from .ExpressionParser import parse_expression
 from .ExpressionFormatter import format_expression
 from .QuineMcCluskey import QuineMcCluskey
 from .ValueTable import ValueTable
+from .Tools import open_file
 
 class ActionSynthesize(BaseAction):
 	def run(self):
-		with open(self._args.filename) as f:
+		with open_file(self._args.filename) as f:
 			vt = ValueTable.parse_from_file(f, unused_value_str = self._args.unused_value_is)
 
 		zero_terms = [ ]
@@ -52,19 +52,6 @@ class ActionSynthesize(BaseAction):
 		print(f"CDNF: {format_expression(expression = cdnf, expression_format = self._args.format, implicit_and = not self._args.no_implicit_and)}")
 		print(f"CCNF: {format_expression(expression = ccnf, expression_format = self._args.format, implicit_and = not self._args.no_implicit_and)}")
 
-
-#		if len(minterms) == 0:
-#			print("0")
-#			return 0
-#
-#		expr = parse_expression(" + ".join(minterms))
-#		if len(dc_expr) > 0:
-#			dc_expr = parse_expression(" + ".join(dc_expr))
-#		else:
-#			dc_expr = None
-#		if not self._args.no_optimization:
-#			qmc = QuineMcCluskey(expr, dc_expr, verbosity = self._args.verbose)
-#			result = qmc.optimize()
-#		else:
-#			result = str(ExpressionFormatterText(expr))
-#		print(result)
+		opt_dnf_str = QuineMcCluskey(cdnf, dc_expr, verbosity = self._args.verbose).optimize()
+		opt_dnf = parse_expression(opt_dnf_str)
+		print(f"DNF : {format_expression(expression = opt_dnf, expression_format = self._args.format, implicit_and = not self._args.no_implicit_and)}")

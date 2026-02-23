@@ -19,7 +19,7 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
-from .ExpressionParser import Operator, Variable, Constant, UnaryOperator, BinaryOperator, Parenthesis
+from .ExpressionParser import ParsedExpression, Operator, Variable, Constant, UnaryOperator, BinaryOperator, Parenthesis
 
 class ExpressionFormatterTex():
 	def __init__(self, expr, neg_overline = True, implicit_and = True):
@@ -113,7 +113,8 @@ class ExpressionFormatterText():
 	def __str__(self):
 		return self._fmt(self._expr.expr)
 
-def format_expression(expression: "Expression", expression_format: str, implicit_and: bool = True):
+def format_expression(expression: ParsedExpression, expression_format: str, implicit_and: bool = True):
+	assert(isinstance(expression, ParsedExpression))
 	match expression_format:
 		case "internal":
 			return str(expression)

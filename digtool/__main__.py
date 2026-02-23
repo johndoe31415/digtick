@@ -67,7 +67,7 @@ def main():
 		parser.add_argument("-o", "--literal-order", metavar = "vars", help = "Print literals in the given order. Can be a comma-separated list (\"A,C,D,B\") or simply a string like \"ACDB\" in case of single-letter literals.")
 		parser.add_argument("-u", "--unused-value-is", choices = [ "forbidden", "0", "1", "*" ], default = "forbidden", help = "Treat values that do not appear in truth table as the specified value (0, 1, or \"don't care\" value). By default, strict parsing is performed which means unused values are forbidden and all values need to be set explicitly.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
-		parser.add_argument("filename", help = "Filename containing the truth table, tab-separated")
+		parser.add_argument("filename", nargs = "?", help = "Filename containing the truth table, tab-separated. Reads from stdin when argument omitted.")
 	mc.register("kv", "Print a truth table as KV-diagram", genparser, action = ActionKVDiagram)
 
 	def genparser(parser):
@@ -75,7 +75,7 @@ def main():
 		parser.add_argument("-f", "--format", choices = [ "text", "pretty-text", "tex-tech", "tex-math", "internal" ], default = "text", help = "Print the expression in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-u", "--unused-value-is", choices = [ "forbidden", "0", "1", "*" ], default = "forbidden", help = "Treat values that do not appear in truth table as the specified value (0, 1, or \"don't care\" value). By default, strict parsing is performed which means unused values are forbidden and all values need to be set explicitly.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
-		parser.add_argument("filename", help = "Filename containing the truth table, tab-separated")
+		parser.add_argument("filename", nargs = "?", help = "Filename containing the truth table, tab-separated. Reads from stdin when argument omitted.")
 	mc.register("synthesize", "Synthesize a Boolean expression from a given truth table", genparser, action = ActionSynthesize)
 
 	def genparser(parser):

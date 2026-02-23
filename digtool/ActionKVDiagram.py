@@ -22,10 +22,11 @@
 from .BaseAction import BaseAction
 from .ExpressionParser import parse_expression
 from .ValueTable import ValueTable
+from .Tools import open_file
 
 class ActionKVDiagram(BaseAction):
 	def run(self):
-		with open(self._args.filename) as f:
+		with open_file(self._args.filename) as f:
 			vt = ValueTable.parse_from_file(f, unused_value_str = self._args.unused_value_is)
 		if self._args.literal_order is None:
 			variable_order = None
