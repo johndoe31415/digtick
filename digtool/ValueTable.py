@@ -48,6 +48,8 @@ class ValueTable():
 			tokens = self._TABLE_SEP.split(line)
 			if lineno == 1:
 				variables = tokens
+				if len(variables) != len(set(variables)):
+					raise ValueError(f"Syntax error when parsing truth table in line {lineno}: Duplicate literal definition found")
 				output_values = [ unused_value ] * (2 ** len(variables))
 			else:
 				if len(tokens) != len(variables) + 1:
