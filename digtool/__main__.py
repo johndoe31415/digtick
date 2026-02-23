@@ -29,6 +29,7 @@ from .ActionEqual import ActionEqual
 from .ActionQMC import ActionQMC
 from .ActionCanonicalize import ActionCanonicalize
 from .ActionRandomExpression import ActionRandomExpression
+from .ActionRandomTable import ActionRandomTable
 from .ActionDigitalTimingDiagram import ActionDigitalTimingDiagram
 from .ActionTransform import ActionTransform
 from .MultiCommand import MultiCommand
@@ -101,7 +102,14 @@ def main():
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
 		parser.add_argument("var_count", type = int, help = "Number of variables in expression")
 		parser.add_argument("complexity", type = int, help = "Number of complexity iteration steps to take")
-	mc.register("random", "Generate a randomized expression", genparser, action = ActionRandomExpression)
+	mc.register("random-expr", "Generate a randomized expression", genparser, action = ActionRandomExpression)
+
+	def genparser(parser):
+		parser.add_argument("-0", "--zero-percentage", metavar = "percentage", type = float, default = 40, help = "Percentage of values that have result 0. Defaults to %(default:.0f)%%.")
+		parser.add_argument("-1", "--one-percentage", metavar = "percentage", type = float, default = 40, help = "Percentage of values that have result 0. Defaults to %(default:.0f)%%.")
+		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
+		parser.add_argument("var_count", type = int, help = "Number of variables in table")
+	mc.register("random-table", "Generate a randomized table", genparser, action = ActionRandomTable)
 
 	def genparser(parser):
 		parser.add_argument("-s", "--random-seed", help = "Specify a custom seed for reproducible traces. Defaults to a random value.")
