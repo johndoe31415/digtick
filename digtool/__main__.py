@@ -1,5 +1,5 @@
 #	digtool - Tool to compute and simplify problems in digital systems
-#	Copyright (C) 2022-2023 Johannes Bauer
+#	Copyright (C) 2022-2026 Johannes Bauer
 #
 #	This file is part of digtool.
 #
@@ -21,7 +21,8 @@
 
 import sys
 from .ActionParse import ActionParse
-from .ActionTable import ActionTable
+from .ActionMakeTable import ActionMakeTable
+from .ActionPrintTable import ActionPrintTable
 from .ActionSynthesize import ActionSynthesize
 from .ActionEqual import ActionEqual
 from .ActionQMC import ActionQMC
@@ -42,12 +43,18 @@ def main():
 	mc.register("parse", "Parse and reformat a Boolean expression", genparser, action = ActionParse)
 
 	def genparser(parser):
-		parser.add_argument("-z", "--kv-show-zeros", action = "store_true", help = "Show zeros explicitly in a KV map")
-		parser.add_argument("-f", "--format", choices = [ "text", "table", "tex", "kv" ], default = "text", help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-f", "--format", choices = [ "text", "pretty" ], default = "text", help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
 		parser.add_argument("expression", help = "Input expression to create truth table from")
 		parser.add_argument("dc_expression", nargs = "?", help = "Optional expression that gives all don't care values")
-	mc.register("table", "Create a truth table for a Boolean expression", genparser, action = ActionTable)
+	mc.register("make-table", "Create a truth table for a Boolean expression", genparser, action = ActionMakeTable)
+
+	def genparser(parser):
+		parser.add_argument("-f", "--format", choices = [ "text", "pretty" ], default = "text", help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-u", "--unused-value-is", choices = [ "forbidden", "0", "1", "*" ], default = "forbidden", help = "Treat values that do not appear in truth table as the specified value (0, 1, or \"don't care\" value). By default, strict parsing is performed which means unused values are forbidden and all values need to be set explicitly.")
+		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
+		parser.add_argument("filename", help = "Filename containing the input data and output data, tab-separated")
+	mc.register("print-table", "Read a table file and print it out", genparser, action = ActionPrintTable)
 
 	def genparser(parser):
 		parser.add_argument("-n", "--no-optimization", action = "store_true", help = "Do not automatically optimize the resulting expression.")
