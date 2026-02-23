@@ -242,10 +242,8 @@ class QuineMcCluskey():
 		grouped_minterms = self._group_by_bitcount(minterms)
 		prime_implicants = self._create_prime_implicants(grouped_minterms)
 		if len(prime_implicants) == 0:
-			TODO #WHAT SHIT IS THIS
 			# Constant zero function
-			print("0")
-			return 0
+			return parse_expression("0" if emit_dnf else "1")
 
 		if self._verbose >= 2:
 			self._dump_implicants("Prime implicants", prime_implicants)

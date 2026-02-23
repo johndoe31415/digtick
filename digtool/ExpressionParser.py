@@ -214,6 +214,8 @@ class ParsedExpression():
 		elif isinstance(element, BinaryOperator):
 			yield from self._traverse(element.lhs)
 			yield from self._traverse(element.rhs)
+		elif isinstance(element, Parenthesis):
+			yield from self._traverse(element.inner)
 
 	def table(self):
 		for value in range(self.state_count):
@@ -240,11 +242,15 @@ class ParsedExpression():
 	def __str__(self):
 		return str(self.expr)
 
-def parse_expression(expr: str):
-	if expr == "":
-		expr = "0"
+def parse_expression(expr: str, default_empty: str | None = None):
+	if (expr == ""):
+		if default_empty is None:
+			raise ValueError(f"Expression may not be empty unless default empty is given.")
+		else:
+			expr = default_empty
 	parser = ExpressionParser()
-	return ParsedExpression(parser(expr))
+	parse_result = ParsedExpression(parser(expr))
+	return parse_result
 
 if __name__ == "__main__":
 	parser = ExpressionParser()

@@ -45,9 +45,9 @@ class ActionSynthesize(BaseAction):
 			else:
 				one_terms.append(non_inverted_term)
 
-		dc_expr = parse_expression("+".join(dc_terms))
-		cdnf = parse_expression("+".join(one_terms))
-		ccnf = parse_expression("".join(zero_terms))
+		dc_expr = parse_expression("+".join(dc_terms), default_empty = "0")
+		cdnf = parse_expression("+".join(one_terms), default_empty = "0")
+		ccnf = parse_expression("".join(zero_terms), default_empty = "1")
 
 		print(f"CDNF: {format_expression(expression = cdnf, expression_format = self._args.format, implicit_and = not self._args.no_implicit_and)}")
 		print(f"CCNF: {format_expression(expression = ccnf, expression_format = self._args.format, implicit_and = not self._args.no_implicit_and)}")
