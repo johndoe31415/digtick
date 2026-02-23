@@ -1,5 +1,5 @@
 #	digtool - Tool to compute and simplify problems in digital systems
-#	Copyright (C) 2022-2022 Johannes Bauer
+#	Copyright (C) 2022-2026 Johannes Bauer
 #
 #	This file is part of digtool.
 #
@@ -21,23 +21,20 @@
 
 from .BaseAction import BaseAction
 from .ExpressionParser import parse_expression
-from .ExpressionFormatter import ExpressionFormatterText, ExpressionFormatterTex
+from .ExpressionFormatter import format_expression
 
 class ActionParse(BaseAction):
 	def run(self):
-		expr = parse_expression(self._args.expression)
-		match self._args.format:
-			case "text":
-				print(ExpressionFormatterText(expr, implicit_and = not self._args.no_implicit_and))
+		if not self._args.read_as_filename:
 
-			case "internal":
-				print(expr)
+			expr = parse_expression(self._args.expression)
+			print(format_expression(expression = expr, expression_format = self._args.format, implicit_and = not self._args.no_implicit_and))
+		else:
+			with open(self._args.expression) as f:
+				for line in f:
+					line = line.rstrip("\r\n")
+					if line.startswith("#") or line == "":
+						continue
 
-			case "tex-tech":
-				print(ExpressionFormatterTex(expr, neg_overline = True, implicit_and = not self._args.no_implicit_and))
-
-			case "tex-math":
-				print(ExpressionFormatterTex(expr, neg_overline = False, implicit_and = not self._args.no_implicit_and))
-
-			case _:
-				raise NotImplementedError(self._args.format)
+					expr = parse_expression(line)
+					print(format_expression(expression = expr, expression_format = self._args.format, implicit_and = not self._args.no_implicit_and))

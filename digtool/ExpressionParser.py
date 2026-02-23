@@ -240,7 +240,9 @@ class ParsedExpression():
 	def __str__(self):
 		return str(self.expr)
 
-def parse_expression(expr):
+def parse_expression(expr: str):
+	if expr == "":
+		expr = "0"
 	parser = ExpressionParser()
 	return ParsedExpression(parser(expr))
 

@@ -1,5 +1,5 @@
 #	digtool - Tool to compute and simplify problems in digital systems
-#	Copyright (C) 2022-2022 Johannes Bauer
+#	Copyright (C) 2022-2026 Johannes Bauer
 #
 #	This file is part of digtool.
 #
@@ -22,56 +22,49 @@
 import re
 from .BaseAction import BaseAction
 from .ExpressionParser import parse_expression
-from .ExpressionFormatter import ExpressionFormatterText
+from .ExpressionFormatter import format_expression
 from .QuineMcCluskey import QuineMcCluskey
+from .ValueTable import ValueTable
 
 class ActionSynthesize(BaseAction):
-	_RE_SEP = re.compile("\s+")
-
 	def run(self):
-		minterms = [ ]
-		dc_expr = [ ]
-
-		varnames = None
 		with open(self._args.filename) as f:
-			for (lineno, line) in enumerate(f, 1):
-				line = line.rstrip("\r\n")
-				if line.startswith("#"):
-					continue
+			vt = ValueTable.parse_from_file(f, unused_value_str = self._args.unused_value_is)
 
-				if varnames is None:
-					varnames = self._RE_SEP.split(line)
-				else:
-					values = self._RE_SEP.split(line)
-					if len(values) != len(varnames) + 1:
-						print(f"Error: cannot parse line {lineno}")
-					else:
-						minterm = " ".join(f"{'-' if (int(value) == 0) else ''}{varname}" for (varname, value) in zip(varnames, values))
-						evaluation = values[-1]
-						try:
-							evaluation = int(evaluation)
-						except ValueError:
-							evaluation = None
+		zero_terms = [ ]
+		one_terms = [ ]
+		dc_terms = [ ]
+		for (inputs, output) in vt:
+			non_inverted_term = " ".join(f"{'!' if (value == 0) else ''}{varname}" for (varname, value) in sorted(inputs.items()))
+			inverted_term = "+".join(f"{'!' if (value == 1) else ''}{varname}" for (varname, value) in sorted(inputs.items()))
 
-						if evaluation == 1:
-							# Minterm
-							minterms.append(minterm)
-						elif evaluation is None:
-							# Don't care
-							dc_expr.append(minterm)
+			if output is None:
+				dc_terms.append(non_inverted_term)
+			elif output == 0:
+				zero_terms.append(f"({inverted_term})")
+			else:
+				one_terms.append(non_inverted_term)
 
-		if len(minterms) == 0:
-			print("0")
-			return 0
+		dc_expr = parse_expression("+".join(dc_terms))
+		cdnf = parse_expression("+".join(one_terms))
+		ccnf = parse_expression("".join(zero_terms))
 
-		expr = parse_expression(" + ".join(minterms))
-		if len(dc_expr) > 0:
-			dc_expr = parse_expression(" + ".join(dc_expr))
-		else:
-			dc_expr = None
-		if not self._args.no_optimization:
-			qmc = QuineMcCluskey(expr, dc_expr, verbosity = self._args.verbose)
-			result = qmc.optimize()
-		else:
-			result = str(ExpressionFormatterText(expr))
-		print(result)
+		print(f"CDNF: {format_expression(expression = cdnf, expression_format = self._args.format, implicit_and = not self._args.no_implicit_and)}")
+		print(f"CCNF: {format_expression(expression = ccnf, expression_format = self._args.format, implicit_and = not self._args.no_implicit_and)}")
+
+
+#		if len(minterms) == 0:
+#			print("0")
+#			return 0
+#
+#		expr = parse_expression(" + ".join(minterms))
+#		if len(dc_expr) > 0:
+#			dc_expr = parse_expression(" + ".join(dc_expr))
+#		else:
+#			dc_expr = None
+#		if not self._args.no_optimization:
+#			qmc = QuineMcCluskey(expr, dc_expr, verbosity = self._args.verbose)
+#			result = qmc.optimize()
+#		else:
+#			result = str(ExpressionFormatterText(expr))
+#		print(result)

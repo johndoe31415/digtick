@@ -41,7 +41,7 @@ class ValueTable():
 		return len(self._input_variable_names)
 
 	@classmethod
-	def parse_from_file(self, f: "_io.TextIOWrapper", unused_value: int | None = -1):
+	def _parse_from_file(self, f: "_io.TextIOWrapper", unused_value: int | None = -1):
 		assert(unused_value in [ None, 0, 1, -1 ])
 		for (lineno, line) in enumerate(f, 1):
 			line = line.strip("\r\n\t ")
@@ -66,6 +66,16 @@ class ValueTable():
 			# If strict parsing required, all values must be explicitly set
 			raise ValueError("Strict parsing was requested and not all input patterns were explicitly specified.")
 		return ValueTable(input_variable_names = variables, output_values = output_values)
+
+	@classmethod
+	def parse_from_file(cls, f: "_io.TextIOWrapper", unused_value_str: str):
+		assert(unused_value_str in [ "0", "1", "*", "forbidden" ])
+		return cls._parse_from_file(f = f, unused_value = {
+			"0":			0,
+			"1":			1,
+			"*":			None,
+			"forbidden":	-1,
+		}[unused_value_str])
 
 	@classmethod
 	def create_from_expression(self, expression: "ParsedExpression", dc_expression: "ParsedExpression | None" = None):
