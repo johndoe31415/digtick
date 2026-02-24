@@ -29,8 +29,9 @@ from .ActionSynthesize import ActionSynthesize
 from .ActionEqual import ActionEqual
 from .ActionRandomExpression import ActionRandomExpression
 from .ActionRandomTable import ActionRandomTable
-from .ActionDigitalTimingDiagram import ActionDigitalTimingDiagram
 from .ActionTransform import ActionTransform
+from .ActionDTDCreate import ActionDTDCreate
+from .ActionDTDRender import ActionDTDRender
 from .MultiCommand import MultiCommand
 
 def main():
@@ -99,6 +100,12 @@ def main():
 	mc.register("random-table", "Generate a randomized table", genparser, action = ActionRandomTable)
 
 	def genparser(parser):
+		parser.add_argument("-l", "--logic", choices = [ "nand", "nor" ], default = "nand", help = "Logic type to transform to. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increases verbosity. Can be specified multiple times to increase.")
+		parser.add_argument("expression", help = "Input expression to transform")
+	mc.register("transform", "Transform a boolean expression", genparser, action = ActionTransform)
+
+	def genparser(parser):
 		parser.add_argument("-s", "--random-seed", help = "Specify a custom seed for reproducible traces. Defaults to a random value.")
 		parser.add_argument("-d", "--device", choices = [ "sr-nand-ff", "d-ff", "jk-ff", "jk-ms-ff" ], default = "sr-nand-ff", help = "Generate a timing diagram for this type of device. Can be one of %(choices)s, defaults to %(default)s")
 		parser.add_argument("-i", "--initial-state-high", action = "store_true", help = "For devices with an internal state, initialize them with HIGH.")
@@ -106,13 +113,14 @@ def main():
 		parser.add_argument("-l", "--length", metavar = "count", type = int, default = 32, help = "Number of bits to generate. By default %(default)d.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increases verbosity. Can be specified multiple times to increase.")
 		parser.add_argument("param", metavar = "signame=value", nargs = "*", help = "Predefine some signals, e.g., 'C=10100010'. By default, those are randomly generated.")
-	mc.register("dtd", "Generate a digital timing diagram", genparser, action = ActionDigitalTimingDiagram)
+	mc.register("dtd-create", "Generate a digital timing diagram", genparser, action = ActionDTDCreate)
 
 	def genparser(parser):
-		parser.add_argument("-l", "--logic", choices = [ "nand", "nor" ], default = "nand", help = "Logic type to transform to. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-f", "--force", action = "store_true", help = "Overwrite output file if it already exists")
+		parser.add_argument("-o", "--output-filename", metavar = "filename", default = "timing_diagram.svg", help = "Output filename to write. Defaults to %(default)s.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increases verbosity. Can be specified multiple times to increase.")
-		parser.add_argument("expression", help = "Input expression to transform")
-	mc.register("transform", "Transform a boolean expression", genparser, action = ActionTransform)
+		parser.add_argument("filename", nargs = "?", help = "Filename containing the timing diagram data. Reads from stdin when omitted.")
+	mc.register("dtd-render", "Render a digital timing diagram to SVG", genparser, action = ActionDTDRender)
 
 	sys.exit(mc.run(sys.argv[1:]) or 0)
 

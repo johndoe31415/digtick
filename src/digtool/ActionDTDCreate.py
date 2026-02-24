@@ -198,7 +198,7 @@ class SRFlipflopNAND():
 			sdg.append("!Q", not self._state)
 
 
-class ActionDigitalTimingDiagram(BaseAction):
+class ActionDTDCreate(BaseAction):
 	_INPUT_SIGNALS = {
 		"sr-nand-ff":	("S", "R"),
 		"d-ff":			("C", "D"),
