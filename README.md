@@ -170,6 +170,7 @@ burden of verification on me, which is cumbersome. For this purpose, this
 rendering command accepts a number of different parameters that influence the
 way the KV diagram is printed.
 
+```
 $ digtool make-table 'A B !C + B D + !C A' 'B !A D + A B C D' >exam1.txt
 $ digtool kv exam1.txt
 ┌─────┬─────┬─────┬─────┬─────┐
@@ -196,6 +197,7 @@ $ digtool kv exam1.txt -o DCBA --x-offset 1 --y-invert
 ├─────┼─────┼─────┼─────┼─────┤
 │ A̅ B │  *  │  *  │  0  │  0  │
 └─────┴─────┴─────┴─────┴─────┘
+```
 
 This makes it much easier to verify solutions for their correctness, regardless
 of which format the student chose.
@@ -280,13 +282,25 @@ Simplified: !B !C !D + !A !B + A B C D
 ```
 
 
-## "ranodm-table": generate a random truth table
+## "random-table": generate a random truth table
 `random-table` creates a truth table for a specified number of variables,
 randomly choosing output values according to configured probabilities. By
 default the output distribution is 40% zeros, 40% ones, and the remainder
 don't-cares. You can adjust the zero/one percentages; whatever remains after
 those is implicitly treated as `*`.
 
+```
+$ digtool random-table -0 30 -1 50 3
+A	B	C
+0	0	0	0
+0	0	1	1
+0	1	0	*
+0	1	1	*
+1	0	0	1
+1	0	1	1
+1	1	0	1
+1	1	1	0
+```
 
 
 ## License
