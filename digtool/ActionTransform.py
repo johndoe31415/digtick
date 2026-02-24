@@ -20,8 +20,7 @@
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 from .BaseAction import BaseAction
-from .ExpressionParser import parse_expression, ParsedExpression, Operator, BinaryOperator, UnaryOperator, Constant, Variable
-
+from .ExpressionParser import parse_expression, ParsedExpression, Operator, BinaryOperator, UnaryOperator, Constant, Variable, Parenthesis
 
 class ExpressionTransformer():
 	def __init__(self, expr):
@@ -48,6 +47,8 @@ class ExpressionTransformer():
 			return self._transform_constant(node)
 		elif isinstance(node, Variable):
 			return self._transform_variable(node)
+		elif isinstance(node, Parenthesis):
+			return Parenthesis(self._transform(node.inner))
 		else:
 			raise NotImplementedError(type(node))
 
