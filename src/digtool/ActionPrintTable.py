@@ -21,10 +21,11 @@
 
 from .MultiCommand import BaseAction
 from .ValueTable import ValueTable
+from .Tools import open_file
 
 class ActionPrintTable(BaseAction):
 	def run(self):
-		with open(self._args.filename) as f:
+		with open_file(self._args.filename) as f:
 			vt = ValueTable.parse_from_file(f, unused_value_str = self._args.unused_value_is)
 		if self._args.format == "pretty":
 			vt.print()
