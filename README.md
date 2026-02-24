@@ -51,6 +51,13 @@ $ digtool parse --no-implicit-and 'A B C + A !B C + C !A'
 A * B * C + A * !B * C + C * !A
 ```
 
+There are multiple output options, e.g. a Unicode renderer:
+
+```
+$ digtool parse --format pretty-text 'A B C + A !B C + C !A'
+A B C ∨ A B̅ C ∨ C A̅
+```
+
 ## Truth table format
 There is a human-readable truth table format which uses Unicode characters for
 pretty viewing in a terminal and the machine-readable format which is
