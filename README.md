@@ -389,7 +389,9 @@ renders it as an SVG. As an example, consider the example shown before in
 $ digtool dtd-create -s 8910607998 | digtool dtd-render -o docs/timing_diagram.png
 ```
 
-Will create the file `docs/timing_diagram.svg` which you can see here:
+Will create the file `docs/timing_diagram.svg` which you can see here (note
+that here, a PNG-conversion is shown which is why it looks fuzzy/washed out --
+the original is crystal clear):
 
 ![SR Flipflop timing diagram](https://raw.githubusercontent.com/johndoe31415/digtool/main/docs/timing_diagram.png)
 
