@@ -214,11 +214,13 @@ of which format the student chose.
 `synthesize` reads a truth table and prints canonical forms (CDNF/CCNF) as well
 as minimized forms (DNF/CNF) produced via Quine-McCluskey.
 
+```
 $ digtool synth exam1.txt
 CDNF: A !B !C !D + A !B !C D + A B !C !D + A B !C D
 CCNF: (A + B + C + D) (A + B + C + !D) (A + B + !C + D) (A + B + !C + !D) (A + !B + C + D) (A + !B + !C + D) (!A + B + !C + D) (!A + B + !C + !D) (!A + !B + !C + D)
 DNF : A !C + B D
 CNF : (!C) (A)
+```
 
 ## "equal": check whether two expressions are equivalent
 `equal` compares two Boolean expressions by evaluating them over all possible
