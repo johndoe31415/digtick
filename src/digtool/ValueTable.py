@@ -20,10 +20,16 @@
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 import re
+import enum
 import itertools
 from .TableFormatter import Table, CellFormatter
 
 class ValueTable():
+	class PrintFormat(enum.Enum):
+		Text = "text"
+		Pretty = "pretty"
+		TeX = "tex"
+
 	_TABLE_SEP = re.compile(r"\t+")
 
 	def __init__(self, input_variable_names: list[str], output_values: list[bool | None]):
@@ -61,9 +67,12 @@ class ValueTable():
 				else:
 					output_value = int(output_value)
 				index = self.input_dict_to_index(input_value_dict, variables)
+				if output_values[index] != unused_value:
+					print(f"Warning when parsing truth table: {input_value_dict} overwrites value in line {lineno}")
 				output_values[index] = output_value
 		if (unused_value == -1) and (-1 in output_values):
 			# If strict parsing required, all values must be explicitly set
+			print(output_values)
 			raise ValueError("Strict parsing was requested and not all input patterns were explicitly specified.")
 		return ValueTable(input_variable_names = variables, output_values = output_values)
 
@@ -92,7 +101,17 @@ class ValueTable():
 			input_dict = { varname: input_value for (varname, input_value) in zip(self.input_variable_names, inputs) }
 			yield (input_dict, output)
 
-	def print(self):
+	def _print_text(self):
+		print("\t".join(self.input_variable_names))
+		for (inputs, output) in self:
+			row = [ str(inputs.get(varname)) for varname in self.input_variable_names ]
+			if output is None:
+				row.append("*")
+			else:
+				row.append(str(output))
+			print("\t".join(row))
+
+	def _print_pretty(self):
 		table = Table()
 		header = { varname: varname for varname in self.input_variable_names }
 		header["="] = " "
@@ -109,15 +128,24 @@ class ValueTable():
 
 		table.print(*(list(self._input_variable_names) + [ "=" ]))
 
-	def print_native(self):
-		print("\t".join(self.input_variable_names))
-		for (inputs, output) in self:
-			row = [ str(inputs.get(varname)) for varname in self.input_variable_names ]
-			if output is None:
-				row.append("*")
-			else:
-				row.append(str(output))
-			print("\t".join(row))
+	def _print_tex(self):
+		colcnt = len(self._output_values) + 1
+		print(f"\\begin{{tabular}}{{{'c' * colcnt}}}")
+		for (varidx, varname) in enumerate(self.input_variable_names):
+			bit = self.input_variable_count - 1 - varidx
+			line = [ varname ]
+			for i in range(2 ** self.input_variable_count):
+				line.append(str((i >> bit) & 1))
+			print(f"	{' & '.join(line)}\\\\%")
+		print("	\\hline")
+
+		line = [ "Y" ] + [ "*" if (value is None) else str(value) for value in self._output_values ]
+		print(f"	{' & '.join(line)}\\\\%")
+		print("\\end{tabular}")
+
+	def print(self, print_format: PrintFormat = PrintFormat.Text):
+		method = getattr(self, f"_print_{print_format.value}")
+		return method()
 
 	@staticmethod
 	def _gray_code(x: int) -> int:
@@ -165,8 +193,8 @@ class ValueTable():
 			x_var_cnt = len(variables) // 2
 		else:
 			x_var_cnt = (len(variables) + 1) // 2
-		x_vars = variables[:x_var_cnt]
-		y_vars = variables[x_var_cnt:]
+		x_vars = list(reversed(variables[:x_var_cnt]))
+		y_vars = list(reversed(variables[x_var_cnt:]))
 
 		x_values = _create_kv_dict(x_vars, x_offset, invert_direction = x_invert)
 		y_values = _create_kv_dict(y_vars, y_offset, invert_direction = y_invert)

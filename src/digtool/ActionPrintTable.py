@@ -27,9 +27,4 @@ class ActionPrintTable(BaseAction):
 	def run(self):
 		with open_file(self._args.filename) as f:
 			vt = ValueTable.parse_from_file(f, unused_value_str = self._args.unused_value_is)
-		if self._args.format == "pretty":
-			vt.print()
-		elif self._args.format == "text":
-			vt.print_native()
-		else:
-			raise NotImplementedError(self._args.format)
+		vt.print(ValueTable.PrintFormat(self._args.format))

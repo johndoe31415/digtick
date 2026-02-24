@@ -38,6 +38,6 @@ class ActionRandomTable(BaseAction):
 		random.shuffle(entries)
 
 		vt = ValueTable(variable_names, entries)
-		vt.print_native()
+		vt.print()
 
 
