@@ -83,7 +83,7 @@ class DigitalTimingCmd():
 class DigitalTimingDiagram():
 	_Marker = collections.namedtuple("Marker", [ "x", "label" ])
 
-	def __init__(self, xdiv = 10, height = 30, vertical_distance = 10, marker_extend = 20, clock_ticks = True, low_high_lines = False):
+	def __init__(self, xdiv: int = 10, height: int = 30, vertical_distance: int = 10, marker_extend: int = 20, clock_ticks: bool = True, low_high_lines: bool = False):
 		self._xdiv = xdiv
 		self._height = height
 		self._vertical_distance = vertical_distance
@@ -95,10 +95,6 @@ class DigitalTimingDiagram():
 		self._path = None
 		self._plot_count = 0
 		self._clock_ticks = 0
-		if self._low_high_lines:
-			self._layer("low_high_horizontal")
-		if self._render_clock_ticks:
-			self._layer("clock_ticks")
 		self._markers = [ ]
 
 	@property
@@ -122,19 +118,23 @@ class DigitalTimingDiagram():
 		self._path.lineto(Vector2D(transition_width, y), relative = True)
 		self._path.horizontal(lead, relative = True)
 
-	def _render_signal_sequence(self, signal_name, x, y, cmds):
+	def _render_signal_sequence(self, signal_name: str, x, y, cmds):
+		signals_layer = self._layer("Signals")
+		layer = signals_layer.add(SVGGroup.new(is_layer = True))
+		layer.label = signal_name
+
 		prev = None
 		self._plot_count += 1
 		abs_y_mid = y + (self._height / 2)
-		self._path = self._layer("signal").add(SVGPath.new(Vector2D(x, abs_y_mid)))
+		self._path = layer.add(SVGPath.new(Vector2D(x, abs_y_mid)))
 
 		text_width = 50
-		svg_text = self._layer("signal").add(SVGText.new(pos = Vector2D(x - text_width, abs_y_mid - 6), rect_extents = Vector2D(text_width, 30), text = signal_name.lstrip("!")))
+		svg_text = self._layer("Signal names").add(SVGText.new(pos = Vector2D(x - text_width, abs_y_mid - 6), rect_extents = Vector2D(text_width, 30), text = signal_name.lstrip("!")))
 		svg_text.style["text-align"] = "right"
 		svg_text.style["font-family"] = "'Latin Modern Roman'"
 		if signal_name.startswith("!"):
 			# text-decoration: overline does not work reliably, emulate
-			path = self._layer("signal").add(SVGPath.new(pos = Vector2D(x, abs_y_mid - 5.5)))
+			path = self._layer("Signal names").add(SVGPath.new(pos = Vector2D(x, abs_y_mid - 5.5)))
 			path.horizontal(-9 * len(signal_name.lstrip("!")), relative = True)
 			path.style["stroke-width"] = 0.75
 
@@ -241,7 +241,7 @@ class DigitalTimingDiagram():
 			have_label = (marker.label is not None) and (marker.label != "")
 			marker_length = self.base_height if (not have_label) else (self.base_height + self._marker_extend)
 
-			path = self._layer("marker").add(SVGPath.new(Vector2D(marker.x, 0)))
+			path = self._layer("Markers").add(SVGPath.new(Vector2D(marker.x, 0)))
 			path.vertical(marker_length, relative = True)
 			path.style["stroke-width"] = 0.5
 
@@ -249,7 +249,7 @@ class DigitalTimingDiagram():
 				text_width = 100
 				text_height = 50
 
-				svg_text = self._layer("marker").add(SVGText.new(pos = Vector2D(marker.x - (text_width / 2), marker_length), rect_extents = Vector2D(text_width, text_height), text = marker.label))
+				svg_text = self._layer("Markers").add(SVGText.new(pos = Vector2D(marker.x - (text_width / 2), marker_length), rect_extents = Vector2D(text_width, text_height), text = marker.label))
 				svg_text.style["text-align"] = "center"
 
 	def _do_render_clock_ticks(self):
@@ -258,7 +258,7 @@ class DigitalTimingDiagram():
 
 		for tick in range(self._clock_ticks):
 			x = (tick * self._xdiv) + self._xdiv / 2
-			path = self._layer("clock_ticks").add(SVGPath.new(Vector2D(x, 0)))
+			path = self._layer("Clock ticks").add(SVGPath.new(Vector2D(x, 0)))
 			path.vertical(self.base_height, relative = True)
 			path.style["stroke-width"] = 0.25
 			path.style["stroke"] = "#95a5a6"
@@ -272,7 +272,7 @@ class DigitalTimingDiagram():
 			y_high = (self._height + self._vertical_distance) * plot
 			y_low = y_high + self._height
 			for y in [ y_low, y_high ]:
-				path = self._layer("low_high_horizontal").add(SVGPath.new(Vector2D(0, y)))
+				path = self._layer("Upper/Lower boundaries").add(SVGPath.new(Vector2D(0, y)))
 				path.horizontal(x_width, relative = True)
 
 				path.style["stroke-width"] = 0.5
