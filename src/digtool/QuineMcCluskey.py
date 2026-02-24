@@ -119,17 +119,12 @@ class QuineMcCluskey():
 		result[top_group] = all_implicants[top_group]
 		return result
 
-	def _determine_required_minterms(self, all_implicants):
+	def _determine_required_minterms(self, all_implicants: dict[int, list[Implicant]], mandatory_minterms: set[int]):
 		ctr = collections.Counter()
 		for (group, implicants) in all_implicants.items():
 			for implicant in implicants:
-				ctr.update(implicant.minterms)
-
-		required = set()
-		for (minterm, count) in ctr.items():
-			if count == 1:
-				required.add(minterm)
-		return required
+				ctr.update(implicant.minterms & mandatory_minterms)
+		return { minterm for (minterm, count) in ctr.items() if count == 1 }
 
 	def _eliminate_required_implicants(self, all_implicants, required_minterms):
 		result = { }
@@ -254,7 +249,7 @@ class QuineMcCluskey():
 		if self._verbose >= 2:
 			self._dump_eliminated_implicants(all_implicants, "after removal of redundant implicants")
 
-		required_minterms = self._determine_required_minterms(all_implicants)
+		required_minterms = self._determine_required_minterms(all_implicants, mandatory_minterms = expr_minterms)
 		if self._verbose >= 2:
 			print(f"Essential minterms (only provided by a single implicant): {sorted(list(required_minterms))}")
 			print()
