@@ -26,11 +26,11 @@ class ExpressionTransformer():
 	def __init__(self, expr):
 		self._expr = expr.expr
 
-	def _transform_unary(self, expr, rhs):
-		return UnaryOperator(op = expr.op, rhs = rhs)
+	def _transform_unary(self, expr):
+		return UnaryOperator(op = expr.op, rhs = expr.rhs)
 
-	def _transform_binary(self, expr, lhs, rhs):
-		return BinaryOperator(lhs = lhs, op = expr.op, rhs = rhs)
+	def _transform_binary(self, expr):
+		return BinaryOperator(lhs = expr.lhs, op = expr.op, rhs = expr.rhs)
 
 	def _transform_constant(self, expr):
 		return expr
@@ -40,9 +40,9 @@ class ExpressionTransformer():
 
 	def _transform(self, node):
 		if isinstance(node, BinaryOperator):
-			return self._transform_binary(node, node.lhs, node.rhs)
+			return self._transform_binary(node)
 		elif isinstance(node, UnaryOperator):
-			return self._transform_unary(node, node.rhs)
+			return self._transform_unary(node)
 		elif isinstance(node, Constant):
 			return self._transform_constant(node)
 		elif isinstance(node, Variable):
@@ -57,32 +57,80 @@ class ExpressionTransformer():
 
 
 class NANDLogicTransformer(ExpressionTransformer):
-	def _transform_unary(self, expr, rhs):
-		if expr.op == Operator.Not:
-			return BinaryOperator(self._transform(rhs), Operator.Nand, Constant(1))
-		else:
-			raise NotImplementedError()
+	def _transform_unary(self, expr: "Expression"):
+		match expr.op:
+			case Operator.Not:
+				return Parenthesis(BinaryOperator(self._transform(expr.rhs), Operator.Nand, Constant(1)))
 
-	def _transform_binary(self, expr, lhs, rhs):
-		if expr.op == Operator.And:
-			return BinaryOperator(BinaryOperator(self._transform(lhs), "@", self._transform(rhs)), "@", Constant(1))
-		elif expr.op == Operator.Or:
-			return BinaryOperator(self._transform(UnaryOperator("!", self._transform(lhs))), "@", self._transform(UnaryOperator("!", self._transform(rhs))))
-		elif expr.op == Operator.Nand:
-			return BinaryOperator(self._transform(lhs), "@", self._transform(rhs))
-		elif expr.op == Operator.Nor:
-			return self._transform(UnaryOperator("!", BinaryOperator(self._transform(lhs), "|", self._transform(rhs))))
-		elif expr.op == Operator.Xor:
-			option1 = BinaryOperator(BinaryOperator(self._transform(lhs), "@", Constant(1)), "@", self._transform(rhs))
-			option2 = BinaryOperator(self._transform(lhs), "@", BinaryOperator(self._transform(rhs), "@", Constant(1)))
-			return self._transform(BinaryOperator(option1, "@", option2))
-		else:
-			raise NotImplementedError(expr.op)
+			case _:
+				raise NotImplementedError(expr.op)
 
+	def _transform_binary(self, expr: "Expression"):
+		match expr.op:
+			case Operator.Or:
+				return Parenthesis(BinaryOperator(self._transform(UnaryOperator("!", self._transform(expr.lhs))), "@", self._transform(UnaryOperator("!", self._transform(expr.rhs)))))
+
+			case Operator.Nor:
+				return self._transform(UnaryOperator("!", BinaryOperator(self._transform(expr.lhs), "|", self._transform(expr.rhs))))
+
+			case Operator.And:
+				return Parenthesis(BinaryOperator(Parenthesis(BinaryOperator(self._transform(expr.lhs), "@", self._transform(expr.rhs))), "@", Constant(1)))
+
+			case Operator.Nand:
+				return BinaryOperator(self._transform(expr.lhs), "@", self._transform(expr.rhs))
+
+			case Operator.Xor:
+				option1 = Parenthesis(BinaryOperator(Parenthesis(BinaryOperator(self._transform(expr.lhs), "@", Constant(1))), "@", self._transform(expr.rhs)))
+				option2 = Parenthesis(BinaryOperator(self._transform(expr.lhs), "@", Parenthesis(BinaryOperator(self._transform(expr.rhs), "@", Constant(1)))))
+				return self._transform(BinaryOperator(option1, "@", option2))
+
+			case _:
+				raise NotImplementedError(expr.op)
+
+class NORLogicTransformer(ExpressionTransformer):
+	def _transform_unary(self, expr: "Expression"):
+		match expr.op:
+			case Operator.Not:
+				return Parenthesis(BinaryOperator(self._transform(expr.rhs), Operator.Nor, Constant(0)))
+
+			case _:
+				raise NotImplementedError(expr.op)
+
+	def _transform_binary(self, expr: "Expression"):
+		match expr.op:
+			case Operator.Or:
+				return self._transform(UnaryOperator("!", Parenthesis(BinaryOperator(self._transform(expr.lhs), Operator.Nor, self._transform(expr.rhs)))))
+
+			case Operator.Nor:
+				return BinaryOperator(self._transform(expr.lhs), Operator.Nor, self._transform(expr.rhs))
+
+			case Operator.And:
+				return self._transform(Parenthesis(BinaryOperator(UnaryOperator("!", expr.lhs), "#", UnaryOperator("!", expr.rhs))))
+
+			case Operator.Nand:
+				return self._transform(UnaryOperator("!", BinaryOperator(expr.lhs, Operator.And, expr.rhs)))
+
+			case Operator.Xor:
+				# (((A # 0) # B) # (A # (B # 0))) # 0
+				option1 = Parenthesis(BinaryOperator(expr.lhs, Operator.Nor, UnaryOperator("!", expr.rhs)))
+				option2 = Parenthesis(BinaryOperator(UnaryOperator("!", expr.lhs), Operator.Nor, expr.rhs))
+				return self._transform(UnaryOperator("!", BinaryOperator(option1, Operator.Nor, option2)))
+
+			case _:
+				raise NotImplementedError(expr.op)
 
 class ActionTransform(BaseAction):
 	def run(self):
 		expr = parse_expression(self._args.expression)
-		xform = NANDLogicTransformer(expr)
+		match self._args.logic:
+			case "nand":
+				xform = NANDLogicTransformer(expr)
+
+			case "nor":
+				xform = NORLogicTransformer(expr)
+
+			case _:
+				raise NotImplementedError(self._args.logic)
+
 		xformed = xform.run()
 		print(xformed)

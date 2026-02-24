@@ -109,7 +109,7 @@ def main():
 	mc.register("dtd", "Generate a digital timing diagram", genparser, action = ActionDigitalTimingDiagram)
 
 	def genparser(parser):
-		parser.add_argument("-l", "--logic", choices = [ "nand", "nor", "xor" ], default = "nand", help = "Logic type to transform to. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-l", "--logic", choices = [ "nand", "nor" ], default = "nand", help = "Logic type to transform to. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increases verbosity. Can be specified multiple times to increase.")
 		parser.add_argument("expression", help = "Input expression to transform")
 	mc.register("transform", "Transform a boolean expression", genparser, action = ActionTransform)
