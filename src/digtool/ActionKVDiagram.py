@@ -19,7 +19,7 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
-from .BaseAction import BaseAction
+from .MultiCommand import BaseAction
 from .ValueTable import ValueTable
 from .Tools import open_file
 

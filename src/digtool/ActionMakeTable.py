@@ -19,7 +19,7 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
-from .BaseAction import BaseAction
+from .MultiCommand import BaseAction
 from .ExpressionParser import parse_expression
 from .ValueTable import ValueTable
 

@@ -20,6 +20,7 @@
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 import sys
+import digtool
 from .ActionParse import ActionParse
 from .ActionMakeTable import ActionMakeTable
 from .ActionPrintTable import ActionPrintTable
@@ -33,7 +34,7 @@ from .ActionTransform import ActionTransform
 from .MultiCommand import MultiCommand
 
 def main():
-	mc = MultiCommand(description = "Tool to compute and simplify problems in digital systems", run_method = True)
+	mc = MultiCommand(description = "Tool to compute and simplify problems in digital systems", trailing_text = f"digtool v{digtool.VERSION}")
 
 	def genparser(parser):
 		parser.add_argument("-F", "--read-as-filename", action = "store_true", help = "Instead of having an expression on the command line, specify a file name that contains multiple expressios and format each one linewise.")

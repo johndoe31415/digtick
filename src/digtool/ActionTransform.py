@@ -19,7 +19,7 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
-from .BaseAction import BaseAction
+from .MultiCommand import BaseAction
 from .ExpressionParser import parse_expression, ParsedExpression, Operator, BinaryOperator, UnaryOperator, Constant, Variable, Parenthesis
 
 class ExpressionTransformer():

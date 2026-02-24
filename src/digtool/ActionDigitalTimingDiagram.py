@@ -21,7 +21,7 @@
 
 import random
 import collections
-from .BaseAction import BaseAction
+from .MultiCommand import BaseAction
 from .PRNG import PRNG
 
 class SequenceDiagramGenerator():

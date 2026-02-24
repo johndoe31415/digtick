@@ -21,7 +21,7 @@
 
 import random
 import string
-from .BaseAction import BaseAction
+from .MultiCommand import BaseAction
 from .ExpressionParser import parse_expression
 from .ExpressionFormatter import format_expression
 from .ValueTable import ValueTable

@@ -21,7 +21,7 @@
 
 import random
 import string
-from .BaseAction import BaseAction
+from .MultiCommand import BaseAction
 from .ValueTable import ValueTable
 
 class ActionRandomTable(BaseAction):
