@@ -8,6 +8,7 @@ from a given Boolean expression and rendering Karnaugh–Veitch (KV) maps with a
 arbitrary number of variables. It can check Boolean equations for equivalance.
 A Quine-McCluskey implementation is used to minify expressions.
 
+
 ## Boolean expression syntax
 digtool accepts a pragmatic Boolean syntax that matches what students often
 write on paper, while still being unambiguous and machine-parseable. Variables
@@ -101,6 +102,28 @@ CCNF: (A + B + C) (A + !B + C) (!A + B + C) (!A + !B + C)
 DNF : C
 CNF : (C)
 ```
+
+## Timing diagram format
+For timing diagrams, the general format is this:
+
+```
+# Comment, this will be ignored
+A  = 01010101010101010
+!B = 10101010101010101
+```
+
+This shows two signals, A and !B. Characters that can be used are:
+
+  - `0`/`1`: LOW or HIGH
+  - `:`: both LOW and HIGH (invalid/ambiguous state)
+  - `!`: LOW -> HIGH and HIGH -> LOW transition simultaneous (only valid within
+    `:` blocks to indicate a signal may change)
+  - `Z`: High impedance (middle line)
+  - `|`: Marker line at that exact point. May also be a labeled marker by using
+    `|'text'`.
+  - `_`: Empty clock cycle
+
+Whitespace is ignored.
 
 ## "parse": parse and reformat Boolean expressions
 `parse` parses an equation and outputs it in a different format, such as LaTeX.
@@ -311,6 +334,84 @@ A	B	C
 1	1	1	0
 ```
 
+
+## "transform": Transform a Boolean expression
+`transform` allows you to input a Boolean expression and have it converted into
+NAND or NOR logic, i.e., replacing all gates exclusively by NAND or NOR.
+Examples:
+
+```
+$ digtool transform 'A ^ B'
+((A @ 1) @ B) @ (A @ (B @ 1))
+
+$ digtool transform -logic nor 'A ^ !B'
+((A # ((B # 0) # 0)) # ((A # 0) # (B # 0)) # 0)
+```
+
+Note that, as stated above, `@` is shortcut notation for NAND while `#` stands
+for NOR.
+
+
+## "dtd-create": Create a digital timing diagram
+`dtd-create` generates timing-diagram source text (a compact, line-based
+format) for common sequential devices typically used in exam exercises: SR-NAND
+flipflops, D-flipflops, JK- or JK-MS-flipflops. It produces randomized inputs
+(reproducible via a seed), simulates the device, and prints input/output
+waveforms.
+
+To do this, you can simply invoke the command and it will generate a random
+timing diagram (by default of a SR-NAND-FF):
+
+```
+$ digtool dtd-create
+# Random seed: 8910607998
+!S = 0|'S'0|'R'11|0|'🗲'111|00|'R'111111|'S'0000|00|'S'00000111|'R'11
+!R = 0    1    00 0    111 00    000001    1111 00    11111111    01
+Q  = 1    1    00 1    000 11    000000    1111 11    11111111    00
+!Q = 1    0    11 1    111 11    111111    0000 11    00000000    11
+```
+
+As you can see, it created a diagram along with notational markers that show
+when the flipflop was set, when it was reset and where an illegal state
+transition occurred. Note that for the SR-NAND-FF it is *not* illegal for both
+inputs to become active (i.e., LOW) at the same time, this is well-defined
+behavior. Undefined behavior occurs only when out of this state there is a
+simultaneous transition into the "keep" state (both inputs inactive, i.e.,
+HIGH).
+
+
+# "dtd-render": render timing diagram data to SVG
+`dtd-render` reads timing-diagram source text (from a file or stdin) and
+renders it as an SVG. As an example, consider the example shown before in
+`dtd-create`. Let us reproduce it from its pseudo-random seed and render it:
+
+```
+$ digtool dtd-create -s 8910607998 | digtool dtd-render -o docs/timing_diagram.png
+```
+
+Will create the file `docs/timing_diagram.svg` which you can see here:
+
+![SR Flipflop timing diagram](https://raw.githubusercontent.com/johndoe31415/digtool/main/docs/timing_diagram.png)
+
+Note that the two-step process makes it exceptionally easy to create random
+diagrams until you find one that you like, use this as the reference solution
+for an exam, edit the test file and clear out the signals you want students to
+fill in, then render that again.
+
+Also note that the created SVG supports layers so it is easy to retroactively
+disable, for example, labels or tick markers.
+
+Another example is this timing diagram, showing tri-state states:
+
+```
+!CS = 1111|'start'000000        00000000000000000000        00001111111
+SCK = 0000        000000|'bit 1'10101010101011110000|'bit 8'11001111111
+DAT = ZZZZ        ::::::        !:!:!:!:!:!:!:::::::        !:::ZZZZZZZ
+```
+
+Which renders as:
+
+![Made-up communication diagram](https://raw.githubusercontent.com/johndoe31415/digtool/main/docs/other_diagram.png)
 
 ## License
 GNU GPL-3.
