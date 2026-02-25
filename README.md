@@ -364,9 +364,11 @@ human consumption:
 ## "random-expr": generate a random Boolean expression
 `random-expr` generates a random expression over a specified number of
 variables that has a certain "complexity" according to some metric (currently,
-number of characters in native format). It automatically simplifies the
+number of generated minterms/maxterms). It automatically simplifies the
 randomized equations and checks that the minimized variant is not below another
-complexity metric (so that tautologies are not created):
+complexity metric (so that tautologies are not created unless the user
+specifically specifies that simple results are permissible via
+`--allow-trivial`):
 
 ```
 $ digtick random-expr 4 60
