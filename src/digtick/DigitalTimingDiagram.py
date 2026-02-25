@@ -101,6 +101,13 @@ class _FontWidthEstimator():
 		return width
 
 class DigitalTimingDiagram():
+	class Layer(enum.Enum):
+		UpperLowerBoundary = "Upper/lower boundaries"
+		ClockTicks = "Clock ticks"
+		SignalNames = "Signal names"
+		Markers = "Markers"
+		Signals = "Signals"
+
 	_Marker = collections.namedtuple("Marker", [ "x", "label" ])
 
 	def __init__(self, xdiv: int = 10, height: int = 30, vertical_distance: int = 10, marker_extend: int = 20, clock_ticks: bool = True, low_high_lines: bool = False, use_overline: bool = True):
@@ -113,6 +120,7 @@ class DigitalTimingDiagram():
 		self._use_overline = use_overline
 		self._risefall = height / 8
 		self._svg = SVGDocument.new()
+		self._setup_layers()
 		self._path = None
 		self._plot_count = 0
 		self._clock_ticks = 0
@@ -126,8 +134,15 @@ class DigitalTimingDiagram():
 	def base_height(self):
 		return ((self._height + self._vertical_distance) * self._plot_count) - self._vertical_distance
 
+	def _setup_layers(self):
+		# Create layers in correct order so that signals are topmost
+		for layer in [ self.Layer.UpperLowerBoundary, self.Layer.ClockTicks, self.Layer.SignalNames, self.Layer.Signals ]:
+			self._layer(layer)
+
 	@functools.cache
-	def _layer(self, layer_label):
+	def _layer(self, layer_id: "Layer"):
+		assert(isinstance(layer_id, self.Layer))
+		layer_label = layer_id.value
 		layer = self._svg.add(SVGGroup.new(is_layer = True))
 		layer.label = layer_label
 		return layer
@@ -140,7 +155,7 @@ class DigitalTimingDiagram():
 		self._path.horizontal(lead, relative = True)
 
 	def _render_signal_sequence(self, signal_name: str, x, y, cmds):
-		signals_layer = self._layer("Signals")
+		signals_layer = self._layer(self.Layer.Signals)
 		layer = signals_layer.add(SVGGroup.new(is_layer = True))
 		layer.label = signal_name
 
@@ -151,7 +166,7 @@ class DigitalTimingDiagram():
 
 		text_width = 50
 		raw_signal_name = signal_name.lstrip("!")
-		svg_text = self._layer("Signal names").add(SVGText.new(pos = Vector2D(x - text_width, abs_y_mid - 6), rect_extents = Vector2D(text_width, 30), text = raw_signal_name))
+		svg_text = self._layer(self.Layer.SignalNames).add(SVGText.new(pos = Vector2D(x - text_width, abs_y_mid - 6), rect_extents = Vector2D(text_width, 30), text = raw_signal_name))
 		svg_text.style["text-align"] = "right"
 		svg_text.style["font-family"] = "'Latin Modern Roman'"
 		if signal_name.startswith("!"):
@@ -160,7 +175,7 @@ class DigitalTimingDiagram():
 			# this is a really ugly hack that only works for this specific
 			# font/font size and only for common glyphs.
 			text_width = _FontWidthEstimator.estimate_text_width(raw_signal_name)
-			path = self._layer("Signal names").add(SVGPath.new(pos = Vector2D(x + 0.5, abs_y_mid - 5.5)))
+			path = self._layer(self.Layer.SignalNames).add(SVGPath.new(pos = Vector2D(x + 0.5, abs_y_mid - 5.5)))
 			path.horizontal(-text_width, relative = True)
 			path.style["stroke-width"] = 0.75
 
@@ -267,7 +282,7 @@ class DigitalTimingDiagram():
 			have_label = (marker.label is not None) and (marker.label != "")
 			marker_length = self.base_height if (not have_label) else (self.base_height + self._marker_extend)
 
-			path = self._layer("Markers").add(SVGPath.new(Vector2D(marker.x, 0)))
+			path = self._layer(self.Layer.Markers).add(SVGPath.new(Vector2D(marker.x, 0)))
 			path.vertical(marker_length, relative = True)
 			path.style["stroke-width"] = 0.5
 
@@ -275,7 +290,7 @@ class DigitalTimingDiagram():
 				text_width = 100
 				text_height = 50
 
-				svg_text = self._layer("Markers").add(SVGText.new(pos = Vector2D(marker.x - (text_width / 2), marker_length), rect_extents = Vector2D(text_width, text_height), text = marker.label))
+				svg_text = self._layer(self.Layer.Markers).add(SVGText.new(pos = Vector2D(marker.x - (text_width / 2), marker_length), rect_extents = Vector2D(text_width, text_height), text = marker.label))
 				svg_text.style["text-align"] = "center"
 
 	def _do_render_clock_ticks(self):
@@ -284,7 +299,7 @@ class DigitalTimingDiagram():
 
 		for tick in range(self._clock_ticks):
 			x = (tick * self._xdiv) + self._xdiv / 2
-			path = self._layer("Clock ticks").add(SVGPath.new(Vector2D(x, 0)))
+			path = self._layer(self.Layer.ClockTicks).add(SVGPath.new(Vector2D(x, 0)))
 			path.vertical(self.base_height, relative = True)
 			path.style["stroke-width"] = 0.25
 			path.style["stroke"] = "#95a5a6"
@@ -298,7 +313,7 @@ class DigitalTimingDiagram():
 			y_high = (self._height + self._vertical_distance) * plot
 			y_low = y_high + self._height
 			for y in [ y_low, y_high ]:
-				path = self._layer("Upper/Lower boundaries").add(SVGPath.new(Vector2D(0, y)))
+				path = self._layer(self.Layer.UpperLowerBoundary).add(SVGPath.new(Vector2D(0, y)))
 				path.horizontal(x_width, relative = True)
 
 				path.style["stroke-width"] = 0.5
