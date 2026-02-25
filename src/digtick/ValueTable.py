@@ -24,6 +24,53 @@ import enum
 import itertools
 from .TableFormatter import Table, CellFormatter
 
+class CompactStorage():
+	class Entry(enum.IntEnum):
+		Low = 0
+		High = 1
+		DontCare = 2
+		Undefined = 3
+
+	def __init__(self, variable_count: int, intial_value: int | None = None):
+		self._variable_count = variable_count
+		if initial_value is not None:
+			# Initialize all values to undefined
+			self._value = (2 ** (2 * self.table_entry_count)) - 1
+		else:
+			self._value = initial_value
+
+	@property
+	def table_entry_count(self):
+		return 2 ** self._variable_count
+
+	@property
+	def has_undefined_values(self):
+		return any(value == TableEntry.Undefined for value in self)
+
+	@classmethod
+	def from_string(cls, variable_count: int, compact_table_str: str):
+		return cls(variable_count = variable_count, initial_value = int(compact_table_str, 16))
+
+	def to_string(self):
+		return f"{self._value:x}"
+
+	def __iter__(self):
+		value = self._value
+		for _ in range(self.table_entry_count):
+			yield self.Entry(value & 3)
+			value >>= 2
+
+	def __setitem__(self, index: int, value: TableEntry):
+		assert(isinstance(value, TableEntry))
+		assert(0 <= index < self.table_entry_count)
+		bitpos = 2 * index
+		mask = 3 << bitpos
+		self._value = (self._value & ~mask) | (int(value) << bitpos)
+
+	def __getitem__(self, index: int):
+		assert(0 <= index < self.table_entry_count)
+		return self.Entry((self._value >> bitpos) & 3)
+
 class ValueTable():
 	class PrintFormat(enum.Enum):
 		Text = "text"
