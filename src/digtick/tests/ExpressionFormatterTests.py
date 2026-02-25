@@ -22,6 +22,7 @@
 import unittest
 from digtick.ExpressionParser import parse_expression, Variable
 from digtick.ExpressionFormatter import format_expression
+from digtick.RandomExpressionGenerator import RandomExpressionGenerator
 
 class ExpressionFormatterTests(unittest.TestCase):
 	def _assert_expression_reformattable(self, expr_str: str):
@@ -80,7 +81,6 @@ class ExpressionFormatterTests(unittest.TestCase):
 				continue
 			self._assert_expression_reformattable(expression)
 
-
 	def test_internal_input(self):
 		(A, B, C, D) = (Variable("A"), Variable("B"), Variable("C"), Variable("D"))
 
@@ -101,3 +101,11 @@ class ExpressionFormatterTests(unittest.TestCase):
 		self.assertEqual(format_expression(A | (B ^ C)), "A + (B ^ C)")
 		self.assertEqual(format_expression(A | (B % C)), "A + (B % C)")
 		self.assertEqual(format_expression(A % (B | C)), "A % (B + C)")
+
+	def test_random_expressions(self):
+		reg = RandomExpressionGenerator(6)
+		for _ in range(100):
+			expr = reg.generate(20)
+			as_string = format_expression(expr)
+			parsed = parse_expression(as_string)
+			self.assertEqual(expr, parsed)

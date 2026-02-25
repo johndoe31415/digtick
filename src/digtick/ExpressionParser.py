@@ -191,7 +191,7 @@ class Variable(ParseTreeElement):
 	def identical_to(self, other: ParseTreeElement) -> bool:
 		return isinstance(other, Variable) and (self.varname == other.varname)
 
-	def __str__(self):
+	def __repr__(self):
 		return self.varname
 
 class Constant(ParseTreeElement):
@@ -215,7 +215,7 @@ class Constant(ParseTreeElement):
 	def identical_to(self, other: ParseTreeElement) -> bool:
 		return isinstance(other, Constant) and (self.value == other.value)
 
-	def __str__(self):
+	def __repr__(self):
 		return str(self.value)
 
 class UnaryOperator(ParseTreeElement):
@@ -272,6 +272,13 @@ class BinaryOperator(ParseTreeElement):
 	@property
 	def rhs(self):
 		return self._rhs
+
+	@classmethod
+	def join(cls, op: Operator, terms: ParseTreeElement) -> ParseTreeElement:
+		result = terms[0]
+		for term in terms[1:]:
+			result = BinaryOperator(result, op, term)
+		return result
 
 	def identical_to(self, other: ParseTreeElement) -> bool:
 		return isinstance(other, BinaryOperator) and (self.op == other.op) and (self.lhs.identical_to(other.lhs)) and (self.rhs.identical_to(other.rhs))
