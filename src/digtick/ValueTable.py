@@ -31,21 +31,25 @@ class CompactStorage():
 		DontCare = 2
 		Undefined = 3
 
-	def __init__(self, variable_count: int, intial_value: int | None = None):
+	def __init__(self, variable_count: int, initial_value: int | None = None):
 		self._variable_count = variable_count
-		if initial_value is not None:
+		if initial_value is None:
 			# Initialize all values to undefined
 			self._value = (2 ** (2 * self.table_entry_count)) - 1
 		else:
 			self._value = initial_value
 
 	@property
+	def variable_count(self):
+		return self._variable_count
+
+	@property
 	def table_entry_count(self):
-		return 2 ** self._variable_count
+		return 2 ** self.variable_count
 
 	@property
 	def has_undefined_values(self):
-		return any(value == TableEntry.Undefined for value in self)
+		return any(value == self.Entry.Undefined for value in self)
 
 	@classmethod
 	def from_string(cls, variable_count: int, compact_table_str: str):
@@ -54,22 +58,35 @@ class CompactStorage():
 	def to_string(self):
 		return f"{self._value:x}"
 
+	def set_undefined_values_to(self, entryvalue: Entry):
+		for (index, value) in enumerate(self):
+			if value == self.Entry.Undefined:
+				self[index] = entryvalue
+
 	def __iter__(self):
 		value = self._value
 		for _ in range(self.table_entry_count):
 			yield self.Entry(value & 3)
 			value >>= 2
 
-	def __setitem__(self, index: int, value: TableEntry):
-		assert(isinstance(value, TableEntry))
+	def __setitem__(self, index: int, entryvalue: Entry | int | str):
+		assert(isinstance(entryvalue, self.Entry) or (entryvalue in [ 0, 1, "0", "1", "*" ]))
+		if entryvalue == "*":
+			entryvalue = self.Entry.DontCare
+		else:
+			entryvalue = int(entryvalue)
 		assert(0 <= index < self.table_entry_count)
 		bitpos = 2 * index
 		mask = 3 << bitpos
-		self._value = (self._value & ~mask) | (int(value) << bitpos)
+		self._value = (self._value & ~mask) | (entryvalue << bitpos)
 
 	def __getitem__(self, index: int):
 		assert(0 <= index < self.table_entry_count)
+		bitpos = 2 * index
 		return self.Entry((self._value >> bitpos) & 3)
+
+	def __repr__(self):
+		return f"CompStor<{self.variable_count}>"
 
 class ValueTable():
 	class PrintFormat(enum.Enum):
@@ -78,12 +95,13 @@ class ValueTable():
 		TeX = "tex"
 		Compact = "compact"
 
-	_TABLE_SEP = re.compile(r"\t+")
+	_TABLE_SEP = re.compile(r"\s+")
 
-	def __init__(self, input_variable_names: list[str], output_values: list[bool | None]):
-		if len(output_values) != 2 ** len(input_variable_names):
-			raise ValueError(f"For {len(input_variable_names)} variables there are {2 ** len(input_variable_names)} output values expected, but {len(output_values)} were found.")
+	def __init__(self, input_variable_names: list[str], output_variable_names: list[str], output_values: list[CompactStorage]):
+		assert(len(output_values) == len(output_variable_names))
+		assert(all(storage.variable_count == len(input_variable_names) for storage in output_values))
 		self._input_variable_names = input_variable_names
+		self._output_variable_names = output_variable_names
 		self._output_values = output_values
 
 	@property
@@ -96,7 +114,7 @@ class ValueTable():
 
 	@property
 	def output_variable_count(self):
-		return 1
+		return len(self._output_variable_names)
 
 	@classmethod
 	def _from_compact_representation(cls, compact_str: str):
@@ -104,27 +122,14 @@ class ValueTable():
 		(input_variable_names, output_variable_names, compact_data) = compact_str[1:].split(":")
 		input_variable_names = input_variable_names.split(",")
 		output_variable_names = output_variable_names.split(",")
-		compact_data = [ int(value, 16) for value in compact_data.split(",") ]
-		input_variable_count = len(input_variable_names)
-		output_variable_count = len(output_variable_names)
-
+		compact_data = compact_data.split(",")
 		if output_variable_count != len(compact_data):
-			raise ValueError(f"Format specifies {output_variable_count} output variables, but present data section indicates {len(compact_data)}.")
-		if output_variable_count != 1:
-			raise ValueError("At the moment, only a single output variable is supported.")
-
-		decompacted_values = [ ]
-		compact_value = compact_data[0]
-		for index in range(2 ** input_variable_count):
-			next_value = (compact_value >> (2 * index)) & 3
-			if next_value == 2:
-				next_value = None
-			decompacted_values.append(next_value)
-		return cls(input_variable_names = input_variable_names, output_values = decompacted_values)
+			raise ValueError(f"Format specifies {len(output_variable_names)} output variables, but present data section indicates {len(compact_data)}.")
+		output_values = [ CompactStorage.from_string(len(input_variable_names), compact_data_string) for compact_data_string in compact_data ]
+		return cls(input_variable_names = input_variable_names, output_variable_names = output_variable_names, output_values = output_values)
 
 	@classmethod
-	def _parse_from_file(cls, f: "_io.TextIOWrapper", unused_value: int | None = -1):
-		assert(unused_value in [ None, 0, 1, -1 ])
+	def _parse_from_file(cls, f: "_io.TextIOWrapper", set_undefined_values_to: CompactStorage.Entry | None = None):
 		output_values = None
 		for (lineno, line) in enumerate(f, 1):
 			line = line.strip("\r\n\t ")
@@ -134,39 +139,61 @@ class ValueTable():
 					# Compact format!
 					return cls._from_compact_representation(line)
 
-				variables = tokens
-				if len(variables) != len(set(variables)):
-					raise ValueError(f"Syntax error when parsing truth table in line {lineno}: Duplicate literal definition found")
-				output_values = [ unused_value ] * (2 ** len(variables))
+				input_indices = [ ]
+				input_variables = [ ]
+				output_indices = [ ]
+				output_variables = [ ]
+				for (index, field) in enumerate(tokens):
+					is_output = field.startswith(">")
+					name = field[1:] if is_output else field
+					if is_output:
+						output_variables.append(name)
+						output_indices.append(index)
+					else:
+						input_variables.append(name)
+						input_indices.append(index)
+				if len(input_variables) == 0:
+					raise ValueError(f"Syntax error when parsing truth table in line {lineno}: No input variables found")
+				if len(output_variables) == 0:
+					raise ValueError(f"Syntax error when parsing truth table in line {lineno}: No output variables found")
+
+				all_variables = input_variables + output_variables
+				if len(all_variables) != len(set(all_variables)):
+					duplicate_variables = { var_name for (var_name, count) in collections.Counter(all_variables).items() if count > 1 }
+					raise ValueError(f"Syntax error when parsing truth table in line {lineno}: Duplicate variable name(s) used: {', '.join(sorted(duplicate_variables))}")
+
+				output_values = [ CompactStorage(variable_count = len(input_variables)) for _ in range(len(output_variables)) ]
 			else:
-				if len(tokens) != len(variables) + 1:
-					raise ValueError(f"Syntax error when parsing truth table in line {lineno}: expected {len(variables) + 1} tokens, but saw {len(tokens)}")
-				input_value_dict = { varname: int(token) for (varname, token) in zip(variables, tokens) }
-				output_value = tokens[-1]
-				if output_value == "*":
-					output_value = None
-				else:
-					output_value = int(output_value)
-				index = cls.input_dict_to_index(input_value_dict, variables)
-				if output_values[index] != unused_value:
-					print(f"Warning when parsing truth table: {input_value_dict} overwrites value in line {lineno}")
-				output_values[index] = output_value
+				if len(tokens) != len(input_variables) + len(output_variables):
+					raise ValueError(f"Syntax error when parsing truth table in line {lineno}: expected {len(input_variables) + len(output_variables)} tokens, but saw {len(tokens)}")
+
+				input_bits = [ int(tokens[i]) for i in input_indices ]
+				index = sum(value << bitpos for (bitpos, value) in enumerate(input_bits))
+
+				output_bits = [ tokens[i] for i in output_indices ]
+				for (storage, output_bit) in zip(output_values, output_bits):
+					if storage[index] != CompactStorage.Entry.Undefined:
+						print(f"Warning when parsing truth table: value overwritten in line {lineno}")
+					storage[index] = output_bit
 		if output_values is None:
 			raise ValueError("Unable to read table data from source.")
-		if (unused_value == -1) and (-1 in output_values):
-			# If strict parsing required, all values must be explicitly set
-			raise ValueError("Strict parsing was requested and not all input patterns were explicitly specified.")
-		return ValueTable(input_variable_names = variables, output_values = output_values)
+
+		if output_values[0].has_undefined_values:
+			if set_undefined_values_to is None:
+				raise ValueError("Strict parsing was requested but not all input patterns were explicitly specified.")
+			else:
+				for storage in output_values:
+					storage.set_undefined_values_to(set_undefined_values_to)
+		return ValueTable(input_variable_names = input_variables, output_variable_names = output_variables, output_values = output_values)
 
 	@classmethod
-	def parse_from_file(cls, f: "_io.TextIOWrapper", unused_value_str: str):
-		assert(unused_value_str in [ "0", "1", "*", "forbidden" ])
-		return cls._parse_from_file(f = f, unused_value = {
-			"0":			0,
-			"1":			1,
-			"*":			None,
-			"forbidden":	-1,
-		}[unused_value_str])
+	def parse_from_file(cls, f: "_io.TextIOWrapper", set_undefined_values_to: str):
+		assert(set_undefined_values_to in [ "0", "1", "*", "forbidden" ])
+		return cls._parse_from_file(f = f, set_undefined_values_to = {
+			"0":			CompactStorage.Entry.Low,
+			"1":			CompactStorage.Entry.High,
+			"*":			CompactStorage.Entry.DontCare,
+		}.get(set_undefined_values_to))
 
 	@classmethod
 	def create_from_expression(self, expression: "ParseTreeElement", dc_expression: "ParseTreeElement | None" = None):
@@ -252,17 +279,17 @@ class ValueTable():
 			x >>= 1
 		return result
 
-	@staticmethod
-	def input_dict_to_index(input_var_dict: dict, variable_names: list[str]) -> int:
-		index = 0
-		for (i, varname) in enumerate(variable_names):
-			bitno = len(variable_names) - 1 - i
-			if input_var_dict[varname]:
-				index += (1 << bitno)
-		return index
-
-	def at(self, input_var_dict: dict) -> int | None:
-		return self._output_values[self.input_dict_to_index(input_var_dict, self.input_variable_names)]
+#	@staticmethod
+#	def input_dict_to_index(input_var_dict: dict, variable_names: list[str]) -> int:
+#		index = 0
+#		for (i, varname) in enumerate(variable_names):
+#			bitno = len(variable_names) - 1 - i
+#			if input_var_dict[varname]:
+#				index += (1 << bitno)
+#		return index
+#
+#	def at(self, input_var_dict: dict) -> int | None:
+#		return self._output_values[self.input_dict_to_index(input_var_dict, self.input_variable_names)]
 
 	def print_kv(self, variable_order: list[str] | None = None, x_offset: int = 0, y_offset: int = 0, x_invert: bool = False, y_invert: bool = False, row_heavy: bool = True):
 		def _create_kv_dict(var_names: list[str], offset: int = 0, invert_direction: bool = False):
