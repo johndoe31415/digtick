@@ -162,10 +162,15 @@ class Variable(ParseTreeElement):
 	def evaluate(self, var_dict: dict):
 		return var_dict[self.varname]
 
+	def identical_to(self, other: ParseTreeElement) -> bool:
+		return isinstance(other, Variable) and (self.varname == other.varname)
+
 	def __str__(self):
 		return self.varname
 
 class Constant(ParseTreeElement):
+	__match_args__ = ("value", )
+
 	def __init__(self, value: int):
 		assert(value in (0, 1))
 		self._value = value
@@ -174,8 +179,11 @@ class Constant(ParseTreeElement):
 	def value(self):
 		return self._value
 
-	def evaluate(self, var_dict):
+	def evaluate(self, var_dict: dict):
 		return self.value
+
+	def identical_to(self, other: ParseTreeElement) -> bool:
+		return isinstance(other, Constant) and (self.value == other.value)
 
 	def __str__(self):
 		return str(self.value)
@@ -199,6 +207,9 @@ class UnaryOperator(ParseTreeElement):
 	def evaluate(self, var_dict: dict):
 		assert(self._op == Operator.Not)
 		return int(not self.rhs.evaluate(var_dict))
+
+	def identical_to(self, other: ParseTreeElement) -> bool:
+		return isinstance(other, UnaryOperator) and (self.op == other.op) and (self.rhs.identical_to(other.rhs))
 
 	def __repr__(self):
 		return f"{self.op.value}{self.rhs}"
@@ -224,6 +235,9 @@ class BinaryOperator(ParseTreeElement):
 	def rhs(self):
 		return self._rhs
 
+	def identical_to(self, other: ParseTreeElement) -> bool:
+		return isinstance(other, BinaryOperator) and (self.op == other.op) and (self.lhs.identical_to(other.lhs)) and (self.rhs.identical_to(other.rhs))
+
 	def evaluate(self, var_dict: dict):
 		lhs = self.lhs.evaluate(var_dict)
 		rhs = self.rhs.evaluate(var_dict)
@@ -240,6 +254,8 @@ class BinaryOperator(ParseTreeElement):
 		return f"{self.lhs} {self.op.value} {self.rhs}"
 
 class Parenthesis(ParseTreeElement):
+	__match_args__ = ("inner", )
+
 	def __init__(self, inner: ParseTreeElement):
 		self._inner = inner
 
@@ -249,6 +265,9 @@ class Parenthesis(ParseTreeElement):
 
 	def evaluate(self, var_dict: dict):
 		return self._inner.evaluate(var_dict)
+
+	def identical_to(self, other: ParseTreeElement) -> bool:
+		return isinstance(other, Parenthesis) and (self.inner.identical_to(other.inner))
 
 	def __repr__(self):
 		return f"({self.inner})"

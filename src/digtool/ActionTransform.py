@@ -121,19 +121,66 @@ class NORLogicTransformer(ExpressionTransformer):
 				raise NotImplementedError(expr.op)
 		return self._transform(expr)
 
+class SimplificationTransformer(ExpressionTransformer):
+	def _transform_parenthesis(self, expr: "Expression"):
+		match (expr.inner):
+			case (Parenthesis(inner)):
+				return Parenthesis(self._transform(inner))
+		return expr
+
+	def _transform_unary(self, expr: "Expression"):
+		match (expr.op, expr.rhs):
+			case (Operator.Not, Constant(0)):
+				return Constant(1)
+
+			case (Operator.Not, Constant(1)):
+				return Constant(0)
+
+			case (Operator.Parenthesis, Operator.Parenthesis(inner)):
+				return Constant(0)
+
+		return expr
+
+	def _transform_binary(self, expr: "Expression"):
+		match (expr.lhs, expr.op, expr.rhs):
+			case (_, Operator.And, Constant(0)):
+				return Constant(0)
+
+			case (lhs, Operator.And, Constant(1)):
+				return lhs
+
+			case (_, Operator.Or, Constant(1)):
+				return Constant(1)
+
+			case (lhs, Operator.Or, Constant(0)):
+				return lhs
+
+			case (lhs, Operator.Or, rhs) if (lhs.identical_to(rhs)):
+				return lhs
+
+			case (lhs, Operator.And, rhs) if (lhs.identical_to(rhs)):
+				return lhs
+		return expr
+
+
 class ActionTransform(BaseAction):
 	def run(self):
 		expr = parse_expression(self._args.expression)
-		match self._args.logic:
-			case "nand":
-				transformer = NANDLogicTransformer()
 
-			case "nor":
-				transformer = NORLogicTransformer()
+		for transformation_name in self._args.transform:
+			match transformation_name:
+				case "nand":
+					transformer = NANDLogicTransformer()
 
-			case _:
-				raise NotImplementedError(self._args.logic)
+				case "nor":
+					transformer = NORLogicTransformer()
 
-		transformed = transformer.transform(expr)
-		print(transformed)
-		assert(expr == transformed)
+				case "simplify":
+					transformer = SimplificationTransformer()
+
+				case _:
+					raise NotImplementedError(self._args.logic)
+
+			transformed = transformer.transform(expr)
+			print(transformed)
+			assert(expr == transformed)
