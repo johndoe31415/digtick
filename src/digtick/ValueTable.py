@@ -29,6 +29,7 @@ class ValueTable():
 		Text = "text"
 		Pretty = "pretty"
 		TeX = "tex"
+		Compact = "compact"
 
 	_TABLE_SEP = re.compile(r"\t+")
 
@@ -45,6 +46,10 @@ class ValueTable():
 	@property
 	def input_variable_count(self):
 		return len(self._input_variable_names)
+
+	@property
+	def output_variable_count(self):
+		return 1
 
 	@classmethod
 	def _parse_from_file(self, f: "_io.TextIOWrapper", unused_value: int | None = -1):
@@ -144,6 +149,18 @@ class ValueTable():
 		line = [ "Y" ] + [ "*" if (value is None) else str(value) for value in self._output_values ]
 		print(f"	{' & '.join(line)}\\\\%")
 		print("\\end{tabular}")
+
+	def _print_compact(self):
+		output = [ ]
+		output += [ f":{self.input_variable_count}:{self.output_variable_count}" ]
+		output += [ f"{','.join(self.input_variable_names)}:" ]
+		compact_value = 0
+		for (index, value) in enumerate(self._output_values):
+			if value is None:
+				value = 2
+			compact_value |= value << (2 * index)
+		output += [ f"{compact_value:x}" ]
+		print(":".join(output))
 
 	def print(self, print_format: PrintFormat = PrintFormat.Text):
 		method = getattr(self, f"_print_{print_format.value}")
