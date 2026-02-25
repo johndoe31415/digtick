@@ -52,13 +52,41 @@ class ValueTable():
 		return 1
 
 	@classmethod
-	def _parse_from_file(self, f: "_io.TextIOWrapper", unused_value: int | None = -1):
+	def _from_compact_representation(cls, compact_str: str):
+		assert(compact_str.startswith(":"))
+		(input_variable_names, output_variable_names, compact_data) = compact_str[1:].split(":")
+		input_variable_names = input_variable_names.split(",")
+		output_variable_names = output_variable_names.split(",")
+		compact_data = [ int(value, 16) for value in compact_data.split(",") ]
+		input_variable_count = len(input_variable_names)
+		output_variable_count = len(output_variable_names)
+
+		if output_variable_count != len(compact_data):
+			raise ValueError(f"Format specifies {output_variable_count} output variables, but present data section indicates {len(compact_data)}.")
+		if output_variable_count != 1:
+			raise ValueError(f"At the moment, only a single output variable is supported.")
+
+		decompacted_values = [ ]
+		compact_value = compact_data[0]
+		for index in range(2 ** input_variable_count):
+			next_value = (compact_value >> (2 * index)) & 3
+			if next_value == 2:
+				next_value = None
+			decompacted_values.append(next_value)
+		return cls(input_variable_names = input_variable_names, output_values = decompacted_values)
+
+	@classmethod
+	def _parse_from_file(cls, f: "_io.TextIOWrapper", unused_value: int | None = -1):
 		assert(unused_value in [ None, 0, 1, -1 ])
 		output_values = None
 		for (lineno, line) in enumerate(f, 1):
 			line = line.strip("\r\n\t ")
-			tokens = self._TABLE_SEP.split(line)
+			tokens = cls._TABLE_SEP.split(line)
 			if lineno == 1:
+				if line.startswith(":"):
+					# Compact format!
+					return cls._from_compact_representation(line)
+
 				variables = tokens
 				if len(variables) != len(set(variables)):
 					raise ValueError(f"Syntax error when parsing truth table in line {lineno}: Duplicate literal definition found")
@@ -72,7 +100,7 @@ class ValueTable():
 					output_value = None
 				else:
 					output_value = int(output_value)
-				index = self.input_dict_to_index(input_value_dict, variables)
+				index = cls.input_dict_to_index(input_value_dict, variables)
 				if output_values[index] != unused_value:
 					print(f"Warning when parsing truth table: {input_value_dict} overwrites value in line {lineno}")
 				output_values[index] = output_value
@@ -152,8 +180,7 @@ class ValueTable():
 
 	def _print_compact(self):
 		output = [ ]
-		output += [ f":{self.input_variable_count}:{self.output_variable_count}" ]
-		output += [ f"{','.join(self.input_variable_names)}:" ]
+		output += [ f":{','.join(self.input_variable_names)}:Y" ]
 		compact_value = 0
 		for (index, value) in enumerate(self._output_values):
 			if value is None:
@@ -242,6 +269,6 @@ class ValueTable():
 
 if __name__ == "__main__":
 	from .ExpressionParser import parse_expression
-	vt = ValueTable.create_from_expression(parse_expression("A B + C !D + (A (C + !C))"), dc_expression =  parse_expression("A !B !C"))
+	vt = ValueTable.create_from_expression(parse_expression("A B + C !D + (A (C + !C))"), dc_expression = parse_expression("A !B !C"))
 	vt.print()
 	vt.print_kv()
