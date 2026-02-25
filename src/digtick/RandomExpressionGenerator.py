@@ -21,7 +21,7 @@
 
 import random
 import string
-from .ExpressionParser import ExpressionParser, Variable, BinaryOperator, Operator, Parenthesis
+from .ExpressionParser import Variable, BinaryOperator, Operator, Parenthesis
 from .RandomDist import RandomDist
 
 class RandomExpressionGenerator():

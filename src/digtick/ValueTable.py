@@ -64,7 +64,7 @@ class ValueTable():
 		if output_variable_count != len(compact_data):
 			raise ValueError(f"Format specifies {output_variable_count} output variables, but present data section indicates {len(compact_data)}.")
 		if output_variable_count != 1:
-			raise ValueError(f"At the moment, only a single output variable is supported.")
+			raise ValueError("At the moment, only a single output variable is supported.")
 
 		decompacted_values = [ ]
 		compact_value = compact_data[0]

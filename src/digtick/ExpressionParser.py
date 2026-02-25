@@ -110,9 +110,6 @@ class ParseTreeElement():
 			if evaluation == 0:
 				yield value_dict
 
-	def evaluate(self, var_dict: dict):
-		return self.expr.evaluate(var_dict)
-
 	def compare_to_expression(self, other: "ParseTreeElement"):
 		e1_vars = set(self.variables)
 		e2_vars = set(other.variables)
