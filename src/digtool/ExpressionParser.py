@@ -46,7 +46,9 @@ class Operator(enum.Enum):
 			"#":	cls.Nor,
 		}[value]
 
-class Variable():
+class ParseTreeElement(): pass
+
+class Variable(ParseTreeElement):
 	def __init__(self, varname):
 		self._varname = varname
 
@@ -54,14 +56,14 @@ class Variable():
 	def varname(self):
 		return self._varname
 
-	def evaluate(self, var_dict):
+	def evaluate(self, var_dict: dict):
 		return var_dict[self.varname]
 
 	def __str__(self):
 		return self.varname
 
-class Constant():
-	def __init__(self, value):
+class Constant(ParseTreeElement):
+	def __init__(self, value: int):
 		assert(value in (0, 1))
 		self._value = value
 
@@ -75,7 +77,7 @@ class Constant():
 	def __str__(self):
 		return str(self.value)
 
-class UnaryOperator():
+class UnaryOperator(ParseTreeElement):
 	def __init__(self, op, rhs):
 		if isinstance(op, Operator):
 			self._op = op
@@ -91,15 +93,15 @@ class UnaryOperator():
 	def rhs(self):
 		return self._rhs
 
-	def evaluate(self, var_dict):
+	def evaluate(self, var_dict: dict):
 		assert(self._op == Operator.Not)
 		return int(not self.rhs.evaluate(var_dict))
 
 	def __repr__(self):
 		return f"{self.op.value}{self.rhs}"
 
-class BinaryOperator():
-	def __init__(self, lhs, op, rhs):
+class BinaryOperator(ParseTreeElement):
+	def __init__(self, lhs: ParseTreeElement, op: Operator | str, rhs: ParseTreeElement):
 		self._lhs = lhs
 		if isinstance(op, Operator):
 			self._op = op
@@ -134,15 +136,15 @@ class BinaryOperator():
 	def __repr__(self):
 		return f"{self.lhs} {self.op.value} {self.rhs}"
 
-class Parenthesis():
-	def __init__(self, inner):
+class Parenthesis(ParseTreeElement):
+	def __init__(self, inner: ParseTreeElement):
 		self._inner = inner
 
 	@property
 	def inner(self):
 		return self._inner
 
-	def evaluate(self, var_dict):
+	def evaluate(self, var_dict: dict):
 		return self._inner.evaluate(var_dict)
 
 	def __repr__(self):
