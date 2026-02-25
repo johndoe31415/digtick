@@ -441,7 +441,7 @@ simultaneous transition into the "keep" state (both inputs inactive, i.e.,
 HIGH).
 
 
-# "dtd-render": render timing diagram data to SVG
+## "dtd-render": render timing diagram data to SVG
 `dtd-render` reads timing-diagram source text (from a file or stdin) and
 renders it as an SVG. As an example, consider the example shown before in
 `dtd-create`. Let us reproduce it from its pseudo-random seed and render it:
