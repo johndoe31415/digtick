@@ -22,8 +22,7 @@
 from .ExpressionParser import ParseTreeElement, Operator, Variable, Constant, UnaryOperator, BinaryOperator, Parenthesis
 
 class ExpressionFormatterTex():
-	def __init__(self, expr: "ParseTreeElement", neg_overline: bool = True, implicit_and: bool = True):
-		self._expr = expr
+	def __init__(self, neg_overline: bool = True, implicit_and: bool = True):
 		self._neg_overline = neg_overline
 		self._implicit_and = implicit_and
 		self._ops = {
@@ -39,7 +38,7 @@ class ExpressionFormatterTex():
 	def _op(self, op):
 		return self._ops[op]
 
-	def _fmt(self, expr, prev = None):
+	def _format_expression(self, expr: ParseTreeElement, prev: ParseTreeElement | None = None):
 		if isinstance(expr, Variable):
 			return f"\\textnormal{{{expr.varname}}}"
 		elif isinstance(expr, BinaryOperator):
@@ -58,12 +57,11 @@ class ExpressionFormatterTex():
 			return f"({self._fmt(expr.inner)})"
 		raise NotImplementedError(expr)
 
-	def __str__(self):
-		return self._fmt(self._expr).replace("  ", " ")
+	def format_expression(self, expr: ParseTreeElement):
+		return self._format_expression(expr).replace("  ", " ")
 
 class ExpressionFormatterText():
-	def __init__(self, expr: "ParseTreeElement", pretty_print: bool = False, implicit_and: bool = True):
-		self._expr = expr
+	def __init__(self, pretty_print: bool = False, implicit_and: bool = True):
 		self._pretty_print = pretty_print
 		self._implicit_and = implicit_and
 		if pretty_print:
@@ -90,7 +88,7 @@ class ExpressionFormatterText():
 	def _op(self, op):
 		return self._ops[op]
 
-	def _fmt(self, expr, prev = None):
+	def _format_expression(self, expr: ParseTreeElement, prev: ParseTreeElement | None = None):
 		if isinstance(expr, Variable):
 			return expr.varname
 		elif isinstance(expr, BinaryOperator):
@@ -109,19 +107,49 @@ class ExpressionFormatterText():
 			return f"({self._fmt(expr.inner)})"
 		raise NotImplementedError(expr)
 
-	def __str__(self):
-		return self._fmt(self._expr)
-
+	def format_expression(self, expr: ParseTreeElement):
+		return self._format_expression(expr)
 
 class GraphvizFormatter():
-	def __init__(self, expr: "ParseTreeElement"):
-		self._expr = expr
+	def __init__(self):
+		self._op_label = {
+			Operator.Or: "\\|\\|",
+			Operator.And: "&&",
+			Operator.Xor: " ⊕ ",
+			Operator.Not: "~",
+			Operator.Nand: "NAND",
+			Operator.Nor: "NOR",
+		}
 
-#	def _fmt(self, expr: ):
-#		pass
+	def format_expression(self, expr: ParseTreeElement):
+		# Enumerate tree fully first so we can easily refer to the unique IDs
+		# of nodes within the tree
+		nodeno = { }
+		for node in expr:
+			nodeno[id(node)] = len(nodeno)
 
-	def __str__(self):
-		return self._fmt(self._expr)
+		lines = [ ]
+		lines += [ "digraph g {" ]
+		lines += [ "	node [ shape=box, style=\"filled,rounded\", fontname=\"Fira Mono\", fontsize=12, fontcolor=\"#111111\" ];" ]
+		for node in expr:
+			if isinstance(node, Variable):
+				lines.append(f"	n{nodeno[id(node)]} [ label=\"{node.varname}\", fillcolor=\"#d9c2ff\" ];")
+			elif isinstance(node, BinaryOperator):
+				lines.append(f"	n{nodeno[id(node)]} [ label=\"{self._op_label[node.op]}\", fillcolor=\"#fff3b0\" ];")
+				lines.append(f"	n{nodeno[id(node)]} -> n{nodeno[id(node.lhs)]};")
+				lines.append(f"	n{nodeno[id(node)]} -> n{nodeno[id(node.rhs)]};")
+			elif isinstance(node, UnaryOperator):
+				lines.append(f"	n{nodeno[id(node)]} [ label=\"{self._op_label[node.op]}\", fillcolor=\"#b9d7ff\" ];")
+				lines.append(f"	n{nodeno[id(node)]} -> n{nodeno[id(node.rhs)]};")
+			elif isinstance(node, Parenthesis):
+				lines.append(f"	n{nodeno[id(node)]} [ label=\"( )\", fillcolor=\"#c6f6c6\" ];")
+				lines.append(f"	n{nodeno[id(node)]} -> n{nodeno[id(node.inner)]};")
+			elif isinstance(node, Constant):
+				lines.append(f"	n{nodeno[id(node)]} [ label=\"{node.value}\", fillcolor=\"#ffd2a6\" ];")
+			else:
+				raise NotImplementedError(type(node))
+		lines += [ "}" ]
+		return "\n".join(lines)
 
 def format_expression(expression: ParseTreeElement, expression_format: str = "text", implicit_and: bool = True):
 	assert(isinstance(expression, ParseTreeElement))
@@ -130,19 +158,20 @@ def format_expression(expression: ParseTreeElement, expression_format: str = "te
 			return str(expression)
 
 		case "text":
-			return str(ExpressionFormatterText(expression, pretty_print = False, implicit_and = implicit_and))
+			formatter = ExpressionFormatterText(expression, pretty_print = False, implicit_and = implicit_and)
 
 		case "pretty-text":
-			return str(ExpressionFormatterText(expression, pretty_print = True, implicit_and = implicit_and))
+			formatter = ExpressionFormatterText(expression, pretty_print = True, implicit_and = implicit_and)
 
 		case "tex-tech":
-			return str(ExpressionFormatterTex(expression, neg_overline = True, implicit_and = implicit_and))
+			formatter = ExpressionFormatterTex(expression, neg_overline = True, implicit_and = implicit_and)
 
 		case "tex-math":
-			return str(ExpressionFormatterTex(expression, neg_overline = False, implicit_and = implicit_and))
+			formatter = ExpressionFormatterTex(neg_overline = False, implicit_and = implicit_and)
 
 		case "dot":
-			return str(GraphvizFormatter(expression))
+			formatter = GraphvizFormatter()
 
 		case _:
 			raise NotImplementedError(expression_format)
+	return formatter.format_expression(expression)

@@ -28,7 +28,7 @@ class ActionParse(BaseAction):
 	def run(self):
 		if not self._args.read_as_filename:
 			expr = parse_expression(self._args.expression)
-			print(format_expression(expression = expr, expression_format = self._args.format, implicit_and = not self._args.no_implicit_and))
+			print(format_expression(expression = expr, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and))
 		else:
 			validation_successful = True
 			with open(self._args.expression) as f:
@@ -41,7 +41,7 @@ class ActionParse(BaseAction):
 						continue
 
 					expr = parse_expression(line)
-					print(format_expression(expression = expr, expression_format = self._args.format, implicit_and = not self._args.no_implicit_and))
+					print(format_expression(expression = expr, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and))
 
 					if self._args.validate_equivalence and (prev_expression is not None):
 						if expr != prev_expression:

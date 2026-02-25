@@ -78,7 +78,7 @@ A * B * C + A * !B * C + C * !A
 There are multiple output options, e.g. a Unicode renderer:
 
 ```
-$ digtick parse --format pretty-text 'A B C + A !B C + C !A'
+$ digtick parse --expr-format pretty-text 'A B C + A !B C + C !A'
 A B C ∨ A B̅ C ∨ C A̅
 ```
 
@@ -125,7 +125,7 @@ A	B	C
 1	1	0	0
 1	1	1	1
 
-$ digtick make-table --format pretty 'A B C + A !B C + C !A'
+$ digtick make-table --tbl-format pretty 'A B C + A !B C + C !A'
 ┌───┬───┬───┬───┐
 │ A │ B │ C │   │
 ├───┼───┼───┼───┤
@@ -180,18 +180,31 @@ It takes care that in overline-style negation of literals the overline does
 default, unfortunately, and results in a non-equivalent equation):
 
 ```
-$ digtick parse --format tex-tech '!A !B'
+$ digtick parse --expr-format tex-tech '!A !B'
 \overline{\textnormal{A}} \ \overline{\textnormal{B}}
-$ digtick parse --format tex-tech '!(A B)'
+$ digtick parse --expr-format tex-tech '!(A B)'
 \overline{(\textnormal{A} \ \textnormal{B})}
 ```
 
 Note that also the mathematical variant of symbols can be used:
 
 ```
-$ digtick parse --format tex-math '!(A B)'
+$ digtick parse --expr-format tex-math '!(A B)'
 \neg \textnormal{A} \ \neg \textnormal{B}
 ```
+
+When you are interested in the internal parse tree of an expression, you can
+emit the expression as Graphviz-compatible format and have it rendererd by dot
+into a graph:
+
+```
+$ digtick parse --expr-format dot 'A + B -C @ (A + B ^ C) @ 1' | dot -Tpng -oast.png
+```
+
+Which will produce the following `ast.png` file:
+
+![Parse tree of expression](https://raw.githubusercontent.com/johndoe31415/digtick/main/docs/expression_ast.png)
+
 
 ## "make-table": generate a truth table from an expression
 `make-table` evaluates a Boolean expression over all input combinations and
