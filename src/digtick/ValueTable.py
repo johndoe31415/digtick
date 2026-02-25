@@ -49,6 +49,7 @@ class ValueTable():
 	@classmethod
 	def _parse_from_file(self, f: "_io.TextIOWrapper", unused_value: int | None = -1):
 		assert(unused_value in [ None, 0, 1, -1 ])
+		output_values = None
 		for (lineno, line) in enumerate(f, 1):
 			line = line.strip("\r\n\t ")
 			tokens = self._TABLE_SEP.split(line)
@@ -70,9 +71,10 @@ class ValueTable():
 				if output_values[index] != unused_value:
 					print(f"Warning when parsing truth table: {input_value_dict} overwrites value in line {lineno}")
 				output_values[index] = output_value
+		if output_values is None:
+			raise ValueError("Unable to read table data from source.")
 		if (unused_value == -1) and (-1 in output_values):
 			# If strict parsing required, all values must be explicitly set
-			print(output_values)
 			raise ValueError("Strict parsing was requested and not all input patterns were explicitly specified.")
 		return ValueTable(input_variable_names = variables, output_values = output_values)
 
