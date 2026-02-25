@@ -81,6 +81,31 @@ $ digtool parse --format pretty-text 'A B C + A !B C + C !A'
 A B C ∨ A B̅ C ∨ C A̅
 ```
 
+
+## Operator precedence within Python
+Note that, when importing `digtool` and using it to perform changes under the
+hood, you can also naturally use the overloaded operators. They also automatically convert
+strings and integers to variables and constants. Example:
+
+```python3
+from digtool.ExpressionParser import Variable
+(A, B, C) = (Variable("A"), Variable("B"), Variable("C"))
+print(~((A | B) & C))
+>>> [![[A + B] * C]]
+```
+
+Note that also the `@` and `%` operators are overloaded to provide NAND and
+NOR, but with the caveat that the operator precedence within Python is
+different than our parsing precedence!
+
+```python3
+from digtool.ExpressionParser import Variable
+(A, B, C) = (Variable("A"), Variable("B"), Variable("C"))
+print(A @ B & C == (A @ B) & C)
+>>> True
+```
+
+
 ## Truth table format
 There is a human-readable truth table format which uses Unicode characters for
 pretty viewing in a terminal and the machine-readable format which is
