@@ -21,6 +21,7 @@
 
 from .MultiCommand import BaseAction
 from .ExpressionParser import parse_expression, ParseTreeElement, Operator, BinaryOperator, UnaryOperator, Constant, Variable, Parenthesis
+from .ExpressionFormatter import format_expression
 
 class ExpressionTransformer():
 	def _transform_unary(self, expr: ParseTreeElement):
@@ -59,7 +60,7 @@ class NANDLogicTransformer(ExpressionTransformer):
 	def _transform_unary(self, expr: "Expression"):
 		match expr.op:
 			case Operator.Not:
-				expr = Parenthesis(expr.rhs @ 1)
+				expr = expr.rhs @ 1
 
 			case _:
 				raise NotImplementedError(expr.op)
@@ -68,20 +69,20 @@ class NANDLogicTransformer(ExpressionTransformer):
 	def _transform_binary(self, expr: "Expression"):
 		match expr.op:
 			case Operator.Or:
-				expr = Parenthesis(Parenthesis(expr.lhs @ 1) @ Parenthesis(expr.rhs @ 1))
+				expr = (expr.lhs @ 1) @ (expr.rhs @ 1)
 
 			case Operator.Nor:
 				expr = ~(expr.lhs | expr.rhs)
 
 			case Operator.And:
-				expr = Parenthesis(Parenthesis(expr.lhs @ expr.rhs) @ 1)
+				expr = (expr.lhs @ expr.rhs) @ 1
 
 			case Operator.Nand:
 				return BinaryOperator(self._transform(expr.lhs), "@", self._transform(expr.rhs))
 
 			case Operator.Xor:
-				option1 = Parenthesis(~expr.lhs @ expr.rhs)
-				option2 = Parenthesis(expr.lhs @ ~expr.rhs)
+				option1 = ~expr.lhs @ expr.rhs
+				option2 = expr.lhs @ ~expr.rhs
 				expr = option1 @ option2
 
 			case _:
@@ -92,7 +93,7 @@ class NORLogicTransformer(ExpressionTransformer):
 	def _transform_unary(self, expr: "Expression"):
 		match expr.op:
 			case Operator.Not:
-				expr = Parenthesis(expr.rhs % 0)
+				expr = expr.rhs % 0
 
 			case _:
 				raise NotImplementedError(expr.op)
@@ -104,7 +105,7 @@ class NORLogicTransformer(ExpressionTransformer):
 				expr = ~(expr.lhs % expr.rhs)
 
 			case Operator.Nor:
-				return BinaryOperator(self._transform(expr.lhs), "#", self._transform(expr.rhs))
+				return self._transform(expr.lhs) % self._transform(expr.rhs)
 
 			case Operator.And:
 				expr = ~(~expr.lhs | ~expr.rhs)
@@ -113,8 +114,8 @@ class NORLogicTransformer(ExpressionTransformer):
 				expr = ~(expr.lhs & expr.rhs)
 
 			case Operator.Xor:
-				option1 = Parenthesis(~expr.lhs % expr.rhs)
-				option2 = Parenthesis(expr.lhs % ~expr.rhs)
+				option1 = ~expr.lhs % expr.rhs
+				option2 = expr.lhs % ~expr.rhs
 				expr = ~(option1 % option2)
 
 			case _:
@@ -182,5 +183,5 @@ class ActionTransform(BaseAction):
 					raise NotImplementedError(self._args.logic)
 
 			transformed = transformer.transform(expr)
-			print(transformed)
+			print(format_expression(expression = transformed, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and))
 			assert(expr == transformed)

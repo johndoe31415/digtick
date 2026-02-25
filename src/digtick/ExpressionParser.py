@@ -43,6 +43,16 @@ class Operator(enum.Enum):
 			Operator.Nor: 12,
 		}[self]
 
+	@property
+	def associative(self) -> bool:
+		return {
+			Operator.And: True,
+			Operator.Nand: False,
+			Operator.Or: True,
+			Operator.Xor: True,
+			Operator.Nor: False,
+		}[self]
+
 	@classmethod
 	def lookup(cls, value: str):
 		return {

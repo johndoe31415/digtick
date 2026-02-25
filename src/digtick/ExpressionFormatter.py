@@ -99,7 +99,7 @@ class ExpressionFormatterText():
 			return expr.varname
 		elif isinstance(expr, BinaryOperator):
 			lhs_needs_parenthesis = expr.lhs.precedence > expr.precedence
-			rhs_needs_parenthesis = expr.rhs.precedence > expr.precedence
+			rhs_needs_parenthesis = (expr.rhs.precedence > expr.precedence) or ((expr.rhs.precedence == expr.precedence) and not expr.op.associative)
 			return f"{self._parenthesize(expr.lhs, lhs_needs_parenthesis)}{self._op(expr.op)}{self._parenthesize(expr.rhs, rhs_needs_parenthesis)}"
 		elif isinstance(expr, UnaryOperator):
 			if isinstance(expr.rhs, Variable) or isinstance(expr.rhs, Constant):
