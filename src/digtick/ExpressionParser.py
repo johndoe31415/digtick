@@ -174,6 +174,8 @@ class ParseTreeElement():
 		yield from self._traverse()
 
 class Variable(ParseTreeElement):
+	__match_args__ = ("varname", )
+
 	def __init__(self, varname):
 		self._varname = varname
 
@@ -249,6 +251,8 @@ class UnaryOperator(ParseTreeElement):
 		return f"[{self.op.value}{self.rhs}]"
 
 class BinaryOperator(ParseTreeElement):
+	__match_args__ = ("lhs", "op", "rhs")
+
 	def __init__(self, lhs: ParseTreeElement, op: Operator | str, rhs: ParseTreeElement):
 		self._lhs = lhs
 		if isinstance(op, Operator):

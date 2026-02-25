@@ -125,44 +125,71 @@ class NORLogicTransformer(ExpressionTransformer):
 class SimplificationTransformer(ExpressionTransformer):
 	def _transform_parenthesis(self, expr: "Expression"):
 		match (expr.inner):
-			case (Parenthesis(inner)):
+			case Parenthesis(inner):
 				return Parenthesis(self._transform(inner))
-		return expr
+
+			case Constant(value):
+				return Constant(value)
+
+			case Variable(varname):
+				return Variable(varname)
+
+		return Parenthesis(self._transform(expr.inner))
 
 	def _transform_unary(self, expr: "Expression"):
 		match (expr.op, expr.rhs):
-			case (Operator.Not, Constant(0)):
-				return Constant(1)
+			case (Operator.Not, Constant(value)):
+				return Constant(value ^ 1)
 
-			case (Operator.Not, Constant(1)):
-				return Constant(0)
-
-			case (Operator.Parenthesis, Operator.Parenthesis(inner)):
-				return Constant(0)
-
-		return expr
+		return UnaryOperator(expr.op, self._transform(expr.rhs))
 
 	def _transform_binary(self, expr: "Expression"):
-		match (expr.lhs, expr.op, expr.rhs):
-			case (_, Operator.And, Constant(0)):
+		match expr:
+			case BinaryOperator(_, Operator.And, Constant(0)):
 				return Constant(0)
 
-			case (lhs, Operator.And, Constant(1)):
+			case BinaryOperator(lhs, Operator.And, Constant(1)):
 				return lhs
 
-			case (_, Operator.Or, Constant(1)):
+			case BinaryOperator(_, Operator.Or, Constant(1)):
 				return Constant(1)
 
-			case (lhs, Operator.Or, Constant(0)):
+			case BinaryOperator(lhs, Operator.Or, Constant(0)):
 				return lhs
 
-			case (lhs, Operator.Or, rhs) if (lhs.identical_to(rhs)):
+			case BinaryOperator(lhs, Operator.Or, rhs) if lhs.identical_to(rhs):
 				return lhs
 
-			case (lhs, Operator.And, rhs) if (lhs.identical_to(rhs)):
+			case BinaryOperator(lhs, Operator.And, rhs) if lhs.identical_to(rhs):
 				return lhs
-		return expr
 
+			case BinaryOperator(BinaryOperator(other, Operator.Nand, Constant(1)), Operator.Nand, Constant(1)):
+				return other
+
+			case BinaryOperator(BinaryOperator(other, Operator.Nor, Constant(0)), Operator.Nor, Constant(0)):
+				return other
+
+			case BinaryOperator(lhs, Operator.And, rhs) if (lhs.variables == rhs.variables) and (lhs == ~rhs):
+				return Constant(0)
+
+			case BinaryOperator(lhs, Operator.Or, rhs) if (lhs.variables == rhs.variables) and (lhs == ~rhs):
+				return Constant(1)
+
+		return BinaryOperator(self._transform(expr.lhs), expr.op, self._transform(expr.rhs))
+
+	def transform(self, expression: ParseTreeElement):
+		while True:
+			transformed = self._transform(expression)
+			if transformed.identical_to(expression):
+				# No more simplification possible
+				break
+			else:
+				expression = transformed
+
+		# Remove outer layers of parenthesis
+		while isinstance(transformed, Parenthesis):
+			transformed = transformed.inner
+		return transformed
 
 class ActionTransform(BaseAction):
 	def run(self):
@@ -185,3 +212,4 @@ class ActionTransform(BaseAction):
 			transformed = transformer.transform(expr)
 			print(format_expression(expression = transformed, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and))
 			assert(expr == transformed)
+			expr = transformed
