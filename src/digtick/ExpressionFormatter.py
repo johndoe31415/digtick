@@ -43,18 +43,18 @@ class ExpressionFormatterTex():
 			return f"\\textnormal{{{expr.varname}}}"
 		elif isinstance(expr, BinaryOperator):
 			if (prev is None) or ((prev is not None) and ((prev.op == expr.op) or ((prev.op, expr.op) == (Operator.Or, Operator.And)))):
-				return f"{self._fmt(expr.lhs, expr)} {self._op(expr.op)} {self._fmt(expr.rhs, expr)}"
+				return f"{self._format_expression(expr.lhs, expr)} {self._op(expr.op)} {self._format_expression(expr.rhs, expr)}"
 			else:
-				return f"({self._fmt(expr.lhs, expr)} {self._op(expr.op)} {self._fmt(expr.rhs, expr)})"
+				return f"({self._format_expression(expr.lhs, expr)} {self._op(expr.op)} {self._format_expression(expr.rhs, expr)})"
 		elif isinstance(expr, UnaryOperator):
 			if self._neg_overline:
-				return f"\\overline{{{self._fmt(expr.rhs, expr)}}}"
+				return f"\\overline{{{self._format_expression(expr.rhs, expr)}}}"
 			else:
-				return f"{self._op(expr.op)} {self._fmt(expr.rhs, expr)}"
+				return f"{self._op(expr.op)} {self._format_expression(expr.rhs, expr)}"
 		elif isinstance(expr, Constant):
 			return str(expr)
 		elif isinstance(expr, Parenthesis):
-			return f"({self._fmt(expr.inner)})"
+			return f"({self._format_expression(expr.inner)})"
 		raise NotImplementedError(expr)
 
 	def format_expression(self, expr: ParseTreeElement):
@@ -92,19 +92,19 @@ class ExpressionFormatterText():
 		if isinstance(expr, Variable):
 			return expr.varname
 		elif isinstance(expr, BinaryOperator):
-			return f"{self._fmt(expr.lhs, expr)}{self._op(expr.op)}{self._fmt(expr.rhs, expr)}"
+			return f"{self._format_expression(expr.lhs, expr)}{self._op(expr.op)}{self._format_expression(expr.rhs, expr)}"
 		elif isinstance(expr, UnaryOperator):
 			if isinstance(expr.rhs, Variable) or isinstance(expr.rhs, Constant):
 				if self._pretty_print and (expr.op == Operator.Not):
-					return f"{self._fmt(expr.rhs, expr)}\u0305"
+					return f"{self._format_expression(expr.rhs, expr)}\u0305"
 				else:
-					return f"{self._op(expr.op)}{self._fmt(expr.rhs, expr)}"
+					return f"{self._op(expr.op)}{self._format_expression(expr.rhs, expr)}"
 			else:
-				return f"{self._op(expr.op)}({self._fmt(expr.rhs, expr)})"
+				return f"{self._op(expr.op)}({self._format_expression(expr.rhs, expr)})"
 		elif isinstance(expr, Constant):
 			return str(expr)
 		elif isinstance(expr, Parenthesis):
-			return f"({self._fmt(expr.inner)})"
+			return f"({self._format_expression(expr.inner)})"
 		raise NotImplementedError(expr)
 
 	def format_expression(self, expr: ParseTreeElement):
@@ -158,13 +158,13 @@ def format_expression(expression: ParseTreeElement, expression_format: str = "te
 			return str(expression)
 
 		case "text":
-			formatter = ExpressionFormatterText(expression, pretty_print = False, implicit_and = implicit_and)
+			formatter = ExpressionFormatterText(pretty_print = False, implicit_and = implicit_and)
 
 		case "pretty-text":
-			formatter = ExpressionFormatterText(expression, pretty_print = True, implicit_and = implicit_and)
+			formatter = ExpressionFormatterText(pretty_print = True, implicit_and = implicit_and)
 
 		case "tex-tech":
-			formatter = ExpressionFormatterTex(expression, neg_overline = True, implicit_and = implicit_and)
+			formatter = ExpressionFormatterTex(neg_overline = True, implicit_and = implicit_and)
 
 		case "tex-math":
 			formatter = ExpressionFormatterTex(neg_overline = False, implicit_and = implicit_and)
