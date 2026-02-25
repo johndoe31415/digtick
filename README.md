@@ -17,19 +17,22 @@ and `1`.
 
 You can express `OR` as `+` or `|`, `AND` as `*` or `&`, and XOR as `^`.
 Negation can be written as `!`, `~`, or `-` prefix. The parser also accepts
-NAND `@` and NOR `#` as explicit operators. Note that neither NAND nor NOR are
-associative and because they are not "typical" operators in Booolean algebra,
-their operator precedence is unspecified. Therefore, during parsing, NAND/NOR
-expression always receive implicit parenthesis to make this explicit:
+NAND `@` and NOR `#` as explicit operators.
 
-```
-$ digtool parse 'A | B + C @ D'
-A + B + (C NAND D)
-```
+Note that neither NAND nor NOR are associative. Their precendence is as
+following, from strongest to weakest:
 
-Parentheses work as expected for grouping and are deliberately not
-automatically removed during parsing (this allows for creating of deliberately
-suboptimal queries in a exam-generation scenario):
+  1. Parenthesis
+  2. NOT
+  3. AND, NAND
+  4. OR, XOR, NOR
+
+Parentheses work as expected for grouping. Contrary to commonly used parsers,
+the parser of `digtool` treats parenthesis as a syntactical element, which
+means they are preserved in the AST. The intention is to allow for expressions
+with unnecessary parenthesis to generate exam questions (students should know
+that `A + (B + C))` is identical to `A + B + C` without the parser eating away
+the exam question):
 
 ```
 $ digtool parse '(((((A | (B))))))'
