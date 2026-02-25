@@ -80,8 +80,8 @@ class NANDLogicTransformer(ExpressionTransformer):
 				return BinaryOperator(self._transform(expr.lhs), "@", self._transform(expr.rhs))
 
 			case Operator.Xor:
-				option1 = Parenthesis(Parenthesis(expr.lhs @ 1) @ expr.rhs)
-				option2 = Parenthesis(expr.lhs @ Parenthesis(expr.rhs @ 1))
+				option1 = Parenthesis(~expr.lhs @ expr.rhs)
+				option2 = Parenthesis(expr.lhs @ ~expr.rhs)
 				expr = option1 @ option2
 
 			case _:
@@ -92,33 +92,34 @@ class NORLogicTransformer(ExpressionTransformer):
 	def _transform_unary(self, expr: "Expression"):
 		match expr.op:
 			case Operator.Not:
-				return Parenthesis(BinaryOperator(self._transform(expr.rhs), Operator.Nor, Constant(0)))
+				expr = Parenthesis(expr.rhs % 0)
 
 			case _:
 				raise NotImplementedError(expr.op)
+		return self._transform(expr)
 
 	def _transform_binary(self, expr: "Expression"):
 		match expr.op:
 			case Operator.Or:
-				return self._transform(UnaryOperator("!", Parenthesis(BinaryOperator(self._transform(expr.lhs), Operator.Nor, self._transform(expr.rhs)))))
+				expr = ~(expr.lhs % expr.rhs)
 
 			case Operator.Nor:
-				return BinaryOperator(self._transform(expr.lhs), Operator.Nor, self._transform(expr.rhs))
+				return BinaryOperator(self._transform(expr.lhs), "#", self._transform(expr.rhs))
 
 			case Operator.And:
-				return self._transform(Parenthesis(BinaryOperator(UnaryOperator("!", expr.lhs), "#", UnaryOperator("!", expr.rhs))))
+				expr = ~(~expr.lhs | ~expr.rhs)
 
 			case Operator.Nand:
-				return self._transform(UnaryOperator("!", BinaryOperator(expr.lhs, Operator.And, expr.rhs)))
+				expr = ~(expr.lhs & expr.rhs)
 
 			case Operator.Xor:
-				# (((A # 0) # B) # (A # (B # 0))) # 0
-				option1 = Parenthesis(BinaryOperator(expr.lhs, Operator.Nor, UnaryOperator("!", expr.rhs)))
-				option2 = Parenthesis(BinaryOperator(UnaryOperator("!", expr.lhs), Operator.Nor, expr.rhs))
-				return self._transform(UnaryOperator("!", BinaryOperator(option1, Operator.Nor, option2)))
+				option1 = Parenthesis(~expr.lhs % expr.rhs)
+				option2 = Parenthesis(expr.lhs % ~expr.rhs)
+				expr = ~(option1 % option2)
 
 			case _:
 				raise NotImplementedError(expr.op)
+		return self._transform(expr)
 
 class ActionTransform(BaseAction):
 	def run(self):
