@@ -20,3 +20,4 @@
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 from .ParserTests import ParserTests
+from .ExpressionFormatterTests import ExpressionFormatterTests
