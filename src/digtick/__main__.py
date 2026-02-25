@@ -87,6 +87,8 @@ def main():
 	mc.register("equal", "Comprare two Boolean expression for equality", genparser, action = ActionEqual)
 
 	def genparser(parser):
+		parser.add_argument("-n", "--allow-nand-nor-xor", action = "store_true", help = "Allow that expressions contain NAND, NOR and XOR.")
+		parser.add_argument("-a", "--allow-trivial", action = "store_true", help = "Allow expressions which simplify to something compartively simple, like tautologies. By default, when such an expression is generated, another try is started.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
 		parser.add_argument("var_count", type = int, help = "Number of variables in expression")
 		parser.add_argument("complexity", type = int, help = "Number of complexity iteration steps to take")

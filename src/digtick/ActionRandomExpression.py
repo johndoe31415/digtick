@@ -19,72 +19,36 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
-import random
-import string
 from .MultiCommand import BaseAction
-from .ExpressionParser import parse_expression
 from .ExpressionFormatter import format_expression
 from .ValueTable import ValueTable
 from .QuineMcCluskey import QuineMcCluskey
-from .RandomDist import RandomDist
+from .RandomExpressionGenerator import RandomExpressionGenerator
 
 class ActionRandomExpression(BaseAction):
-	def _gen_term(self):
-		disjunctive = RandomDist.coinflip()
-		literal_count = round(abs(random.gauss(0.75 * len(self._variables), 2)))
-		if literal_count < 1:
-			literal_count = 1
-		elif literal_count > len(self._variables):
-			literal_count = len(self._variables)
-
-		if literal_count == len(self._variables):
-			literals = list(self._variables)
-		else:
-			literals = random.sample(self._variables, literal_count)
-		random.shuffle(literals)
-		literals = [ f"{'!' if RandomDist.coinflip() else ''}{literal}" for literal in literals ]
-		if RandomDist.coinflip():
-			return f"({' + '.join(literals)})"
-		else:
-			return f"{' '.join(literals)}"
-
-	def _generate(self):
-		expr = self._gen_term()
-		while len(expr) < self._args.complexity:
-			match option := self._op_dist.event():
-				case "parenthesis":
-					expr = f"({expr})"
-
-				case "not":
-					expr = f"-({expr})"
-
-				case "and":
-					expr = f"{expr} {self._gen_term()}"
-
-				case "or":
-					expr = f"{expr} + {self._gen_term()}"
-
-		return parse_expression(expr)
-
-
 	def run(self):
-		self._op_dist = RandomDist({
-			"parenthesis": 1,
-			"not": 1,
-			"and": 5,
-			"or": 10,
-		})
+		if self._args.allow_nand_nor_xor:
+			operator_distribution = None
+		else:
+			operator_distribution = {
+				"parenthesis": 1,
+				"not": 1,
+				"and": 5,
+				"or": 10,
+			}
 
-		self._variables = [ string.ascii_uppercase[i] for i in range(self._args.var_count) ]
+		reg = RandomExpressionGenerator(self._args.var_count, operator_distribution = operator_distribution)
+		try_no = 0
 		while True:
-			self._expression = self._generate()
+			try_no += 1
+			expression = reg.generate(self._args.complexity)
 
-			vt = ValueTable.create_from_expression(self._expression)
+			vt = ValueTable.create_from_expression(expression)
 			simplified = QuineMcCluskey(vt, verbosity = self._args.verbose).optimize()
 			simplified_str = format_expression(simplified)
-			if len(simplified_str) < 20:
-				# Too low simplified complexity
+			if (len(simplified_str) < 20) and (try_no < 100):
+				# Too low simplified complexity or unable to fulfill
 				continue
-			print(f"Expression: {format_expression(self._expression)}")
+			print(f"Expression: {format_expression(expression)}")
 			print(f"Simplified: {format_expression(simplified)}")
 			break

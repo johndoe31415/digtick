@@ -63,7 +63,7 @@ class RandomExpressionGenerator():
 
 	def generate(self, complexity_count: int) -> "ParseTreeElement":
 		expr = self._gen_term()
-		for _ in range(complexity_count):
+		for _ in range(complexity_count - 1):
 			match option := self._op_dist.event():
 				case "parenthesis":
 					expr = Parenthesis(expr)
