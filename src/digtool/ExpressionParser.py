@@ -46,7 +46,76 @@ class Operator(enum.Enum):
 			"#":	cls.Nor,
 		}[value]
 
-class ParseTreeElement(): pass
+class ParseTreeElement():
+	@property
+	def state_count(self):
+		return 1 << len(self.variables)
+
+	@functools.cached_property
+	def variables(self):
+		varnames = set()
+		for element in self:
+			if isinstance(element, Variable):
+				varnames.add(element.varname)
+		varnames = tuple(sorted(varnames))
+		return varnames
+
+	def _traverse(self):
+		yield self
+		if isinstance(self, UnaryOperator):
+			yield from self.rhs._traverse()
+		elif isinstance(self, BinaryOperator):
+			yield from self.lhs._traverse()
+			yield from self.rhs._traverse()
+		elif isinstance(self, Parenthesis):
+			yield from self.inner._traverse()
+
+	def table(self):
+		for value in range(self.state_count):
+			value_dict = { varname: int((value & (1 << (len(self.variables) - 1 - varno))) != 0) for (varno, varname) in enumerate(self.variables) }
+			evaluation = self.evaluate(value_dict)
+			yield (value_dict, evaluation)
+
+	def minterms(self):
+		for (value_dict, evaluation) in self.table():
+			if evaluation == 1:
+				yield value_dict
+
+	def maxterms(self):
+		for (value_dict, evaluation) in self.table():
+			if evaluation == 0:
+				yield value_dict
+
+	def evaluate(self, var_dict: dict):
+		return self.expr.evaluate(var_dict)
+
+	def compare_to_expression(self, other: "ParseTreeElement"):
+		e1_vars = set(self.variables)
+		e2_vars = set(other.variables)
+		intersection = e1_vars & e2_vars
+
+		if (intersection != e1_vars) and (intersection != e2_vars):
+			raise ValueError("Cannot compare expressions with different variables.")
+
+		if intersection == e2_vars:
+			# self has more variables
+			(dominant_expr, subordinate_expr) = (self, other)
+		else:
+			# other has more variables
+			(dominant_expr, subordinate_expr) = (other, self)
+
+		for (value_dict, eval1) in dominant_expr.table():
+			eval2 = subordinate_expr.evaluate(value_dict)
+			yield (value_dict, eval1, eval2)
+
+	def __eq__(self, other: "ParseTreeElement"):
+		for (value_dict, eval1, eval2) in self.compare_to_expression(other):
+			if eval1 != eval2:
+				return False
+		return True
+
+	def __iter__(self):
+		yield from self._traverse()
 
 class Variable(ParseTreeElement):
 	def __init__(self, varname):
@@ -188,95 +257,14 @@ class ExpressionParser(tpg.Parser):
 
 	"""
 
-class ParsedExpression():
-	def __init__(self, expr):
-		self._expr = expr
-
-	@property
-	def expr(self):
-		return self._expr
-
-	@property
-	def state_count(self):
-		return 1 << len(self.variables)
-
-	@functools.cached_property
-	def variables(self):
-		varnames = set()
-		for element in self:
-			if isinstance(element, Variable):
-				varnames.add(element.varname)
-		varnames = tuple(sorted(varnames))
-		return varnames
-
-	def _traverse(self, element):
-		yield element
-		if isinstance(element, UnaryOperator):
-			yield from self._traverse(element.rhs)
-		elif isinstance(element, BinaryOperator):
-			yield from self._traverse(element.lhs)
-			yield from self._traverse(element.rhs)
-		elif isinstance(element, Parenthesis):
-			yield from self._traverse(element.inner)
-
-	def table(self):
-		for value in range(self.state_count):
-			value_dict = { varname: int((value & (1 << (len(self.variables) - 1 - varno))) != 0) for (varno, varname) in enumerate(self.variables) }
-			evaluation = self._expr.evaluate(value_dict)
-			yield (value_dict, evaluation)
-
-	def minterms(self):
-		for (value_dict, evaluation) in self.table():
-			if evaluation == 1:
-				yield value_dict
-
-	def maxterms(self):
-		for (value_dict, evaluation) in self.table():
-			if evaluation == 0:
-				yield value_dict
-
-	def evaluate(self, var_dict: dict):
-		return self.expr.evaluate(var_dict)
-
-	def compare_to_expression(self, other: "ParsedExpression"):
-		e1_vars = set(self.variables)
-		e2_vars = set(other.variables)
-		intersection = e1_vars & e2_vars
-
-		if (intersection != e1_vars) and (intersection != e2_vars):
-			raise ValueError("Cannot compare expressions with different variables.")
-
-		if intersection == e2_vars:
-			# self has more variables
-			(dominant_expr, subordinate_expr) = (self, other)
-		else:
-			# other has more variables
-			(dominant_expr, subordinate_expr) = (other, self)
-
-		for (value_dict, eval1) in dominant_expr.table():
-			eval2 = subordinate_expr.expr.evaluate(value_dict)
-			yield (value_dict, eval1, eval2)
-
-	def is_equivalent_to(self, other: "ParsedExpression"):
-		for (value_dict, eval1, eval2) in self.compare_to_expression(other):
-			if eval1 != eval2:
-				return False
-		return True
-
-	def __iter__(self):
-		yield from self._traverse(self._expr)
-
-	def __str__(self):
-		return str(self.expr)
-
-def parse_expression(expr: str, default_empty: str | None = None):
+def parse_expression(expr: str, default_empty: str | None = None) -> ParseTreeElement:
 	if (expr == ""):
 		if default_empty is None:
 			raise ValueError("Expression may not be empty unless default empty is given.")
 		else:
 			expr = default_empty
 	parser = ExpressionParser()
-	parse_result = ParsedExpression(parser(expr))
+	parse_result = parser(expr)
 	return parse_result
 
 if __name__ == "__main__":

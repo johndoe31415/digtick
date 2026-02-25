@@ -87,7 +87,7 @@ class ValueTable():
 		}[unused_value_str])
 
 	@classmethod
-	def create_from_expression(self, expression: "ParsedExpression", dc_expression: "ParsedExpression | None" = None):
+	def create_from_expression(self, expression: "ParseTreeElement", dc_expression: "ParseTreeElement | None" = None):
 		output_values = [ ]
 		for (inputs, output) in expression.table():
 			if (dc_expression is not None) and (dc_expression.evaluate(inputs) != 0):

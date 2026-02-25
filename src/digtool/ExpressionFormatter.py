@@ -19,10 +19,10 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
-from .ExpressionParser import ParsedExpression, Operator, Variable, Constant, UnaryOperator, BinaryOperator, Parenthesis
+from .ExpressionParser import ParseTreeElement, Operator, Variable, Constant, UnaryOperator, BinaryOperator, Parenthesis
 
 class ExpressionFormatterTex():
-	def __init__(self, expr, neg_overline = True, implicit_and = True):
+	def __init__(self, expr: "ParseTreeElement", neg_overline: bool = True, implicit_and: bool = True):
 		self._expr = expr
 		self._neg_overline = neg_overline
 		self._implicit_and = implicit_and
@@ -59,10 +59,10 @@ class ExpressionFormatterTex():
 		raise NotImplementedError(expr)
 
 	def __str__(self):
-		return self._fmt(self._expr.expr).replace("  ", " ")
+		return self._fmt(self._expr).replace("  ", " ")
 
 class ExpressionFormatterText():
-	def __init__(self, expr, pretty_print: bool = False, implicit_and: bool = True):
+	def __init__(self, expr: "ParseTreeElement", pretty_print: bool = False, implicit_and: bool = True):
 		self._expr = expr
 		self._pretty_print = pretty_print
 		self._implicit_and = implicit_and
@@ -111,10 +111,21 @@ class ExpressionFormatterText():
 		raise NotImplementedError(expr)
 
 	def __str__(self):
-		return self._fmt(self._expr.expr)
+		return self._fmt(self._expr)
 
-def format_expression(expression: ParsedExpression, expression_format: str = "text", implicit_and: bool = True):
-	assert(isinstance(expression, ParsedExpression))
+
+class GraphvizFormatter():
+	def __init__(self, expr: "ParseTreeElement"):
+		self._expr = expr
+
+#	def _fmt(self, expr: ):
+#		pass
+
+	def __str__(self):
+		return self._fmt(self._expr)
+
+def format_expression(expression: ParseTreeElement, expression_format: str = "text", implicit_and: bool = True):
+	assert(isinstance(expression, ParseTreeElement))
 	match expression_format:
 		case "internal":
 			return str(expression)
@@ -130,6 +141,9 @@ def format_expression(expression: ParsedExpression, expression_format: str = "te
 
 		case "tex-math":
 			return str(ExpressionFormatterTex(expression, neg_overline = False, implicit_and = implicit_and))
+
+		case "dot":
+			return str(GraphvizFormatter(expression))
 
 		case _:
 			raise NotImplementedError(expression_format)

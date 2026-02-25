@@ -20,7 +20,7 @@
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 from .MultiCommand import BaseAction
-from .ExpressionParser import parse_expression, ParsedExpression, Operator, BinaryOperator, UnaryOperator, Constant, Variable, Parenthesis
+from .ExpressionParser import parse_expression, ParseTreeElement, Operator, BinaryOperator, UnaryOperator, Constant, Variable, Parenthesis
 
 class ExpressionTransformer():
 	def __init__(self, expr):
@@ -53,7 +53,7 @@ class ExpressionTransformer():
 			raise NotImplementedError(type(node))
 
 	def run(self):
-		return ParsedExpression(self._transform(self._expr))
+		return self._transform(self._expr)
 
 
 class NANDLogicTransformer(ExpressionTransformer):

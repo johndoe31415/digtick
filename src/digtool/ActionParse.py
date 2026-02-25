@@ -44,7 +44,7 @@ class ActionParse(BaseAction):
 					print(format_expression(expression = expr, expression_format = self._args.format, implicit_and = not self._args.no_implicit_and))
 
 					if self._args.validate_equivalence and (prev_expression is not None):
-						if not prev_expression.is_equivalent_to(expr):
+						if expr != prev_expression:
 							print(f"Warning: expression \"{prev_expression}\" on line {prev_line} is not equivalent to expression \"{expr}\" on line {lineno}.", file = sys.stderr)
 							validation_successful = False
 
