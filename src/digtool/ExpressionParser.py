@@ -290,13 +290,13 @@ class ExpressionParser(tpg.Parser):
 		;
 
 		Expr/lhs -> Term/lhs ( or_op/op Term/rhs		$ lhs = BinaryOperator(lhs, op, rhs)
+							| xor_op/op Term/rhs		$ lhs = BinaryOperator(lhs, op, rhs)
+							| nor_op/op Term/rhs		$ lhs = BinaryOperator(lhs, op, rhs)
 					)*
 		;
 
 		Term/lhs -> Atom/lhs ( and_op/op Atom/rhs		$ lhs = BinaryOperator(lhs, op, rhs)
-							| xor_op/op Atom/rhs		$ lhs = BinaryOperator(lhs, op, rhs)
 							| nand_op/op Atom/rhs		$ lhs = BinaryOperator(lhs, op, rhs)
-							| nor_op/op Atom/rhs		$ lhs = BinaryOperator(lhs, op, rhs)
 							| Atom/rhs					$ lhs = BinaryOperator(lhs, "*", rhs)
 					)*
 		;
