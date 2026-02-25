@@ -141,6 +141,9 @@ class ParseTreeElement():
 	def __matmul__(self, rhs: "ParseTreeElement"):
 		return self._Elements["BinaryOperator"](self, Operator.Nand, self._wrap(rhs))
 
+	def __mod__(self, rhs: "ParseTreeElement"):
+		return self._Elements["BinaryOperator"](self, Operator.Nor, self._wrap(rhs))
+
 	def __init_subclass__(cls, **kwargs):
 		super().__init_subclass__(**kwargs)
 		ParseTreeElement._Elements[cls.__name__] = cls

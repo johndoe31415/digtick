@@ -23,69 +23,70 @@ from .MultiCommand import BaseAction
 from .ExpressionParser import parse_expression, ParseTreeElement, Operator, BinaryOperator, UnaryOperator, Constant, Variable, Parenthesis
 
 class ExpressionTransformer():
-	def __init__(self, expr):
-		self._expr = expr.expr
+	def _transform_unary(self, expr: ParseTreeElement):
+		return UnaryOperator(op = expr.op, rhs = self._transform(expr.rhs))
 
-	def _transform_unary(self, expr):
-		return UnaryOperator(op = expr.op, rhs = expr.rhs)
+	def _transform_binary(self, expr: ParseTreeElement):
+		return BinaryOperator(lhs = self._transform(expr.lhs), op = expr.op, rhs = self._transform(expr.rhs))
 
-	def _transform_binary(self, expr):
-		return BinaryOperator(lhs = expr.lhs, op = expr.op, rhs = expr.rhs)
-
-	def _transform_constant(self, expr):
+	def _transform_constant(self, expr: ParseTreeElement):
 		return expr
 
-	def _transform_variable(self, expr):
+	def _transform_variable(self, expr: ParseTreeElement):
 		return expr
 
-	def _transform(self, node):
-		if isinstance(node, BinaryOperator):
-			return self._transform_binary(node)
-		elif isinstance(node, UnaryOperator):
-			return self._transform_unary(node)
-		elif isinstance(node, Constant):
-			return self._transform_constant(node)
-		elif isinstance(node, Variable):
-			return self._transform_variable(node)
-		elif isinstance(node, Parenthesis):
-			return Parenthesis(self._transform(node.inner))
+	def _transform_parenthesis(self, expr: ParseTreeElement):
+		return Parenthesis(self._transform(expr.inner))
+
+	def _transform(self, expr: ParseTreeElement):
+		if isinstance(expr, BinaryOperator):
+			return self._transform_binary(expr)
+		elif isinstance(expr, UnaryOperator):
+			return self._transform_unary(expr)
+		elif isinstance(expr, Constant):
+			return self._transform_constant(expr)
+		elif isinstance(expr, Variable):
+			return self._transform_variable(expr)
+		elif isinstance(expr, Parenthesis):
+			return self._transform_parenthesis(expr)
 		else:
-			raise NotImplementedError(type(node))
+			raise NotImplementedError(type(expr))
 
-	def run(self):
-		return self._transform(self._expr)
-
+	def transform(self, expression: ParseTreeElement):
+		return self._transform(expression)
 
 class NANDLogicTransformer(ExpressionTransformer):
 	def _transform_unary(self, expr: "Expression"):
 		match expr.op:
 			case Operator.Not:
-				return Parenthesis(BinaryOperator(self._transform(expr.rhs), Operator.Nand, Constant(1)))
+				expr = Parenthesis(expr.rhs @ 1)
 
 			case _:
 				raise NotImplementedError(expr.op)
+		return self._transform(expr)
 
 	def _transform_binary(self, expr: "Expression"):
 		match expr.op:
 			case Operator.Or:
-				return Parenthesis(BinaryOperator(self._transform(UnaryOperator("!", self._transform(expr.lhs))), "@", self._transform(UnaryOperator("!", self._transform(expr.rhs)))))
+				expr = Parenthesis(Parenthesis(expr.lhs @ 1) @ Parenthesis(expr.rhs @ 1))
 
 			case Operator.Nor:
-				return self._transform(UnaryOperator("!", BinaryOperator(self._transform(expr.lhs), "|", self._transform(expr.rhs))))
+				expr = ~(expr.lhs | expr.rhs)
 
 			case Operator.And:
-				return Parenthesis(BinaryOperator(Parenthesis(BinaryOperator(self._transform(expr.lhs), "@", self._transform(expr.rhs))), "@", Constant(1)))
+				expr = Parenthesis(Parenthesis(expr.lhs @ expr.rhs) @ 1)
 
 			case Operator.Nand:
 				return BinaryOperator(self._transform(expr.lhs), "@", self._transform(expr.rhs))
 
 			case Operator.Xor:
-				option1 = Parenthesis(BinaryOperator(Parenthesis(BinaryOperator(self._transform(expr.lhs), "@", Constant(1))), "@", self._transform(expr.rhs)))
-				option2 = Parenthesis(BinaryOperator(self._transform(expr.lhs), "@", Parenthesis(BinaryOperator(self._transform(expr.rhs), "@", Constant(1)))))
-				return self._transform(BinaryOperator(option1, "@", option2))
+				option1 = Parenthesis(Parenthesis(expr.lhs @ 1) @ expr.rhs)
+				option2 = Parenthesis(expr.lhs @ Parenthesis(expr.rhs @ 1))
+				expr = option1 @ option2
 
 			case _:
 				raise NotImplementedError(expr.op)
+		return self._transform(expr)
 
 class NORLogicTransformer(ExpressionTransformer):
 	def _transform_unary(self, expr: "Expression"):
@@ -124,13 +125,14 @@ class ActionTransform(BaseAction):
 		expr = parse_expression(self._args.expression)
 		match self._args.logic:
 			case "nand":
-				xform = NANDLogicTransformer(expr)
+				transformer = NANDLogicTransformer()
 
 			case "nor":
-				xform = NORLogicTransformer(expr)
+				transformer = NORLogicTransformer()
 
 			case _:
 				raise NotImplementedError(self._args.logic)
 
-		xformed = xform.run()
-		print(xformed)
+		transformed = transformer.transform(expr)
+		print(transformed)
+		assert(expr == transformed)
