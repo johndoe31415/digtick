@@ -447,7 +447,7 @@ renders it as an SVG. As an example, consider the example shown before in
 `dtd-create`. Let us reproduce it from its pseudo-random seed and render it:
 
 ```
-$ digtick dtd-create -s 8910607998 | digtick dtd-render -o docs/timing_diagram.png
+$ digtick dtd-create -s 8910607998 | digtick dtd-render -o docs/timing_diagram.svg
 ```
 
 Will create the file `docs/timing_diagram.svg` which you can see here (note

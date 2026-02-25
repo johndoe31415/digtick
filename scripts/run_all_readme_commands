@@ -1,0 +1,15 @@
+#!/usr/bin/python3
+import re
+import subprocess
+
+with open("README.md") as f:
+	readme = f.read()
+
+for rematch in re.finditer(r"^\$ (?P<cmd>digtick.*?[^\\]$)", readme, flags = re.DOTALL | re.MULTILINE):
+	cmd = rematch["cmd"].replace("\\\n", "")
+	print(cmd)
+	proc = subprocess.run(cmd, shell = True)
+	if proc.returncode != 0:
+		print("~" * 120)
+		print(cmd, proc.returncode)
+		print("~" * 120)
