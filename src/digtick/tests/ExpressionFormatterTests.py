@@ -82,7 +82,7 @@ class ExpressionFormatterTests(unittest.TestCase):
 
 
 	def test_internal_input(self):
-		(A, B, C) = (Variable("A"), Variable("B"), Variable("C"))
+		(A, B, C, D) = (Variable("A"), Variable("B"), Variable("C"), Variable("D"))
 
 		self.assertEqual(format_expression(A), "A")
 		self.assertEqual(format_expression(A & B), "A B")
@@ -90,3 +90,4 @@ class ExpressionFormatterTests(unittest.TestCase):
 
 		self.assertEqual(format_expression((A & C) | B), "A C + B")
 		self.assertEqual(format_expression((A | C) & B), "(A + C) B")
+		self.assertEqual(format_expression((A | B) & (C | D)), "(A + B) (C + D)")

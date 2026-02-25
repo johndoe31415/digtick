@@ -88,27 +88,32 @@ class ExpressionFormatterText():
 	def _op(self, op):
 		return self._ops[op]
 
-	def _format_expression(self, expr: ParseTreeElement, prev: ParseTreeElement | None = None):
+	def _parenthesize(self, expr: ParseTreeElement, needs_parenthesis: bool):
+			if needs_parenthesis:
+				return f"({self.format_expression(expr)})"
+			else:
+				return f"{self.format_expression(expr)}"
+
+	def format_expression(self, expr: ParseTreeElement):
 		if isinstance(expr, Variable):
 			return expr.varname
 		elif isinstance(expr, BinaryOperator):
-			return f"{self._format_expression(expr.lhs, expr)}{self._op(expr.op)}{self._format_expression(expr.rhs, expr)}"
+			lhs_needs_parenthesis = expr.lhs.precedence > expr.precedence
+			rhs_needs_parenthesis = expr.rhs.precedence > expr.precedence
+			return f"{self._parenthesize(expr.lhs, lhs_needs_parenthesis)}{self._op(expr.op)}{self._parenthesize(expr.rhs, rhs_needs_parenthesis)}"
 		elif isinstance(expr, UnaryOperator):
 			if isinstance(expr.rhs, Variable) or isinstance(expr.rhs, Constant):
 				if self._pretty_print and (expr.op == Operator.Not):
-					return f"{self._format_expression(expr.rhs, expr)}\u0305"
+					return f"{self.format_expression(expr.rhs)}\u0305"
 				else:
-					return f"{self._op(expr.op)}{self._format_expression(expr.rhs, expr)}"
+					return f"{self._op(expr.op)}{self.format_expression(expr.rhs)}"
 			else:
-				return f"{self._op(expr.op)}({self._format_expression(expr.rhs, expr)})"
+				return f"{self._op(expr.op)}({self.format_expression(expr.rhs)})"
 		elif isinstance(expr, Constant):
 			return str(expr)
 		elif isinstance(expr, Parenthesis):
-			return f"({self._format_expression(expr.inner)})"
+			return f"({self.format_expression(expr.inner)})"
 		raise NotImplementedError(expr)
-
-	def format_expression(self, expr: ParseTreeElement):
-		return self._format_expression(expr)
 
 class GraphvizFormatter():
 	def __init__(self):

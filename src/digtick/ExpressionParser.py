@@ -31,8 +31,20 @@ class Operator(enum.Enum):
 	Nand = "@"
 	Nor = "%"
 
+	@property
+	def precedence(self) -> int:
+		"""Lowest precedence value is highest."""
+		return {
+			Operator.Not: 9,
+			Operator.And: 10,
+			Operator.Nand: 11,
+			Operator.Or: 12,
+			Operator.Xor: 12,
+			Operator.Nor: 12,
+		}[self]
+
 	@classmethod
-	def lookup(cls, value):
+	def lookup(cls, value: str):
 		return {
 			"+":	cls.Or,
 			"|":	cls.Or,
@@ -156,6 +168,10 @@ class Variable(ParseTreeElement):
 		self._varname = varname
 
 	@property
+	def precedence(self) -> int:
+		return 5
+
+	@property
 	def varname(self):
 		return self._varname
 
@@ -174,6 +190,10 @@ class Constant(ParseTreeElement):
 	def __init__(self, value: int):
 		assert(value in (0, 1))
 		self._value = value
+
+	@property
+	def precedence(self) -> int:
+		return 5
 
 	@property
 	def value(self):
@@ -195,6 +215,10 @@ class UnaryOperator(ParseTreeElement):
 		else:
 			self._op = Operator.lookup(op)
 		self._rhs = rhs
+
+	@property
+	def precedence(self) -> int:
+		return self._op.precedence
 
 	@property
 	def op(self):
@@ -222,6 +246,10 @@ class BinaryOperator(ParseTreeElement):
 		else:
 			self._op = Operator.lookup(op)
 		self._rhs = rhs
+
+	@property
+	def precedence(self) -> int:
+		return self._op.precedence
 
 	@property
 	def lhs(self):
@@ -258,6 +286,10 @@ class Parenthesis(ParseTreeElement):
 
 	def __init__(self, inner: ParseTreeElement):
 		self._inner = inner
+
+	@property
+	def precedence(self) -> int:
+		return 5
 
 	@property
 	def inner(self):
