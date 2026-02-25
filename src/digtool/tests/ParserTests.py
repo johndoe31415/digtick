@@ -28,21 +28,27 @@ class ParserTests(unittest.TestCase):
 		expr2 = parse_expression(expr2_str)
 		self.assertEqual(expr1, expr2)
 
-	def test_precedence(self):
+	def test_precedence_and_or(self):
 		self._assert_expression_equal("A + B C", "A + (B C)")
 		self._assert_expression_equal("A B + C", "(A B) + C")
 		self._assert_expression_equal("A B + C D", "(A B) + (C D)")
+
+	def test_precedence_nand(self):
 		self._assert_expression_equal("A + B @ C", "A + (B @ C)")
-		self._assert_expression_equal("A # B @ C", "A # (B @ C)")
+		self._assert_expression_equal("A % B @ C", "A % (B @ C)")
 		self._assert_expression_equal("A + -B @ C", "A + ((-B) @ C)")
-		self._assert_expression_equal("A # -B @ C", "A # ((-B) @ C)")
-		self._assert_expression_equal("A # B # C", "(A # B) # C")
-		self._assert_expression_equal("A + B # C", "(A + B) # C")
-		self._assert_expression_equal("A # B + C", "(A # B) + C")
-		self._assert_expression_equal("A # B # C # D", "((A # B) # C) # D")
-		self._assert_expression_equal("A ^ B # C # D", "((A ^ B) # C) # D")
-		self._assert_expression_equal("A # B ^ C # D", "((A # B) ^ C) # D")
-		self._assert_expression_equal("A # B # C ^ D", "((A # B) # C) ^ D")
+		self._assert_expression_equal("A % -B @ C", "A % ((-B) @ C)")
 		self._assert_expression_equal("A @ B @ C", "(A @ B) @ C")
 		self._assert_expression_equal("A * B @ C", "(A * B) @ C")
-		self._assert_expression_equal("A @ B * C", "(A @ B) * C")
+		self._assert_expression_equal("A @ B * C", "A @ (B * C)")
+		self._assert_expression_equal("A @ B C", "A @ (B * C)")
+		self._assert_expression_equal("(A @ B) C", "(A @ B) * C")
+
+	def test_precedence_nor(self):
+		self._assert_expression_equal("A % B % C", "(A % B) % C")
+		self._assert_expression_equal("A + B % C", "(A + B) % C")
+		self._assert_expression_equal("A % B + C", "(A % B) + C")
+		self._assert_expression_equal("A % B % C % D", "((A % B) % C) % D")
+		self._assert_expression_equal("A ^ B % C % D", "((A ^ B) % C) % D")
+		self._assert_expression_equal("A % B ^ C % D", "((A % B) ^ C) % D")
+		self._assert_expression_equal("A % B % C ^ D", "((A % B) % C) ^ D")

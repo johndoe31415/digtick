@@ -17,15 +17,34 @@ and `1`.
 
 You can express `OR` as `+` or `|`, `AND` as `*` or `&`, and XOR as `^`.
 Negation can be written as `!`, `~`, or `-` prefix. The parser also accepts
-NAND `@` and NOR `#` as explicit operators.
+NAND `@` and NOR `%` as explicit operators.
 
-Note that neither NAND nor NOR are associative. Their precendence is as
-following, from strongest to weakest:
+Note that neither NAND nor NOR are associative. Their precendence in parsing is
+as following, from strongest to weakest:
 
   1. Parenthesis
   2. NOT
-  3. AND, NAND
-  4. OR, XOR, NOR
+  3. AND
+  4. NAND
+  5. OR, XOR, NOR
+
+Note that AND has higher precedence than NOR. This is so that the expression
+
+```
+A @ B C
+```
+
+is interpreted on how it is "naturally" read because of implicit AND as
+
+```
+A @ (B C)
+```
+
+instead of what would be correct if AND and NAND had same precedence:
+
+```
+(A @ B) C
+```
 
 Parentheses work as expected for grouping. Contrary to commonly used parsers,
 the parser of `digtool` treats parenthesis as a syntactical element, which
@@ -344,14 +363,14 @@ NAND or NOR logic, i.e., replacing all gates exclusively by NAND or NOR.
 Examples:
 
 ```
-$ digtool transform 'A ^ B'
+$ digtool transform -t nand 'A ^ B'
 ((A @ 1) @ B) @ (A @ (B @ 1))
 
-$ digtool transform -logic nor 'A ^ !B'
-((A # ((B # 0) # 0)) # ((A # 0) # (B # 0)) # 0)
+$ digtool transform -t nor 'A ^ !B'
+((A % ((B % 0) % 0)) % ((A % 0) % (B % 0)) % 0)
 ```
 
-Note that, as stated above, `@` is shortcut notation for NAND while `#` stands
+Note that, as stated above, `@` is shortcut notation for NAND while `%` stands
 for NOR.
 
 

@@ -73,14 +73,16 @@ class ExpressionFormatterText():
 				Operator.Xor: " ⊕ ",
 				Operator.Not: "!",
 				Operator.Nand: " NAND ",
+				Operator.Nor: " NOR ",
 			}
 		else:
 			self._ops = {
 				Operator.Or: " + ",
 				Operator.And: " * ",
-				Operator.Xor: " XOR ",
+				Operator.Xor: " ^ ",
 				Operator.Not: "!",
-				Operator.Nand: " NAND ",
+				Operator.Nand: " @ ",
+				Operator.Nor: " % ",
 			}
 		if self._implicit_and:
 			self._ops[Operator.And] = " "
@@ -92,10 +94,7 @@ class ExpressionFormatterText():
 		if isinstance(expr, Variable):
 			return expr.varname
 		elif isinstance(expr, BinaryOperator):
-			if (prev is None) or ((prev is not None) and ((prev.op == expr.op) or ((prev.op, expr.op) == (Operator.Or, Operator.And)))):
-				return f"{self._fmt(expr.lhs, expr)}{self._op(expr.op)}{self._fmt(expr.rhs, expr)}"
-			else:
-				return f"({self._fmt(expr.lhs, expr)}{self._op(expr.op)}{self._fmt(expr.rhs, expr)})"
+			return f"{self._fmt(expr.lhs, expr)}{self._op(expr.op)}{self._fmt(expr.rhs, expr)}"
 		elif isinstance(expr, UnaryOperator):
 			if isinstance(expr.rhs, Variable) or isinstance(expr.rhs, Constant):
 				if self._pretty_print and (expr.op == Operator.Not):

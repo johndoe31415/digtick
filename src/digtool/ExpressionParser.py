@@ -29,7 +29,7 @@ class Operator(enum.Enum):
 	Xor = "^"
 	Not = "!"
 	Nand = "@"
-	Nor = "#"
+	Nor = "%"
 
 	@classmethod
 	def lookup(cls, value):
@@ -43,7 +43,7 @@ class Operator(enum.Enum):
 			"-":	cls.Not,
 			"~":	cls.Not,
 			"@":	cls.Nand,
-			"#":	cls.Nor,
+			"%":	cls.Nor,
 		}[value]
 
 class ParseTreeElement():
@@ -279,8 +279,8 @@ class ExpressionParser(tpg.Parser):
 		token or_op     '[|+]';
 		token and_op    '[&*]';
 		token xor_op    '[\^]';
-		token nand_op    '@';
-		token nor_op    '#';
+		token nand_op   '@';
+		token nor_op    '%';
 		token neg_op	'[!-]';
 		token const 	'[01]';
 		token variable  '[a-zA-Z_][a-zA-Z0-9_]*'		$ Variable
@@ -295,8 +295,11 @@ class ExpressionParser(tpg.Parser):
 					)*
 		;
 
-		Term/lhs -> Atom/lhs ( and_op/op Atom/rhs		$ lhs = BinaryOperator(lhs, op, rhs)
-							| nand_op/op Atom/rhs		$ lhs = BinaryOperator(lhs, op, rhs)
+		Term/lhs -> Factor/lhs ( nand_op/op Factor/rhs		$ lhs = BinaryOperator(lhs, op, rhs)
+					)*
+		;
+
+		Factor/lhs -> Atom/lhs ( and_op/op Atom/rhs		$ lhs = BinaryOperator(lhs, op, rhs)
 							| Atom/rhs					$ lhs = BinaryOperator(lhs, "*", rhs)
 					)*
 		;
