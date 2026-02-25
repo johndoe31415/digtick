@@ -1,16 +1,17 @@
-# digtool
-digtool is a command-line-tool tool for creating and solving problems in
-digital systems. The primary target audience are educators (who can use it to
-create and validate exam questions) as well as students who want to improve
-their skills. It allows you to specify, parse and reformat Boolean equations
-(e.g., in LaTeX form for easy inclusion in documents). It can create tables
-from a given Boolean expression and rendering Karnaugh–Veitch (KV) maps with an
-arbitrary number of variables. It can check Boolean equations for equivalance.
-A Quine-McCluskey implementation is used to minify expressions.
+# digtick
+digtick (the mnemonic for "dig tk", i.e., digital toolkit) is a
+command-line-tool tool for creating and solving problems in digital systems.
+The primary target audience are educators (who can use it to create and
+validate exam questions) as well as students who want to improve their skills.
+It allows you to specify, parse and reformat Boolean equations (e.g., in LaTeX
+form for easy inclusion in documents). It can create tables from a given
+Boolean expression and rendering Karnaugh–Veitch (KV) maps with an arbitrary
+number of variables. It can check Boolean equations for equivalance.  A
+Quine-McCluskey implementation is used to minify expressions.
 
 
 ## Boolean expression syntax
-digtool accepts a pragmatic Boolean syntax that matches what students often
+digtick accepts a pragmatic Boolean syntax that matches what students often
 write on paper, while still being unambiguous and machine-parseable. Variables
 follow a typical identifier pattern (e.g. `A`, `B`, `clk`). Constants are `0`
 and `1`.
@@ -47,14 +48,14 @@ instead of what would be correct if AND and NAND had same precedence:
 ```
 
 Parentheses work as expected for grouping. Contrary to commonly used parsers,
-the parser of `digtool` treats parenthesis as a syntactical element, which
+the parser of `digtick` treats parenthesis as a syntactical element, which
 means they are preserved in the AST. The intention is to allow for expressions
 with unnecessary parenthesis to generate exam questions (students should know
 that `A + (B + C))` is identical to `A + B + C` without the parser eating away
 the exam question):
 
 ```
-$ digtool parse '(((((A | (B))))))'
+$ digtick parse '(((((A | (B))))))'
 (((((A + (B))))))
 ```
 
@@ -62,7 +63,7 @@ For convenience of notation, `AND` is implicit: adjacency separated by
 whitespace counts as `AND`:
 
 ```
-$ digtool parse 'A B C + A !B C + C !A'
+$ digtick parse 'A B C + A !B C + C !A'
 A B C + A !B C + C !A
 ```
 
@@ -70,25 +71,25 @@ By default, this is also implemented this way in the output, but many commands
 allow specifying a particular format, including the `--no-implicit-and` option:
 
 ```
-$ digtool parse --no-implicit-and 'A B C + A !B C + C !A'
+$ digtick parse --no-implicit-and 'A B C + A !B C + C !A'
 A * B * C + A * !B * C + C * !A
 ```
 
 There are multiple output options, e.g. a Unicode renderer:
 
 ```
-$ digtool parse --format pretty-text 'A B C + A !B C + C !A'
+$ digtick parse --format pretty-text 'A B C + A !B C + C !A'
 A B C ∨ A B̅ C ∨ C A̅
 ```
 
 
 ## Operator precedence within Python
-Note that, when importing `digtool` and using it to perform changes under the
+Note that, when importing `digtick` and using it to perform changes under the
 hood, you can also naturally use the overloaded operators. They also automatically convert
 strings and integers to variables and constants. Example:
 
 ```python3
-from digtool.ExpressionParser import Variable
+from digtick.ExpressionParser import Variable
 (A, B, C) = (Variable("A"), Variable("B"), Variable("C"))
 print(~((A | B) & C))
 >>> [![[A + B] * C]]
@@ -99,7 +100,7 @@ NOR, but with the caveat that the operator precedence within Python is
 different than our parsing precedence!
 
 ```python3
-from digtool.ExpressionParser import Variable
+from digtick.ExpressionParser import Variable
 (A, B, C) = (Variable("A"), Variable("B"), Variable("C"))
 print(A @ B & C == (A @ B) & C)
 >>> True
@@ -113,7 +114,7 @@ tab-separated. The latter is the default output variant and the only variant
 which can be used as input:
 
 ```
-$ digtool make-table 'A B C + A !B C + C !A'
+$ digtick make-table 'A B C + A !B C + C !A'
 A	B	C
 0	0	0	0
 0	0	1	1
@@ -124,7 +125,7 @@ A	B	C
 1	1	0	0
 1	1	1	1
 
-$ digtool make-table --format pretty 'A B C + A !B C + C !A'
+$ digtick make-table --format pretty 'A B C + A !B C + C !A'
 ┌───┬───┬───┬───┐
 │ A │ B │ C │   │
 ├───┼───┼───┼───┤
@@ -143,7 +144,7 @@ Note that commands which accept truth table inputs can all have the filename
 omitted and will then read from stdin. This allows for easy piping of commands:
 
 ```
-$ digtool make-table 'A B C + A !B C + C !A' | digtool synth
+$ digtick make-table 'A B C + A !B C + C !A' | digtick synth
 CDNF: !A !B C + !A B C + A !B C + A B C
 CCNF: (A + B + C) (A + !B + C) (!A + B + C) (!A + !B + C)
 DNF : C
@@ -179,16 +180,16 @@ It takes care that in overline-style negation of literals the overline does
 default, unfortunately, and results in a non-equivalent equation):
 
 ```
-$ digtool parse --format tex-tech '!A !B'
+$ digtick parse --format tex-tech '!A !B'
 \overline{\textnormal{A}} \ \overline{\textnormal{B}}
-$ digtool parse --format tex-tech '!(A B)'
+$ digtick parse --format tex-tech '!(A B)'
 \overline{(\textnormal{A} \ \textnormal{B})}
 ```
 
 Note that also the mathematical variant of symbols can be used:
 
 ```
-$ digtool parse --format tex-math '!(A B)'
+$ digtick parse --format tex-math '!(A B)'
 \neg \textnormal{A} \ \neg \textnormal{B}
 ```
 
@@ -199,7 +200,7 @@ care” output positions (`*`). Wherever the “don't care” expression evaluat
 1, the output is printed as `*` instead of `0` or `1`.
 
 ```
-$ digtool make-table 'A + B !C' 'A !B'
+$ digtick make-table 'A + B !C' 'A !B'
 A	B	C
 0	0	0	0
 0	0	1	0
@@ -220,9 +221,9 @@ mode, missing patterns are considered an error; in the relaxed modes, missing
 patterns are filled as `0`, `1`, or `*`.
 
 ```
-$ digtool make-table 'A + B !C' 'A !B' | \
+$ digtick make-table 'A + B !C' 'A !B' | \
   head -n 4 | \
-  digtool print-table -f pretty --unused-value-is '*'
+  digtick print-table -f pretty --unused-value-is '*'
 ┌───┬───┬───┬───┐
 │ A │ B │ C │   │
 ├───┼───┼───┼───┤
@@ -248,8 +249,8 @@ rendering command accepts a number of different parameters that influence the
 way the KV diagram is printed.
 
 ```
-$ digtool make-table 'A B !C + B D + !C A' 'B !A D + A B C D' >exam1.txt
-$ digtool kv exam1.txt
+$ digtick make-table 'A B !C + B D + !C A' 'B !A D + A B C D' >exam1.txt
+$ digtick kv exam1.txt
 ┌─────┬─────┬─────┬─────┬─────┐
 │     │ A̅ B̅ │ A B̅ │ A B │ A̅ B │
 ├─────┼─────┼─────┼─────┼─────┤
@@ -262,7 +263,7 @@ $ digtool kv exam1.txt
 │ C̅ D │  0  │  1  │  1  │  *  │
 └─────┴─────┴─────┴─────┴─────┘
 
-$ digtool kv exam1.txt -o DCBA --x-offset 1 --y-invert
+$ digtick kv exam1.txt -o DCBA --x-offset 1 --y-invert
 ┌─────┬─────┬─────┬─────┬─────┐
 │     │ C̅ D │ C D │ C D̅ │ C̅ D̅ │
 ├─────┼─────┼─────┼─────┼─────┤
@@ -285,7 +286,7 @@ of which format the student chose.
 as minimized forms (DNF/CNF) produced via Quine-McCluskey.
 
 ```
-$ digtool synth exam1.txt
+$ digtick synth exam1.txt
 CDNF: A !B !C !D + A !B !C D + A B !C !D + A B !C D
 CCNF: (A + B + C + D) (A + B + C + !D) (A + B + !C + D) (A + B + !C + !D) (A + !B + C + D) (A + !B + !C + D) (!A + B + !C + D) (!A + B + !C + !D) (!A + !B + !C + D)
 DNF : A !C + B D
@@ -298,14 +299,14 @@ input assignments of the involved variables. If they are equivalent, it reports
 success. If they differ, it prints a counterexample assignment.
 
 ```
-$ digtool eq 'A @ B @ C' 'A @ (B @ C)'
+$ digtick eq 'A @ B @ C' 'A @ (B @ C)'
 Not equal: {'A': 0, 'B': 0, 'C': 1} gives 0 on LHS but 1 on RHS
 
-$ digtool eq 'A B C + C !D B + B C' 'B C'
+$ digtick eq 'A B C + C !D B + B C' 'B C'
 Expressions equal.
 ```
 
-Note that `digtool` also supports checking a whole file for equivalence in the `parse` command. For example, say you have generated an exam and are preparing the reference solution, in which you are performing tiny simplification steps each line:
+Note that `digtick` also supports checking a whole file for equivalence in the `parse` command. For example, say you have generated an exam and are preparing the reference solution, in which you are performing tiny simplification steps each line:
 
 ```
 $ cat exam2.txt
@@ -321,7 +322,7 @@ B (C D + A !D)
 Did you spot my error? A simple omission that changes the whole formula:
 
 ```
-$ digtool parse --read-as-filename --validate-equivalence exam2.txt
+$ digtick parse --read-as-filename --validate-equivalence exam2.txt
 A B C + B C (A + D) + B A !D + F (E + !F)
 A B C + B C A + B C D + B A !D + F (E + !F)
 A B C + B C A + B C D + B A !D + F E + F !F
@@ -355,7 +356,7 @@ randomized equations and checks that the minimized variant is not below another
 complexity metric (so that tautologies are not created):
 
 ```
-$ digtool random-expr 4 60
+$ digtick random-expr 4 60
 Expression: !((!B !C D A + A C)) (!C) !B !C (!D + !C) + (!C + D) B C D A + !B !A
 Simplified: !B !C !D + !A !B + A B C D
 ```
@@ -369,7 +370,7 @@ don't-cares. You can adjust the zero/one percentages; whatever remains after
 those is implicitly treated as `*`.
 
 ```
-$ digtool random-table -0 30 -1 50 3
+$ digtick random-table -0 30 -1 50 3
 A	B	C
 0	0	0	0
 0	0	1	1
@@ -388,10 +389,10 @@ NAND or NOR logic, i.e., replacing all gates exclusively by NAND or NOR.
 Examples:
 
 ```
-$ digtool transform -t nand 'A ^ B'
+$ digtick transform -t nand 'A ^ B'
 ((A @ 1) @ B) @ (A @ (B @ 1))
 
-$ digtool transform -t nor 'A ^ !B'
+$ digtick transform -t nor 'A ^ !B'
 ((A % ((B % 0) % 0)) % ((A % 0) % (B % 0)) % 0)
 ```
 
@@ -410,7 +411,7 @@ To do this, you can simply invoke the command and it will generate a random
 timing diagram (by default of a SR-NAND-FF):
 
 ```
-$ digtool dtd-create
+$ digtick dtd-create
 # Random seed: 8910607998
 !S = 0|'S'0|'R'11|0|'🗲'111|00|'R'111111|'S'0000|00|'S'00000111|'R'11
 !R = 0    1    00 0    111 00    000001    1111 00    11111111    01
@@ -433,14 +434,14 @@ renders it as an SVG. As an example, consider the example shown before in
 `dtd-create`. Let us reproduce it from its pseudo-random seed and render it:
 
 ```
-$ digtool dtd-create -s 8910607998 | digtool dtd-render -o docs/timing_diagram.png
+$ digtick dtd-create -s 8910607998 | digtick dtd-render -o docs/timing_diagram.png
 ```
 
 Will create the file `docs/timing_diagram.svg` which you can see here (note
 that here, a PNG-conversion is shown which is why it looks fuzzy/washed out --
 the original is crystal clear):
 
-![SR Flipflop timing diagram](https://raw.githubusercontent.com/johndoe31415/digtool/main/docs/timing_diagram.png)
+![SR Flipflop timing diagram](https://raw.githubusercontent.com/johndoe31415/digtick/main/docs/timing_diagram.png)
 
 Note that the two-step process makes it exceptionally easy to create random
 diagrams until you find one that you like, use this as the reference solution
@@ -460,7 +461,7 @@ DAT = ZZZZ        ::::::        !:!:!:!:!:!:!:::::::        !:::ZZZZZZZ
 
 Which renders as:
 
-![Made-up communication diagram](https://raw.githubusercontent.com/johndoe31415/digtool/main/docs/other_diagram.png)
+![Made-up communication diagram](https://raw.githubusercontent.com/johndoe31415/digtick/main/docs/other_diagram.png)
 
 ## License
 GNU GPL-3.

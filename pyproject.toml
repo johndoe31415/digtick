@@ -3,14 +3,14 @@ requires = [ "setuptools>=77.0.3" ]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "digtool"
+name = "digtick"
 license = "GPL-3.0"
 version = "0.0.1rc0"
 description = "A command-line tool for computing digital circuits"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [ { name = "Johannes Bauer", email = "joe@johannes-bauer.com" } ]
-keywords = [ "digital", "electronics", "cli", "teaching" ]
+keywords = [ "digital", "electronics", "boolean-logic", "boolean-expression", "cli", "teaching" ]
 classifiers = [
 	"Programming Language :: Python :: 3",
 ]
@@ -19,13 +19,13 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/johndoe31415/digtool"
-Repository = "https://github.com/johndoe31415/digtool.git"
-Issues = "https://github.com/johndoe31415/digtool/issues"
-Releases = "https://github.com/johndoe31415/digtool/tags"
+Homepage = "https://github.com/johndoe31415/digtick"
+Repository = "https://github.com/johndoe31415/digtick.git"
+Issues = "https://github.com/johndoe31415/digtick/issues"
+Releases = "https://github.com/johndoe31415/digtick/tags"
 
 [project.scripts]
-digtool = "digtool.__main__:main"
+digtick = "digtick.__main__:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }

@@ -1,26 +1,26 @@
-#	digtool - Tool to compute and simplify problems in digital systems
+#	digtick - Digital systems toolkit: simplify, minimize and transform Boolean expressions, draw KV-maps, etc.
 #	Copyright (C) 2022-2026 Johannes Bauer
 #
-#	This file is part of digtool.
+#	This file is part of digtick.
 #
-#	digtool is free software; you can redistribute it and/or modify
+#	digtick is free software; you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
 #	the Free Software Foundation; this program is ONLY licensed under
 #	version 3 of the License, later versions are explicitly excluded.
 #
-#	digtool is distributed in the hope that it will be useful,
+#	digtick is distributed in the hope that it will be useful,
 #	but WITHOUT ANY WARRANTY; without even the implied warranty of
 #	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #	GNU General Public License for more details.
 #
 #	You should have received a copy of the GNU General Public License
-#	along with digtool; if not, write to the Free Software
+#	along with digtick; if not, write to the Free Software
 #	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 import sys
-import digtool
+import digtick
 from .ActionParse import ActionParse
 from .ActionMakeTable import ActionMakeTable
 from .ActionPrintTable import ActionPrintTable
@@ -35,7 +35,7 @@ from .ActionDTDRender import ActionDTDRender
 from .MultiCommand import MultiCommand
 
 def main():
-	mc = MultiCommand(description = "Tool to compute and simplify problems in digital systems", trailing_text = f"digtool v{digtool.VERSION}")
+	mc = MultiCommand(description = "Digital systems toolkit: simplify, minimize and transform Boolean expressions, draw KV-maps, etc.", trailing_text = f"digtick v{digtick.VERSION}")
 
 	def genparser(parser):
 		parser.add_argument("-F", "--read-as-filename", action = "store_true", help = "Instead of having an expression on the command line, specify a file name that contains multiple expressios and format each one linewise.")
