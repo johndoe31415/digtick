@@ -99,3 +99,5 @@ class ExpressionFormatterTests(unittest.TestCase):
 
 		self.assertEqual(format_expression(A ^ (B | C)), "A ^ (B + C)")
 		self.assertEqual(format_expression(A | (B ^ C)), "A + (B ^ C)")
+		self.assertEqual(format_expression(A | (B % C)), "A + (B % C)")
+		self.assertEqual(format_expression(A % (B | C)), "A % (B + C)")
