@@ -212,7 +212,7 @@ class UnaryOperator(ParseTreeElement):
 		return isinstance(other, UnaryOperator) and (self.op == other.op) and (self.rhs.identical_to(other.rhs))
 
 	def __repr__(self):
-		return f"{self.op.value}{self.rhs}"
+		return f"[{self.op.value}{self.rhs}]"
 
 class BinaryOperator(ParseTreeElement):
 	def __init__(self, lhs: ParseTreeElement, op: Operator | str, rhs: ParseTreeElement):
@@ -251,7 +251,7 @@ class BinaryOperator(ParseTreeElement):
 		return fnc(lhs, rhs)
 
 	def __repr__(self):
-		return f"{self.lhs} {self.op.value} {self.rhs}"
+		return f"[{self.lhs} {self.op.value} {self.rhs}]"
 
 class Parenthesis(ParseTreeElement):
 	__match_args__ = ("inner", )
