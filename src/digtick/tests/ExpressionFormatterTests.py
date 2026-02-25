@@ -20,7 +20,7 @@
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 import unittest
-from digtick.ExpressionParser import parse_expression
+from digtick.ExpressionParser import parse_expression, Variable
 from digtick.ExpressionFormatter import format_expression
 
 class ExpressionFormatterTests(unittest.TestCase):
@@ -81,6 +81,12 @@ class ExpressionFormatterTests(unittest.TestCase):
 			self._assert_expression_reformattable(expression)
 
 
+	def test_internal_input(self):
+		(A, B, C) = (Variable("A"), Variable("B"), Variable("C"))
 
+		self.assertEqual(format_expression(A), "A")
+		self.assertEqual(format_expression(A & B), "A B")
+		self.assertEqual(format_expression(A & C & B), "A C B")
 
-
+		self.assertEqual(format_expression((A & C) | B), "A C + B")
+		self.assertEqual(format_expression((A | C) & B), "(A + C) B")
