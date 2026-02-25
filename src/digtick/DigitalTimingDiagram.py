@@ -83,13 +83,14 @@ class DigitalTimingCmd():
 class DigitalTimingDiagram():
 	_Marker = collections.namedtuple("Marker", [ "x", "label" ])
 
-	def __init__(self, xdiv: int = 10, height: int = 30, vertical_distance: int = 10, marker_extend: int = 20, clock_ticks: bool = True, low_high_lines: bool = False):
+	def __init__(self, xdiv: int = 10, height: int = 30, vertical_distance: int = 10, marker_extend: int = 20, clock_ticks: bool = True, low_high_lines: bool = False, use_overline: bool = True):
 		self._xdiv = xdiv
 		self._height = height
 		self._vertical_distance = vertical_distance
 		self._marker_extend = marker_extend
 		self._render_clock_ticks = clock_ticks
 		self._low_high_lines = low_high_lines
+		self._use_overline = use_overline
 		self._risefall = height / 8
 		self._svg = SVGDocument.new()
 		self._path = None
@@ -133,10 +134,28 @@ class DigitalTimingDiagram():
 		svg_text.style["text-align"] = "right"
 		svg_text.style["font-family"] = "'Latin Modern Roman'"
 		if signal_name.startswith("!"):
-			# text-decoration: overline does not work reliably, emulate
-			path = self._layer("Signal names").add(SVGPath.new(pos = Vector2D(x, abs_y_mid - 5.5)))
-			path.horizontal(-9 * len(signal_name.lstrip("!")), relative = True)
-			path.style["stroke-width"] = 0.75
+			if self._use_overline:
+				overline_y_offset = 1
+				# Even when overline works we need a hack here: Overline is way
+				# too close to the signal name, we want the invert line to be
+				# well above the text. Adjusting the Y-offset is not supported
+				# in SVG. Therefore, we place a second identical text block a
+				# few pixels higher, make it completely transparent and set the
+				# overline color. Note that this may or may not work, depending
+				# on the renderer.
+				invisible_svg_text = self._layer("Signal names").add(SVGText.new(pos = Vector2D(x - text_width, abs_y_mid - 6 - overline_y_offset), rect_extents = Vector2D(text_width, 30), text = signal_name.lstrip("!")))
+				invisible_svg_text.style["text-align"] = "right"
+				invisible_svg_text.style["font-family"] = "'Latin Modern Roman'"
+				invisible_svg_text.style["text-decoration"] = "overline"
+				invisible_svg_text.style["text-decoration-color"] = "#000000"
+				invisible_svg_text.style["fill-opacity"] = "0"
+			else:
+				# text-decoration: overline does not work reliably, emulate.
+				# Note that this is a really ugly hack that does not take into
+				# account that different glyphs have different width
+				path = self._layer("Signal names").add(SVGPath.new(pos = Vector2D(x, abs_y_mid - 5.5)))
+				path.horizontal(-9 * len(signal_name.lstrip("!")), relative = True)
+				path.style["stroke-width"] = 0.75
 
 		for cur in cmds:
 			if prev is None:
