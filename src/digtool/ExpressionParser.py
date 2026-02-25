@@ -47,6 +47,8 @@ class Operator(enum.Enum):
 		}[value]
 
 class ParseTreeElement():
+	_Elements = { }
+
 	@property
 	def state_count(self):
 		return 1 << len(self.variables)
@@ -113,6 +115,35 @@ class ParseTreeElement():
 			if eval1 != eval2:
 				return False
 		return True
+
+	def _wrap(self, expr: "ParseTreeElement | int | str") -> "ParseTreeElement":
+		if isinstance(expr, ParseTreeElement):
+			return expr
+		elif isinstance(expr, int):
+			return self._Elements["Constant"](expr)
+		elif isinstance(expr, str):
+			return self._Elements["Variable"](expr)
+		else:
+			raise ValueError(type(expr))
+
+	def __invert__(self):
+		return self._Elements["UnaryOperator"](Operator.Not, self)
+
+	def __or__(self, rhs: "ParseTreeElement"):
+		return self._Elements["BinaryOperator"](self, Operator.Or, self._wrap(rhs))
+
+	def __and__(self, rhs: "ParseTreeElement"):
+		return self._Elements["BinaryOperator"](self, Operator.And, self._wrap(rhs))
+
+	def __xor__(self, rhs: "ParseTreeElement"):
+		return self._Elements["BinaryOperator"](self, Operator.Xor, self._wrap(rhs))
+
+	def __matmul__(self, rhs: "ParseTreeElement"):
+		return self._Elements["BinaryOperator"](self, Operator.Nand, self._wrap(rhs))
+
+	def __init_subclass__(cls, **kwargs):
+		super().__init_subclass__(**kwargs)
+		ParseTreeElement._Elements[cls.__name__] = cls
 
 	def __iter__(self):
 		yield from self._traverse()
@@ -293,3 +324,7 @@ if __name__ == "__main__":
 		except Exception as e:
 			print(tpg.exc())
 			raise
+
+	A = Variable("A")
+	Zero = Constant(0)
+	print((A & 1) | (A & 0) == A)
