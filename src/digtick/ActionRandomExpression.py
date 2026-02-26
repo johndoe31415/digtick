@@ -43,8 +43,8 @@ class ActionRandomExpression(BaseAction):
 			try_no += 1
 			expression = reg.generate(self._args.complexity)
 
-			vt = ValueTable.create_from_expression(expression)
-			simplified = QuineMcCluskey(vt, verbosity = self._args.verbose).optimize()
+			vt = ValueTable.create_from_expression("Y", expression)
+			simplified = QuineMcCluskey(vt, "Y", verbosity = self._args.verbose).optimize()
 			simplified_str = format_expression(simplified)
 			if (len(simplified_str) < 20) and (try_no < 100):
 				# Too low simplified complexity or unable to fulfill
