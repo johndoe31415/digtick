@@ -122,6 +122,10 @@ class ValueTable():
 		return len(self._input_variable_names)
 
 	@property
+	def output_variable_names(self):
+		return self._output_variable_names
+
+	@property
 	def output_variable_count(self):
 		return len(self._output_variable_names)
 
@@ -228,6 +232,12 @@ class ValueTable():
 		for (index, outputs) in enumerate(zip(*self._output_values)):
 			yield (self.index_to_list(index), outputs)
 
+	@property
+	def iter_inputdict(self):
+		for (index, outputs) in enumerate(zip(*self._output_values)):
+			output_dict = { name: output for (name, output) in zip(self._output_variable_names, outputs) }
+			yield (self.index_to_dict(index), output_dict)
+
 	def _print_text(self):
 		heading = self._input_variable_names + [ f">{name}" for name in self._output_variable_names ]
 		print("\t".join(heading))
@@ -237,20 +247,17 @@ class ValueTable():
 
 	def _print_pretty(self):
 		table = Table()
-		header = { varname: varname for varname in self.input_variable_names }
+		header = { varname: varname for varname in self.input_variable_names + self.output_variable_names }
 		header["="] = " "
 		table.add_row(header)
 		table.add_separator_row()
 
-		for (inputs, output) in self:
-			row = inputs
-			if output is None:
-				row["="] = "*"
-			else:
-				row["="] = output
+		for (inputs, outputs) in self.iter_inputdict:
+			row = { name: value.as_str for (name, value) in outputs.items() }
+			row.update(inputs)
 			table.add_row(row)
 
-		table.print(*(list(self._input_variable_names) + [ "=" ]))
+		table.print(*(self.input_variable_names + self.output_variable_names))
 
 	def _print_tex(self):
 		colcnt = len(self._output_values) + 1
