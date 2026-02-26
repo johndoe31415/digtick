@@ -112,6 +112,8 @@ class ValueTable():
 		self._input_variable_names = input_variable_names
 		self._output_variable_names = output_variable_names
 		self._output_values = output_values
+		self._named_outputs = { output_variable_name: storage for (output_variable_name, storage) in zip(self._output_variable_names, self._output_values) }
+		self._index_weights = { varname: 1 << bitno for (bitno, varname) in enumerate(reversed(self._input_variable_names)) }
 
 	@property
 	def input_variable_names(self):
@@ -225,6 +227,13 @@ class ValueTable():
 	def index_to_dict(self, index: int) -> dict:
 		return { varname: bit for (varname, bit) in zip(self.input_variable_names, self.index_to_list(index)) }
 
+	def dict_to_index(self, input_var_dict: dict) -> int:
+		return sum(self._index_weights[varname] for (varname, bit_value) in input_var_dict.items() if bit_value == 1)
+
+	def at(self, input_var_dict: dict, output_var_name: str) -> CompactStorage.Entry:
+		index = self.dict_to_index(input_var_dict)
+		return self._named_outputs[output_var_name][index]
+
 	def __iter__(self):
 		yield from zip(*self._output_values)
 
@@ -306,11 +315,14 @@ class ValueTable():
 #			if input_var_dict[varname]:
 #				index += (1 << bitno)
 #		return index
-#
-#	def at(self, input_var_dict: dict) -> int | None:
-#		return self._output_values[self.input_dict_to_index(input_var_dict, self.input_variable_names)]
 
-	def print_kv(self, variable_order: list[str] | None = None, x_offset: int = 0, y_offset: int = 0, x_invert: bool = False, y_invert: bool = False, row_heavy: bool = True):
+	def print_kv(self, variable_order: list[str] | None = None, output_variable_name: str | None = None, x_offset: int = 0, y_offset: int = 0, x_invert: bool = False, y_invert: bool = False, row_heavy: bool = True):
+		if output_variable_name is None:
+			if self.output_variable_count == 1:
+				output_variable_name = self.output_variable_names[0]
+			else:
+				raise ValueError(f"Multiple outputs are present in the data table, need to explicitly specify which of the output variables the KV diagram should show. Options: {', '.join(sorted(self.output_variable_names))}")
+
 		def _create_kv_dict(var_names: list[str], offset: int = 0, invert_direction: bool = False):
 			result = [ ]
 			var_count = len(var_names)
@@ -351,8 +363,7 @@ class ValueTable():
 			cell_value = dict(yvalue)
 			for (x, xvalue) in enumerate(x_values):
 				cell_value.update(xvalue)
-				row[f"x{x}"] = self.at(cell_value)
-			row = { key: value if (value is not None) else "*" for (key, value) in row.items() }
+				row[f"x{x}"] = self.at(cell_value, output_variable_name).as_str
 
 			table.add_separator_row()
 			table.add_row(row)

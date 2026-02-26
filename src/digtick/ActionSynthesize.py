@@ -29,7 +29,7 @@ from .Tools import open_file
 class ActionSynthesize(BaseAction):
 	def run(self):
 		with open_file(self._args.filename) as f:
-			vt = ValueTable.parse_from_file(f, unused_value_str = self._args.unused_value_is)
+			vt = ValueTable.parse_from_file(f, set_undefined_values_to = self._args.unused_value_is)
 
 		zero_terms = [ ]
 		one_terms = [ ]
