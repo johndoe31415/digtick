@@ -192,9 +192,29 @@ class KVDiagram():
 				svg_text.style["text-align"] = "center"
 
 	def _svg_render_term_coverage(self, layer: SVGGroup, covered: set[tuple[int, int]], color: str):
+		width = len(self._rkvd.x_values)
+		height = len(self._rkvd.y_values)
+		margin = 3
 		for (x, y) in covered:
+			has_top = (x, (y - 1) % height) in covered
+			has_bottom = (x, (y + 1) % height) in covered
+			has_left = ((x - 1) % width, y) in covered
+			has_right = ((x + 1) % width, y) in covered
+
 			pos = Vector2D(x, y) * self._svg_cell_width
-			svg_rect = layer.add(SVGRect.new(pos = pos, extents = Vector2D(self._svg_cell_width, self._svg_cell_width)))
+			extents = Vector2D(self._svg_cell_width, self._svg_cell_width)
+			if not has_top:
+				pos += Vector2D(0, margin)
+				extents -= Vector2D(0, margin)
+			if not has_bottom:
+				extents -= Vector2D(0, margin)
+			if not has_left:
+				pos += Vector2D(margin, 0)
+				extents -= Vector2D(margin, 0)
+			if not has_right:
+				extents -= Vector2D(margin, 0)
+
+			svg_rect = layer.add(SVGRect.new(pos = pos, extents = extents))
 			svg_rect.style["stroke"] = "none"
 			svg_rect.style["fill"] = color
 			svg_rect.style["fill-opacity"] = 0.5
