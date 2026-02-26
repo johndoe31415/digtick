@@ -31,6 +31,15 @@ class CompactStorage():
 		DontCare = 2
 		Undefined = 3
 
+		@property
+		def as_str(self):
+			return {
+				self.Low:		"0",
+				self.High:		"1",
+				self.DontCare:	"*",
+				self.Undefined:	"N/A",
+			}[self]
+
 	def __init__(self, variable_count: int, initial_value: int | None = None):
 		self._variable_count = variable_count
 		if initial_value is None:
@@ -168,7 +177,7 @@ class ValueTable():
 					raise ValueError(f"Syntax error when parsing truth table in line {lineno}: expected {len(input_variables) + len(output_variables)} tokens, but saw {len(tokens)}")
 
 				input_bits = [ int(tokens[i]) for i in input_indices ]
-				index = sum(value << bitpos for (bitpos, value) in enumerate(input_bits))
+				index = sum(value << bitpos for (bitpos, value) in enumerate(reversed(input_bits)))
 
 				output_bits = [ tokens[i] for i in output_indices ]
 				for (storage, output_bit) in zip(output_values, output_bits):
@@ -205,19 +214,25 @@ class ValueTable():
 			output_values.append(output)
 		return ValueTable(expression.variables, output_values = output_values)
 
+	def index_to_list(self, index: int) -> list[int]:
+		return [ (index >> i) & 1 for i in reversed(range(self.input_variable_count)) ]
+
+	def index_to_dict(self, index: int) -> dict:
+		return { varname: bit for (varname, bit) in zip(self.input_variable_names, self.index_to_list(index)) }
+
 	def __iter__(self):
-		for (inputs, output) in zip(itertools.product([0, 1], repeat = self.input_variable_count), self._output_values):
-			input_dict = { varname: input_value for (varname, input_value) in zip(self.input_variable_names, inputs) }
-			yield (input_dict, output)
+		yield from zip(*self._output_values)
+
+	@property
+	def iter_inputlist(self):
+		for (index, outputs) in enumerate(zip(*self._output_values)):
+			yield (self.index_to_list(index), outputs)
 
 	def _print_text(self):
-		print("\t".join(self.input_variable_names))
-		for (inputs, output) in self:
-			row = [ str(inputs.get(varname)) for varname in self.input_variable_names ]
-			if output is None:
-				row.append("*")
-			else:
-				row.append(str(output))
+		heading = self._input_variable_names + [ f">{name}" for name in self._output_variable_names ]
+		print("\t".join(heading))
+		for (inputs, outputs) in self.iter_inputlist:
+			row = [ str(bit) for bit in inputs ] + [ output_bit.as_str for output_bit in outputs ]
 			print("\t".join(row))
 
 	def _print_pretty(self):
