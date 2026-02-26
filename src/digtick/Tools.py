@@ -23,7 +23,7 @@ import sys
 import contextlib
 
 def open_file(filename: str):
-	if filename is None:
+	if (filename is None) or (filename == "-"):
 		return contextlib.nullcontext(sys.stdin)
 	else:
 		return open(filename)

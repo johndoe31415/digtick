@@ -21,7 +21,7 @@
 
 import re
 import enum
-import itertools
+import collections
 from .TableFormatter import Table, CellFormatter
 from .ExpressionParser import Operator, Constant, Variable, BinaryOperator
 
@@ -135,6 +135,12 @@ class ValueTable():
 	def output_variable_count(self):
 		return len(self._output_variable_names)
 
+	def add_output_variable(self, varname: str, storage: CompactStorage):
+		assert(storage.variable_count == self.input_variable_count)
+		self._output_variable_names.append(varname)
+		self._named_outputs[varname] = storage
+		self._output_values.append(storage)
+
 	@classmethod
 	def _from_compact_representation(cls, compact_str: str):
 		assert(compact_str.startswith(":"))
@@ -142,7 +148,7 @@ class ValueTable():
 		input_variable_names = input_variable_names.split(",")
 		output_variable_names = output_variable_names.split(",")
 		compact_data = compact_data.split(",")
-		if output_variable_count != len(compact_data):
+		if len(output_variable_names) != len(compact_data):
 			raise ValueError(f"Format specifies {len(output_variable_names)} output variables, but present data section indicates {len(compact_data)}.")
 		output_values = [ CompactStorage.from_string(len(input_variable_names), compact_data_string) for compact_data_string in compact_data ]
 		return cls(input_variable_names = input_variable_names, output_variable_names = output_variable_names, output_values = output_values)
@@ -344,15 +350,6 @@ class ValueTable():
 			x >>= 1
 		return result
 
-#	@staticmethod
-#	def input_dict_to_index(input_var_dict: dict, variable_names: list[str]) -> int:
-#		index = 0
-#		for (i, varname) in enumerate(variable_names):
-#			bitno = len(variable_names) - 1 - i
-#			if input_var_dict[varname]:
-#				index += (1 << bitno)
-#		return index
-
 	def print_kv(self, variable_order: list[str] | None = None, output_variable_name: str | None = None, x_offset: int = 0, y_offset: int = 0, x_invert: bool = False, y_invert: bool = False, row_heavy: bool = True):
 		if output_variable_name is None:
 			if self.output_variable_count == 1:
@@ -410,6 +407,6 @@ class ValueTable():
 
 if __name__ == "__main__":
 	from .ExpressionParser import parse_expression
-	vt = ValueTable.create_from_expression(parse_expression("A B + C !D + (A (C + !C))"), dc_expression = parse_expression("A !B !C"))
+	vt = ValueTable.create_from_expression("Q", parse_expression("A B + C !D + (A (C + !C))"), dc_expression = parse_expression("A !B !C"))
 	vt.print()
 	vt.print_kv()

@@ -26,6 +26,7 @@ from .ActionMakeTable import ActionMakeTable
 from .ActionPrintTable import ActionPrintTable
 from .ActionKVDiagram import ActionKVDiagram
 from .ActionSynthesize import ActionSynthesize
+from .ActionSatisfied import ActionSatisfied
 from .ActionEqual import ActionEqual
 from .ActionRandomExpression import ActionRandomExpression
 from .ActionRandomTable import ActionRandomTable
@@ -81,6 +82,15 @@ def main():
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
 		parser.add_argument("filename", nargs = "?", help = "Filename containing the truth table, tab-separated. Reads from stdin when argument omitted.")
 	mc.register("synthesize", "Synthesize a Boolean expression from a given truth table", genparser, action = ActionSynthesize)
+
+	def genparser(parser):
+		parser.add_argument("-f", "--tbl-format", choices = [ "text", "pretty", "tex", "compact" ], default = "text", help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-o", "--output-variable-name", metavar = "name", default = "Y", help = "Name of the output variable to use. Defaults to %(default)s.")
+		parser.add_argument("-u", "--unused-value-is", choices = [ "forbidden", "0", "1", "*" ], default = "forbidden", help = "Treat values that do not appear in truth table as the specified value (0, 1, or \"don't care\" value). By default, strict parsing is performed which means unused values are forbidden and all values need to be set explicitly.")
+		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
+		parser.add_argument("filename", help = "Filename containing the truth table, tab-separated. Reads from stdin when argument is \"-\".")
+		parser.add_argument("expression", help = "Input expression to parse or filename (if the 'file' option was given)")
+	mc.register("satisfied", "Verify if a givel Boolean expression satisfies the truth table", genparser, action = ActionSatisfied)
 
 	def genparser(parser):
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
