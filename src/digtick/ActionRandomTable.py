@@ -22,10 +22,13 @@
 import random
 import string
 from .MultiCommand import BaseAction
-from .ValueTable import ValueTable
+from .ValueTable import ValueTable, CompactStorage
 
 class ActionRandomTable(BaseAction):
 	def run(self):
+		if (self._args.zero_percentage + self._args.one_percentage) > 100:
+			raise ValueError(f"With {self._args.zero_percentage}% chance to get a zero and {self._args.one_percentage}% chance to get a zero the total proability is greater than 100% ({self._args.zero_percentage + self._args.one_percentage}%).")
+
 		variable_names = [ string.ascii_uppercase[i] for i in range(self._args.var_count) ]
 		entry_count = 2 ** self._args.var_count
 		zero_entries = round(self._args.zero_percentage / 100 * entry_count)
@@ -34,10 +37,18 @@ class ActionRandomTable(BaseAction):
 		if dc_entries < 0:
 			raise ValueError("Cannot have {dc_entries} D/C entries. Probabilities do not seem to add up.")
 
-		entries = ([ 0 ] * zero_entries) + ([ 1 ] * one_entries) + ([ None ] * dc_entries)
-		random.shuffle(entries)
+		if len(self._args.output_variable_name) == 0:
+			output_var_names = [ "Y" ]
+		else:
+			output_var_names = self._args.output_variable_name
 
-		vt = ValueTable(variable_names, entries)
-		vt.print()
-
-
+		output_values = [ ]
+		for output_var_name in output_var_names:
+			entries = ([ 0 ] * zero_entries) + ([ 1 ] * one_entries) + ([ "*" ] * dc_entries)
+			random.shuffle(entries)
+			storage = CompactStorage(len(variable_names))
+			for (index, entry) in enumerate(entries):
+				storage[index] = entry
+			output_values.append(storage)
+		vt = ValueTable(variable_names, output_var_names, output_values)
+		vt.print(ValueTable.PrintFormat(self._args.tbl_format))

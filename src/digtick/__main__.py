@@ -96,6 +96,8 @@ def main():
 	mc.register("random-expr", "Generate a randomized expression", genparser, action = ActionRandomExpression)
 
 	def genparser(parser):
+		parser.add_argument("-f", "--tbl-format", choices = [ "text", "pretty", "tex", "compact" ], default = "text", help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-o", "--output-variable-name", metavar = "name", action = "append", default = [ ], help = "Name the output variable. Can be specified multiple times to generate a table that has multiple outputs. If omitted, a single output named \"Y\" is generated.")
 		parser.add_argument("-0", "--zero-percentage", metavar = "percentage", type = float, default = 40, help = "Percentage of values that have result 0. Defaults to %(default).0f%%.")
 		parser.add_argument("-1", "--one-percentage", metavar = "percentage", type = float, default = 40, help = "Percentage of values that have result 0. Defaults to %(default).0f%%.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
