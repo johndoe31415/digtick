@@ -310,7 +310,7 @@ $ digtick kv examples/table1.txt
 │ C̅ D │  0  │  1  │  1  │  *  │
 └─────┴─────┴─────┴─────┴─────┘
 
-$ digtick kv examples/table1.txt -o DCBA --x-offset 1 --y-invert
+$ digtick kv examples/table1.txt -d DCBA --x-offset 1 --y-invert
 ┌─────┬─────┬─────┬─────┬─────┐
 │     │ C̅ D │ C D │ C D̅ │ C̅ D̅ │
 ├─────┼─────┼─────┼─────┼─────┤
