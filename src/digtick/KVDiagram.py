@@ -25,7 +25,6 @@ from .TableFormatter import Table, CellFormatter
 from .ValueTable import CompactStorage
 from .TextWidthEstimator import TextWidthEstimator
 from .QuineMcCluskey import QuineMcCluskey
-from .ExpressionParser import Operator, BinaryOperator
 from .ExpressionFormatter import format_expression
 
 class KVDiagram():

@@ -20,7 +20,6 @@
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 from .MultiCommand import BaseAction
-from .ExpressionParser import parse_expression
 from .ExpressionFormatter import format_expression
 from .QuineMcCluskey import QuineMcCluskey
 from .ValueTable import ValueTable
