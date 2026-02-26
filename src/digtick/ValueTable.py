@@ -22,7 +22,7 @@
 import re
 import enum
 import collections
-from .TableFormatter import Table, CellFormatter
+from .TableFormatter import Table
 from .ExpressionParser import Operator, Constant, Variable, BinaryOperator
 
 class CompactStorage():
@@ -338,75 +338,7 @@ class ValueTable():
 		else:
 			return BinaryOperator.join(Operator.And, terms)
 
-	@staticmethod
-	def _gray_code(x: int) -> int:
-		return x ^ (x >> 1)
-
-	@staticmethod
-	def _inv_gray_code(x: int) -> int:
-		result = 0
-		while x != 0:
-			result ^= x
-			x >>= 1
-		return result
-
-	def print_kv(self, variable_order: list[str] | None = None, output_variable_name: str | None = None, x_offset: int = 0, y_offset: int = 0, x_invert: bool = False, y_invert: bool = False, row_heavy: bool = True):
-		if output_variable_name is None:
-			if self.output_variable_count == 1:
-				output_variable_name = self.output_variable_names[0]
-			else:
-				raise ValueError(f"Multiple outputs are present in the data table, need to explicitly specify which of the output variables the KV diagram should show. Options: {', '.join(sorted(self.output_variable_names))}")
-
-		def _create_kv_dict(var_names: list[str], offset: int = 0, invert_direction: bool = False):
-			result = [ ]
-			var_count = len(var_names)
-			for i in range(2 ** var_count):
-				idx = (-i + offset) if invert_direction else (i + offset)
-				gc = self._gray_code(idx % (2 ** var_count))
-				values = { var_names[i]: int((gc & (1 << i)) != 0) for i in range(var_count) }
-				result.append(values)
-			return result
-
-		def _overline(text: str) -> str:
-			return "".join(char + "\u0305" for char in text)
-
-		def _dict2str(var_dict: dict) -> str:
-			return " ".join(_overline(varname) if (value == 0) else varname for (varname, value) in sorted(var_dict.items()))
-
-		variables = self.input_variable_names if (variable_order is None) else variable_order
-		if row_heavy:
-			x_var_cnt = len(variables) // 2
-		else:
-			x_var_cnt = (len(variables) + 1) // 2
-		x_vars = list(reversed(variables[:x_var_cnt]))
-		y_vars = list(reversed(variables[x_var_cnt:]))
-
-		x_values = _create_kv_dict(x_vars, x_offset, invert_direction = x_invert)
-		y_values = _create_kv_dict(y_vars, y_offset, invert_direction = y_invert)
-
-		table = Table()
-		table.format_columns({ f"x{x}": CellFormatter.basic_center() for x in range(len(x_values)) })
-
-		heading = { "_": " " }
-		for (x, xvalue) in enumerate(x_values):
-			heading[f"x{x}"] = _dict2str(xvalue)
-		table.add_row(heading)
-
-		for (y, yvalue) in enumerate(y_values):
-			row = { "_": _dict2str(yvalue) }
-			cell_value = dict(yvalue)
-			for (x, xvalue) in enumerate(x_values):
-				cell_value.update(xvalue)
-				row[f"x{x}"] = self.at(cell_value, output_variable_name).as_str
-
-			table.add_separator_row()
-			table.add_row(row)
-
-		table.print(*([ "_" ] + [ f"x{x}" for x in range(len(x_values)) ]))
-
-
 if __name__ == "__main__":
 	from .ExpressionParser import parse_expression
 	vt = ValueTable.create_from_expression("Q", parse_expression("A B + C !D + (A (C + !C))"), dc_expression = parse_expression("A !B !C"))
 	vt.print()
-	vt.print_kv()

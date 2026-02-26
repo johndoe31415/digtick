@@ -63,12 +63,13 @@ def main():
 	mc.register("print-table", "Read a table file and print it out", genparser, action = ActionPrintTable)
 
 	def genparser(parser):
+		parser.add_argument("-o", "--output-variable-name", metavar = "name", default = "Y", help = "Name of the output variable to use. Defaults to %(default)s.")
 		parser.add_argument("-r", "--row-heavy", action = "store_true", help = "For odd number of literals, choose row-heavy representation (vertical) instead of the default column-heavy representation (horizontal)")
 		parser.add_argument("-x", "--x-offset", metavar = "offset", type = int, default = 0, help = "Order of literals in the X direction start with this offset. Defaults to %(default)d.")
 		parser.add_argument("-y", "--y-offset", metavar = "offset", type = int, default = 0, help = "Order of literals in the Y direction start with this offset. Defaults to %(default)d.")
 		parser.add_argument("-X", "--x-invert", action = "store_true", help = "Invert ordering of literals in the X direction")
 		parser.add_argument("-Y", "--y-invert", action = "store_true", help = "Invert ordering of literals in the Y direction")
-		parser.add_argument("-o", "--literal-order", metavar = "vars", help = "Print literals in the given order. Can be a comma-separated list (\"A,C,D,B\") or simply a string like \"ACDB\" in case of single-letter literals.")
+		parser.add_argument("-d", "--literal-order", metavar = "vars", help = "Print literals in the given order. Can be a comma-separated list (\"A,C,D,B\") or simply a string like \"ACDB\" in case of single-letter literals.")
 		parser.add_argument("-u", "--unused-value-is", choices = [ "forbidden", "0", "1", "*" ], default = "forbidden", help = "Treat values that do not appear in truth table as the specified value (0, 1, or \"don't care\" value). By default, strict parsing is performed which means unused values are forbidden and all values need to be set explicitly.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
 		parser.add_argument("filename", nargs = "?", help = "Filename containing the truth table, tab-separated. Reads from stdin when argument omitted.")

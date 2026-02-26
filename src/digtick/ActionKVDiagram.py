@@ -22,6 +22,7 @@
 from .MultiCommand import BaseAction
 from .ValueTable import ValueTable
 from .Tools import open_file
+from .KVDiagram import KVDiagram
 
 class ActionKVDiagram(BaseAction):
 	def run(self):
@@ -40,4 +41,5 @@ class ActionKVDiagram(BaseAction):
 			if set(variable_order) != set(vt.input_variable_names):
 				raise ValueError(f"The specified literal order variables ({', '.join(variable_order)}) does not match the variables present in the input file ({', '.join(vt.input_variable_names)}).")
 
-		vt.print_kv(variable_order = variable_order, x_offset = self._args.x_offset, y_offset = self._args.y_offset, x_invert = self._args.x_invert, y_invert = self._args.y_invert, row_heavy = self._args.row_heavy)
+		kvd = KVDiagram(value_table = vt, output_variable_name = self._args.output_variable_name, variable_order = variable_order, x_offset = self._args.x_offset, y_offset = self._args.y_offset, x_invert = self._args.x_invert, y_invert = self._args.y_invert, row_heavy = self._args.row_heavy)
+		kvd.print_text()
