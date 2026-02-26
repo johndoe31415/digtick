@@ -277,13 +277,8 @@ class ValueTable():
 
 	def _print_compact(self):
 		output = [ ]
-		output += [ f":{','.join(self.input_variable_names)}:Y" ]
-		compact_value = 0
-		for (index, value) in enumerate(self._output_values):
-			if value is None:
-				value = 2
-			compact_value |= value << (2 * index)
-		output += [ f"{compact_value:x}" ]
+		output += [ f":{','.join(self.input_variable_names)}:{','.join(self.output_variable_names)}" ]
+		output += [ storage.to_string() for storage in self._output_values ]
 		print(":".join(output))
 
 	def print(self, print_format: PrintFormat = PrintFormat.Text):
