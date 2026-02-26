@@ -22,12 +22,14 @@
 import collections
 import itertools
 from .ExpressionParser import parse_expression
+from .ValueTable import CompactStorage
 
 class QuineMcCluskey():
 	Implicant = collections.namedtuple("Implicant", [ "minterms", "value", "mask" ])
 
-	def __init__(self, value_table: "ValueTable", verbosity = 0):
+	def __init__(self, value_table: "ValueTable", variable_name: str, verbosity = 0):
 		self._vt = value_table
+		self._varname = variable_name
 		self._verbose = verbosity
 
 	def _minterm2int(self, minterm):
@@ -226,11 +228,10 @@ class QuineMcCluskey():
 
 		expr_minterms = set()
 		dc_minterms = set()
-		for (input_values, output) in self._vt:
-			index = self._vt.input_dict_to_index(input_values, self._vt.input_variable_names)
-			if output is None:
+		for (index, output) in enumerate(self._vt.iter_output_variable(self._varname)):
+			if output == CompactStorage.Entry.DontCare:
 				dc_minterms.add(index)
-			elif (emit_dnf and (output == 1)) or (not emit_dnf and (output == 0)):
+			elif (emit_dnf and (output == CompactStorage.Entry.High)) or (not emit_dnf and (output == CompactStorage.Entry.Low)):
 				expr_minterms.add(index)
 
 		minterms = expr_minterms | dc_minterms

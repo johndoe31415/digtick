@@ -31,28 +31,13 @@ class ActionSynthesize(BaseAction):
 		with open_file(self._args.filename) as f:
 			vt = ValueTable.parse_from_file(f, set_undefined_values_to = self._args.unused_value_is)
 
-		zero_terms = [ ]
-		one_terms = [ ]
-		dc_terms = [ ]
-		for (inputs, output) in vt:
-			non_inverted_term = " ".join(f"{'!' if (value == 0) else ''}{varname}" for (varname, value) in sorted(inputs.items()))
-			inverted_term = "+".join(f"{'!' if (value == 1) else ''}{varname}" for (varname, value) in sorted(inputs.items()))
-
-			if output is None:
-				dc_terms.append(non_inverted_term)
-			elif output == 0:
-				zero_terms.append(f"({inverted_term})")
-			else:
-				one_terms.append(non_inverted_term)
-
-		dc_expr = parse_expression("+".join(dc_terms), default_empty = "0")
-		cdnf = parse_expression("+".join(one_terms), default_empty = "0")
-		ccnf = parse_expression("".join(zero_terms), default_empty = "1")
-
+		dc_expr = vt.cdnf_dc(self._args.output_variable_name)
+		cdnf = vt.cdnf(self._args.output_variable_name)
+		ccnf = vt.ccnf(self._args.output_variable_name)
 		print(f"CDNF: {format_expression(expression = cdnf, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and)}")
 		print(f"CCNF: {format_expression(expression = ccnf, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and)}")
 
-		qmc = QuineMcCluskey(vt, verbosity = self._args.verbose)
+		qmc = QuineMcCluskey(vt, self._args.output_variable_name, verbosity = self._args.verbose)
 		opt_dnf = qmc.optimize(emit_dnf = True)
 		opt_cnf = qmc.optimize(emit_dnf = False)
 		print(f"DNF : {format_expression(expression = opt_dnf, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and)}")

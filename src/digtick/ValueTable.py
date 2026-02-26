@@ -23,6 +23,7 @@ import re
 import enum
 import itertools
 from .TableFormatter import Table, CellFormatter
+from .ExpressionParser import Operator, Constant, Variable, BinaryOperator
 
 class CompactStorage():
 	class Entry(enum.IntEnum):
@@ -71,6 +72,9 @@ class CompactStorage():
 		for (index, value) in enumerate(self):
 			if value == self.Entry.Undefined:
 				self[index] = entryvalue
+
+	def indices_with_value(self, search_value: Entry):
+		return [ index for (index, value) in enumerate(self) if (value == search_value) ]
 
 	def __iter__(self):
 		value = self._value
@@ -248,6 +252,11 @@ class ValueTable():
 			output_dict = { name: output for (name, output) in zip(self._output_variable_names, outputs) }
 			yield (self.index_to_dict(index), output_dict)
 
+	def iter_output_variable(self, output_var_name: str):
+		if output_var_name not in self._named_outputs:
+			raise KeyError(f"No output variable \"{output_var_name}\" in truth table, only: {', '.join(self.output_variable_names)}")
+		yield from self._named_outputs[output_var_name]
+
 	def _print_text(self):
 		heading = self._input_variable_names + [ f">{name}" for name in self._output_variable_names ]
 		print("\t".join(heading))
@@ -294,6 +303,34 @@ class ValueTable():
 	def print(self, print_format: PrintFormat = PrintFormat.Text):
 		method = getattr(self, f"_print_{print_format.value}")
 		return method()
+
+	def _cdnf(self, varname: str, search_value: CompactStorage.Entry):
+		term_input_values = [ self.index_to_dict(index) for index in self._named_outputs[varname].indices_with_value(search_value) ]
+		def _minterm(input_values: dict):
+			literals = [ ~Variable(varname) if input_values[varname] else Variable(varname) for varname in self.input_variable_names ]
+			return BinaryOperator.join(Operator.And, literals)
+		terms = [ _minterm(term_input_value) for term_input_value in term_input_values ]
+		if len(terms) == 0:
+			return Constant(0)
+		else:
+			return BinaryOperator.join(Operator.Or, terms)
+
+	def cdnf(self, varname: str) -> "ParseTreeElement":
+		return self._cdnf(varname = varname, search_value = CompactStorage.Entry.High)
+
+	def cdnf_dc(self, varname: str) -> "ParseTreeElement":
+		return self._cdnf(varname = varname, search_value = CompactStorage.Entry.DontCare)
+
+	def ccnf(self, varname: str) -> "ParseTreeElement":
+		term_input_values = [ self.index_to_dict(index) for index in self._named_outputs[varname].indices_with_value(CompactStorage.Entry.Low) ]
+		def _maxterm(input_values: dict):
+			literals = [ Variable(varname) if input_values[varname] else ~Variable(varname) for varname in self.input_variable_names ]
+			return BinaryOperator.join(Operator.Or, literals)
+		terms = [ _maxterm(term_input_value) for term_input_value in term_input_values ]
+		if len(terms) == 0:
+			return Constant(1)
+		else:
+			return BinaryOperator.join(Operator.And, terms)
 
 	@staticmethod
 	def _gray_code(x: int) -> int:
