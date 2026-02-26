@@ -110,6 +110,20 @@ class ParseTreeElement():
 			if evaluation == 0:
 				yield value_dict
 
+	def find_minterms(self):
+		if isinstance(self, BinaryOperator) and (self.op == Operator.Or):
+			yield from self.lhs.find_minterms()
+			yield from self.rhs.find_minterms()
+		else:
+			yield self
+
+	def find_maxterms(self):
+		if isinstance(self, BinaryOperator) and (self.op == Operator.And):
+			yield from self.lhs.find_maxterms()
+			yield from self.rhs.find_maxterms()
+		else:
+			yield self
+
 	def compare_to_expression(self, other: "ParseTreeElement"):
 		e1_vars = set(self.variables)
 		e2_vars = set(other.variables)

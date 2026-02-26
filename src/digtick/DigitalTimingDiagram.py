@@ -24,6 +24,7 @@ import functools
 import collections
 import dataclasses
 from pysvgedit import SVGDocument, SVGGroup, SVGPath, SVGText, Vector2D
+from .TextWidthEstimator import TextWidthEstimator
 
 class DigitalTimingType(enum.Enum):
 	Low = "0"
@@ -79,26 +80,6 @@ class DigitalTimingCmd():
 					raise NotImplementedError(f"Unknown character in sequence diagram: {char}")
 			sequence.append(cmd)
 		return sequence
-
-class _FontWidthEstimator():
-	# Do not judge me. There is no good solution for the issue: I do not want a
-	# runtime dependency on freetype-py, the overline hack does not work
-	# reliably (Inkscape renders it, but Firefox and Chromium do not) and just
-	# hard coding the glyph width looks "off" for many wider characters.
-	# Therefore this is a class that is able to estimate a subset of characters
-	# widths, calibrated against Latin Modern Roman at 12px.
-	_GLYPHS = { "0": 6, "1": 6, "2": 6, "3": 6, "4": 6, "5": 6, "6": 6, "7": 6, "8": 6, "9": 6,
-				"A": 9, "B": 9, "C": 9, "D": 9, "E": 8, "F": 8, "G": 9, "H": 9, "I": 4, "J": 6, "K": 9, "L": 8, "M": 11, "N": 9, "O": 9, "P": 8, "Q": 9, "R": 9, "S": 7, "T": 9, "U": 9, "V": 9, "W": 12, "X": 9, "Y": 9, "Z": 7,
-				"a": 6, "b": 7, "c": 5, "d": 7, "e": 5, "f": 4, "g": 6, "h": 7, "i": 3, "j": 4, "k": 6, "l": 3, "m": 10, "n": 7, "o": 6, "p": 7, "q": 6, "r": 5, "s": 5, "t": 5, "u": 7, "v": 6, "w": 9, "x": 6, "y": 6, "z": 5,
-				"_": 9 }
-	_MEDIAN_GLYPH_WIDTH = 7
-
-	@classmethod
-	def estimate_text_width(cls, text: str) -> float:
-		width = 0
-		for character in text:
-			width += cls._GLYPHS.get(character, cls._MEDIAN_GLYPH_WIDTH)
-		return width
 
 class DigitalTimingDiagram():
 	class Layer(enum.Enum):
@@ -174,7 +155,7 @@ class DigitalTimingDiagram():
 			# Chromium both do not render it), emulate by a path.  Note that
 			# this is a really ugly hack that only works for this specific
 			# font/font size and only for common glyphs.
-			text_width = _FontWidthEstimator.estimate_text_width(raw_signal_name)
+			text_width = TextWidthEstimator.estimate_text_width(raw_signal_name)
 			path = self._layer(self.Layer.SignalNames).add(SVGPath.new(pos = Vector2D(x + 0.5, abs_y_mid - 5.5)))
 			path.horizontal(-text_width, relative = True)
 			path.style["stroke-width"] = 0.75
