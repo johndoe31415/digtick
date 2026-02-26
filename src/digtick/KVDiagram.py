@@ -19,9 +19,15 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
+import dataclasses
 from .TableFormatter import Table, CellFormatter
 
 class KVDiagram():
+	@dataclasses.dataclass
+	class RenderedKVDiagram():
+		x_values: list[dict]
+		y_values: list[dict]
+
 	def __init__(self, value_table: "ValueTable", output_variable_name: str | None = None, variable_order: list[str] | None = None, x_offset: int = 0, y_offset: int = 0, x_invert: bool = False, y_invert: bool = False, row_heavy: bool = True):
 		self._value_table = value_table
 		self._output_variable_name = output_variable_name
@@ -49,7 +55,7 @@ class KVDiagram():
 			x >>= 1
 		return result
 
-	def print_text(self):
+	def _compute(self):
 		def _create_kv_dict(var_names: list[str], offset: int = 0, invert_direction: bool = False):
 			result = [ ]
 			var_count = len(var_names)
@@ -59,12 +65,6 @@ class KVDiagram():
 				values = { var_names[i]: int((gc & (1 << i)) != 0) for i in range(var_count) }
 				result.append(values)
 			return result
-
-		def _overline(text: str) -> str:
-			return "".join(char + "\u0305" for char in text)
-
-		def _dict2str(var_dict: dict) -> str:
-			return " ".join(_overline(varname) if (value == 0) else varname for (varname, value) in sorted(var_dict.items()))
 
 		variables = self._value_table.input_variable_names if (self._variable_order is None) else self._variable_order
 		if self._row_heavy:
@@ -77,22 +77,37 @@ class KVDiagram():
 		x_values = _create_kv_dict(x_vars, self._x_offset, invert_direction = self._x_invert)
 		y_values = _create_kv_dict(y_vars, self._y_offset, invert_direction = self._y_invert)
 
+		return self.RenderedKVDiagram(x_values = x_values, y_values = y_values)
+
+
+	def print_text(self):
+		rkvd = self._compute()
+
 		table = Table()
-		table.format_columns({ f"x{x}": CellFormatter.basic_center() for x in range(len(x_values)) })
+		table.format_columns({ f"x{x}": CellFormatter.basic_center() for x in range(len(rkvd.x_values)) })
+
+		def _overline(text: str) -> str:
+			return "".join(char + "\u0305" for char in text)
+
+		def _dict2str(var_dict: dict) -> str:
+			return " ".join(_overline(varname) if (value == 0) else varname for (varname, value) in sorted(var_dict.items()))
 
 		heading = { "_": " " }
-		for (x, xvalue) in enumerate(x_values):
+		for (x, xvalue) in enumerate(rkvd.x_values):
 			heading[f"x{x}"] = _dict2str(xvalue)
 		table.add_row(heading)
 
-		for (y, yvalue) in enumerate(y_values):
+		for (y, yvalue) in enumerate(rkvd.y_values):
 			row = { "_": _dict2str(yvalue) }
 			cell_value = dict(yvalue)
-			for (x, xvalue) in enumerate(x_values):
+			for (x, xvalue) in enumerate(rkvd.x_values):
 				cell_value.update(xvalue)
 				row[f"x{x}"] = self._value_table.at(cell_value, self._output_variable_name).as_str
 
 			table.add_separator_row()
 			table.add_row(row)
 
-		table.print(*([ "_" ] + [ f"x{x}" for x in range(len(x_values)) ]))
+		table.print(*([ "_" ] + [ f"x{x}" for x in range(len(rkvd.x_values)) ]))
+
+	def render_svg(self):
+		pass
