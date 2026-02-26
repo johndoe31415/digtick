@@ -47,6 +47,7 @@ def main():
 	mc.register("parse", "Parse and reformat Boolean expression(s)", genparser, action = ActionParse)
 
 	def genparser(parser):
+		parser.add_argument("-o", "--output-variable-name", metavar = "name", default = "Y", help = "Name of the output variable. Defaults to %(default)s.")
 		parser.add_argument("-f", "--tbl-format", choices = [ "text", "pretty", "tex", "compact" ], default = "text", help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
 		parser.add_argument("expression", help = "Input expression to create truth table from")

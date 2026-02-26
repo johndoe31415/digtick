@@ -209,14 +209,15 @@ class ValueTable():
 		}.get(set_undefined_values_to))
 
 	@classmethod
-	def create_from_expression(self, expression: "ParseTreeElement", dc_expression: "ParseTreeElement | None" = None):
-		output_values = [ ]
+	def create_from_expression(self, output_variable_name: str, expression: "ParseTreeElement", dc_expression: "ParseTreeElement | None" = None):
+		storage = CompactStorage(len(expression.variables))
+		index_values = { varname: 1 << bitno for (bitno, varname) in enumerate(reversed(expression.variables)) }
 		for (inputs, output) in expression.table():
 			if (dc_expression is not None) and (dc_expression.evaluate(inputs) != 0):
-				# Don't care
-				output = None
-			output_values.append(output)
-		return ValueTable(expression.variables, output_values = output_values)
+				output = CompactStorage.Entry.DontCare
+			index = sum(index_values[varname] for (varname, bitvalue) in inputs.items() if bitvalue == 1)
+			storage[index] = output
+		return ValueTable(input_variable_names = list(expression.variables), output_variable_names = [ output_variable_name ], output_values = [ storage ])
 
 	def index_to_list(self, index: int) -> list[int]:
 		return [ (index >> i) & 1 for i in reversed(range(self.input_variable_count)) ]
