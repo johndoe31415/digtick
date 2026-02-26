@@ -1,0 +1,7 @@
+A B C + B C (A + D) + B A !D + F (E + !F)
+A B C + B C A + B C D + B A !D + F (E + !F)
+A B C + B C A + B C D + B A !D + F E + F !F
+A B C + B C A + B C D + B A !D
+B C A + B C D + B A !D
+B (C A + C D + A !D)
+B (C D + A !D)

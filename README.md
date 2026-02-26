@@ -110,12 +110,12 @@ print(A @ B & C == (A @ B) & C)
 ## Truth table format
 There is a human-readable truth table format which uses Unicode characters for
 pretty viewing in a terminal and the machine-readable format which is
-tab-separated. The latter is the default output variant and the only variant
+whitespace-separated. The latter is the default output variant one of two forms
 which can be used as input:
 
 ```
 $ digtick make-table 'A B C + A !B C + C !A'
-A	B	C
+A	B	C   >Y
 0	0	0	0
 0	0	1	1
 0	1	0	0
@@ -127,7 +127,7 @@ A	B	C
 
 $ digtick make-table --tbl-format pretty 'A B C + A !B C + C !A'
 ┌───┬───┬───┬───┐
-│ A │ B │ C │   │
+│ A │ B │ C │ Y │
 ├───┼───┼───┼───┤
 │ 0 │ 0 │ 0 │ 0 │
 │ 0 │ 0 │ 1 │ 1 │
@@ -140,6 +140,9 @@ $ digtick make-table --tbl-format pretty 'A B C + A !B C + C !A'
 └───┴───┴───┴───┘
 ```
 
+By default, the output is named `Y`. Output signals are denoted by the `>`
+prefix in the heading row. There can be multiple output signals in a single table.
+
 Note that commands which accept truth table inputs can all have the filename
 omitted and will then read from stdin. This allows for easy piping of commands:
 
@@ -151,8 +154,39 @@ DNF : C
 CNF : (C)
 ```
 
+There is a second format which is also automatically accepted, called the
+"compact" format. The compact format is useful when you want to modify whole
+tables in a single command line because it is, as the name indicates, a very
+compact representation of a truth table:
+
+```
+$ digtick make-table --tbl-format compact 'A B C + A !B C + C !A'
+:A,B,C:Y:4444
+```
+
+digtick distinguishes when reading table input by the first character of the
+first line -- in compact format, this is always a colon `:`. Compact format
+then lists the input variable names, output variable names and then the
+bit-packed data (0 = Low, 1 = High, 2 = Don't Care, 3 = Undefined). Note the
+seamless conversion:
+
+```
+$ echo :A,B,C:Y:4444 | digtick print-table
+A	B	C	>Y
+0	0	0	0
+0	0	1	1
+0	1	0	0
+0	1	1	1
+1	0	0	0
+1	0	1	1
+1	1	0	0
+1	1	1	1
+```
+
+
 ## Timing diagram format
-For timing diagrams, the general format is this:
+For timing diagrams (described below in more detail), the general format is
+this:
 
 ```
 # Comment, this will be ignored
@@ -214,7 +248,7 @@ care” output positions (`*`). Wherever the “don't care” expression evaluat
 
 ```
 $ digtick make-table 'A + B !C' 'A !B'
-A	B	C
+A	B	C   >Y
 0	0	0	0
 0	0	1	0
 0	1	0	1
@@ -238,7 +272,7 @@ $ digtick make-table 'A + B !C' 'A !B' | \
   head -n 4 | \
   digtick print-table -f pretty --unused-value-is '*'
 ┌───┬───┬───┬───┐
-│ A │ B │ C │   │
+│ A │ B │ C │ Y │
 ├───┼───┼───┼───┤
 │ 0 │ 0 │ 0 │ 0 │
 │ 0 │ 0 │ 1 │ 0 │
@@ -262,8 +296,8 @@ rendering command accepts a number of different parameters that influence the
 way the KV diagram is printed.
 
 ```
-$ digtick make-table 'A B !C + B D + !C A' 'B !A D + A B C D' >exam1.txt
-$ digtick kv exam1.txt
+$ digtick make-table 'A B !C + B D + !C A' 'B !A D + A B C D' >examples/table1.txt
+$ digtick kv examples/table1.txt
 ┌─────┬─────┬─────┬─────┬─────┐
 │     │ A̅ B̅ │ A B̅ │ A B │ A̅ B │
 ├─────┼─────┼─────┼─────┼─────┤
@@ -276,7 +310,7 @@ $ digtick kv exam1.txt
 │ C̅ D │  0  │  1  │  1  │  *  │
 └─────┴─────┴─────┴─────┴─────┘
 
-$ digtick kv exam1.txt -o DCBA --x-offset 1 --y-invert
+$ digtick kv examples/table1.txt -o DCBA --x-offset 1 --y-invert
 ┌─────┬─────┬─────┬─────┬─────┐
 │     │ C̅ D │ C D │ C D̅ │ C̅ D̅ │
 ├─────┼─────┼─────┼─────┼─────┤
@@ -292,6 +326,23 @@ $ digtick kv exam1.txt -o DCBA --x-offset 1 --y-invert
 
 This makes it much easier to verify solutions for their correctness, regardless
 of which format the student chose.
+
+You may also render SVGs from a KV diagram, which will also display the
+solution implicants for both DNF and CNF using SVG layers:
+
+```
+$ digtick kv --output-filename docs/kv.svg examples/table2.txt
+```
+
+![DNF in KV](https://raw.githubusercontent.com/johndoe31415/digtick/main/docs/kv_dnf.png)
+
+Via layers, you can also switch to CNF view:
+
+![CNF in KV](https://raw.githubusercontent.com/johndoe31415/digtick/main/docs/kv_cnf.png)
+
+The selection, here shown in Inkscape, allows also for selection based on single min/maxterms:
+
+![Inkscape KV diagram layers](https://raw.githubusercontent.com/johndoe31415/digtick/main/docs/kv_inkscape_layers.png)
 
 
 ## "synthesize": minimize/synthesize expressions from a truth table
@@ -322,7 +373,7 @@ Expressions equal.
 Note that `digtick` also supports checking a whole file for equivalence in the `parse` command. For example, say you have generated an exam and are preparing the reference solution, in which you are performing tiny simplification steps each line:
 
 ```
-$ cat exam2.txt
+$ cat examples/equations.txt
 A B C + B C (A + D) + B A !D + F (E + !F)
 A B C + B C A + B C D + B A !D + F (E + !F)
 A B C + B C A + B C D + B A !D + F E + F !F
@@ -335,7 +386,7 @@ B (C D + A !D)
 Did you spot my error? A simple omission that changes the whole formula:
 
 ```
-$ digtick parse --read-as-filename --validate-equivalence exam2.txt
+$ digtick parse --read-as-filename --validate-equivalence examples/equations.txt
 A B C + B C (A + D) + B A !D + F (E + !F)
 A B C + B C A + B C D + B A !D + F (E + !F)
 A B C + B C A + B C D + B A !D + F E + F !F
@@ -386,7 +437,7 @@ those is implicitly treated as `*`.
 
 ```
 $ digtick random-table -0 30 -1 50 3
-A	B	C
+A	B	C   >Y
 0	0	0	0
 0	0	1	1
 0	1	0	*
