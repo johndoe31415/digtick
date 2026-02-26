@@ -49,14 +49,14 @@ def main():
 
 	def genparser(parser):
 		parser.add_argument("-o", "--output-variable-name", metavar = "name", default = "Y", help = "Name of the output variable. Defaults to %(default)s.")
-		parser.add_argument("-f", "--tbl-format", choices = [ "text", "pretty", "tex", "compact" ], default = "text", help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-f", "--tbl-format", choices = [ "text", "pretty", "tex", "compact", "logisim" ], default = "text", help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
 		parser.add_argument("expression", help = "Input expression to create truth table from")
 		parser.add_argument("dc_expression", nargs = "?", help = "Optional expression that gives all don't care values")
 	mc.register("make-table", "Create a truth table for a Boolean expression", genparser, action = ActionMakeTable, aliases = [ "mkt" ])
 
 	def genparser(parser):
-		parser.add_argument("-f", "--tbl-format", choices = [ "text", "pretty", "tex", "compact" ], default = "text", help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-f", "--tbl-format", choices = [ "text", "pretty", "tex", "compact", "logisim" ], default = "text", help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-u", "--unused-value-is", choices = [ "forbidden", "0", "1", "*" ], default = "forbidden", help = "Treat values that do not appear in truth table as the specified value (0, 1, or \"don't care\" value). By default, strict parsing is performed which means unused values are forbidden and all values need to be set explicitly.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
 		parser.add_argument("filename", nargs = "?", help = "Filename containing the truth table, tab-separated")
@@ -86,7 +86,7 @@ def main():
 	mc.register("synthesize", "Synthesize a Boolean expression from a given truth table", genparser, action = ActionSynthesize)
 
 	def genparser(parser):
-		parser.add_argument("-f", "--tbl-format", choices = [ "text", "pretty", "tex", "compact" ], default = "text", help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-f", "--tbl-format", choices = [ "text", "pretty", "tex", "compact", "logisim" ], default = "text", help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-o", "--output-variable-name", metavar = "name", default = "Y", help = "Name of the output variable to use. Defaults to %(default)s.")
 		parser.add_argument("-u", "--unused-value-is", choices = [ "forbidden", "0", "1", "*" ], default = "forbidden", help = "Treat values that do not appear in truth table as the specified value (0, 1, or \"don't care\" value). By default, strict parsing is performed which means unused values are forbidden and all values need to be set explicitly.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
@@ -109,7 +109,7 @@ def main():
 	mc.register("random-expr", "Generate a randomized expression", genparser, action = ActionRandomExpression)
 
 	def genparser(parser):
-		parser.add_argument("-f", "--tbl-format", choices = [ "text", "pretty", "tex", "compact" ], default = "text", help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-f", "--tbl-format", choices = [ "text", "pretty", "tex", "compact", "logisim" ], default = "text", help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-o", "--output-variable-name", metavar = "name", action = "append", default = [ ], help = "Name the output variable. Can be specified multiple times to generate a table that has multiple outputs. If omitted, a single output named \"Y\" is generated.")
 		parser.add_argument("-0", "--zero-percentage", metavar = "percentage", type = float, default = 40, help = "Percentage of values that have result 0. Defaults to %(default).0f%%.")
 		parser.add_argument("-1", "--one-percentage", metavar = "percentage", type = float, default = 40, help = "Percentage of values that have result 0. Defaults to %(default).0f%%.")
