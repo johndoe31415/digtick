@@ -270,8 +270,9 @@ class ValueTable():
 			print(f"	{' & '.join(line)}\\\\%")
 		print("	\\hline")
 
-		line = [ "Y" ] + [ "*" if (value is None) else str(value) for value in self._output_values ]
-		print(f"	{' & '.join(line)}\\\\%")
+		for (output_varname, storage) in zip(self.output_variable_names, self._output_values):
+			line = [ output_varname ] + [ value.as_str for value in storage ]
+			print(f"	{' & '.join(line)}\\\\%")
 		print("\\end{tabular}")
 
 	def _print_compact(self):
