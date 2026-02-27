@@ -21,11 +21,20 @@
 
 import collections
 import itertools
+import dataclasses
 from .ExpressionParser import parse_expression
 from .ValueTable import CompactStorage
 
+
 class QuineMcCluskey():
-	Implicant = collections.namedtuple("Implicant", [ "minterms", "value", "mask" ])
+	@dataclasses.dataclass(frozen = True, slots = True, order = True)
+	class Implicant():
+		minterms: frozenset[int]
+		value: int
+		mask: int
+
+		def __repr__(self):
+			return f"{'Prime' if (len(self.minterms) == 1) else f'size-{len(self.minterms)}'} implicant {{{','.join(str(minterm) for minterm in sorted(self.minterms))}}}"
 
 	def __init__(self, value_table: "ValueTable", variable_name: str, verbosity = 0):
 		self._vt = value_table
@@ -181,6 +190,7 @@ class QuineMcCluskey():
 				yield from self._enumerate_fulfilling_implicants(remaining_path, grouped_implicants, included_path)
 
 	def _find_minimal_expression(self, remaining_minterms, grouped_implicants):
+		print(f"Finding minimal expression: Remaining {remaining_minterms}")
 		min_length = None
 		optimal_solution = None
 		for implicants in self._enumerate_fulfilling_implicants(remaining_minterms, grouped_implicants):
@@ -209,7 +219,7 @@ class QuineMcCluskey():
 		for (bit_count, implicants_by_mask) in sorted(implicants.items()):
 			for (mask, implicants) in sorted(implicants_by_mask.items()):
 				for implicant in implicants:
-					print(f"   [{implicant.mask:04x}] {bit_count:3d} {implicant.minterms}")
+					print(f"   [{implicant.mask:04x}] HW={bit_count:<3d} {implicant}")
 		print()
 
 	def _dump_eliminated_implicants(self, all_implicants, text):
@@ -219,7 +229,7 @@ class QuineMcCluskey():
 			else:
 				print(f"Eliminiated size {1 << (group - 1)} implicants {text}:")
 			for implicant in implicants:
-				print(f"    {implicant.minterms}")
+				print(f"    {implicant}")
 			print()
 
 	def optimize(self, emit_dnf: bool = True):
@@ -262,7 +272,7 @@ class QuineMcCluskey():
 
 		remaining_minterms = self._compute_remaining_minterms(expr_minterms, required_implicants)
 		if self._verbose >= 2:
-			print(f"Remaining minterms: {sorted(list(remaining_minterms))}")
+			print(f"{len(remaining_minterms)} remaining minterms: {sorted(list(remaining_minterms))}")
 
 		grouped_implicants = self._group_implicants_by_minterm(all_implicants)
 		optimal_solution = self._find_minimal_expression(remaining_minterms, grouped_implicants)
