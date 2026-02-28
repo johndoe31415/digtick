@@ -33,6 +33,17 @@ class QuineMcCluskey():
 		value: int
 		mask: int
 
+		def binformat(self, bit_count: int):
+			bitstr = [ ]
+			for bit in reversed(range(bit_count)):
+				if (self.mask >> bit) & 1:
+					bitstr.append("-")
+				elif (self.value >> bit) & 1:
+					bitstr.append("1")
+				else:
+					bitstr.append("0")
+			return "".join(bitstr)
+
 		def __repr__(self):
 			return f"size-{len(self.minterms)} implicant {{{','.join(str(minterm) for minterm in sorted(self.minterms))}}}"
 
@@ -54,7 +65,7 @@ class QuineMcCluskey():
 			result[value.bit_count()].append(value)
 		return result
 
-	def _create_prime_implicants(self, grouped_minterms):
+	def _create_size_one_implicants(self, grouped_minterms):
 		return { bit_count: { 0: [ self.Implicant(minterms = frozenset([ minterm ]), value = minterm, mask = 0) for minterm in minterms ] } for (bit_count, minterms) in grouped_minterms.items() }
 
 	def _merge_implicants(self, grouped_implicants):
@@ -165,40 +176,6 @@ class QuineMcCluskey():
 					result[minterm].append(implicant)
 		return result
 
-	def _enumerate_fulfilling_implicants(self, remaining_minterms, grouped_implicants, included = None):
-		if included is None:
-			included = set()
-		if len(remaining_minterms) == 0:
-			yield included
-			return
-
-		# We're not done yet.
-		analyzed = set()
-		for remaining_minterm in remaining_minterms:
-			for candidate_implicant in grouped_implicants[remaining_minterm]:
-				if candidate_implicant in analyzed:
-					# We've already covered this path.
-					continue
-				if candidate_implicant in included:
-					# It's already considered
-					continue
-				analyzed.add(candidate_implicant)
-
-				remaining_path = remaining_minterms - candidate_implicant.minterms
-				included_path = set(included)
-				included_path.add(candidate_implicant)
-				yield from self._enumerate_fulfilling_implicants(remaining_path, grouped_implicants, included_path)
-
-	def _find_minimal_expression(self, remaining_minterms, grouped_implicants):
-		print(f"Finding minimal expression: Remaining {remaining_minterms}")
-		min_length = None
-		optimal_solution = None
-		for implicants in self._enumerate_fulfilling_implicants(remaining_minterms, grouped_implicants):
-			if (min_length is None) or (len(implicants) < min_length):
-				min_length = len(implicants)
-				optimal_solution = implicants
-		return optimal_solution
-
 	def _print_prime_implicant_chart(self, remaining_minterms: set[int], implicants_fulfilling_minterm: dict[int, list[Implicant]]):
 		# Reverse dictionary
 		minterm_covered_by_implicant = collections.defaultdict(list)
@@ -208,7 +185,7 @@ class QuineMcCluskey():
 
 		table = Table()
 		heading = { str(minterm): str(minterm) for minterm in remaining_minterms }
-		heading.update({ "_": " " })
+		heading.update({ "_": "Prime implicant chart" })
 		table.add_row(heading)
 		table.add_separator_row()
 
@@ -224,7 +201,6 @@ class QuineMcCluskey():
 		# terms of their bits. This is current O(n²) but I'm quite certain we
 		# could use a divide-and-conquery approach. Let's check first if this
 		# works
-		print("PRE AB ", len(terms))
 		unique = set()
 		while len(terms) > 0:
 			term = terms.pop()
@@ -233,8 +209,6 @@ class QuineMcCluskey():
 					break
 			else:
 				unique.add(term)
-
-		print("POST AB", len(unique))
 		return unique
 
 	def _filter_min_bit_count(self, terms: set[int]) -> set[int]:
@@ -260,26 +234,21 @@ class QuineMcCluskey():
 		possible_solutions = None
 		for minterm in remaining_minterms:
 			next_minterm_implicants = set(candidate_implicants[implicant] for implicant in implicants_fulfilling_minterm[minterm])
-#			for x in next_minterm_implicants:
-				#				print(x, inverse[x])
-#			print(next_minterm_implicants)
-#			fjdsio
 			if possible_solutions is None:
 				# First term
 				possible_solutions = next_minterm_implicants
 			else:
 				# Next term, multiply/absorb
-				print("MUL", possible_solutions, next_minterm_implicants)
 				possible_solutions = set(a | b for (a, b) in itertools.product(possible_solutions, next_minterm_implicants))
-				# TODO filter least amount of bits already????
-				print("RES", possible_solutions)
-				possible_solutions = self._filter_min_bit_count(possible_solutions)
+				possible_solutions = self._filter_min_bit_count(possible_solutions)		# TODO: greedy matching. Is this correct?
 				possible_solutions = self._absorb(possible_solutions)
 
 
 		remaining_solutions = self._filter_min_bit_count(possible_solutions)
+		# We now have a list of solutions that all are correct. Choose one that
+		# has the fewest amount of literals (not all implicants have the same!).
 
-		final_solution = remaining_solutions.pop()
+		final_solution = remaining_solutions.pop()		# TODO: implement me
 		impl = [ ]
 		for bit in range(final_solution.bit_length()):
 			impl.append(inverse[1 << bit])
@@ -301,23 +270,20 @@ class QuineMcCluskey():
 				return "1"
 			return " ".join(reversed(terms))
 
-	def _dump_implicants(self, text, implicants):
+	def _dump_implicants(self, text: set, implicants_by_hamming_weight: dict[int, dict[int, Implicant]]):
 		print(f"{text}:")
-		for (bit_count, implicants_by_mask) in sorted(implicants.items()):
-			for (mask, implicants) in sorted(implicants_by_mask.items()):
+		for (hamming_weight, implicants) in sorted(implicants_by_hamming_weight.items()):
+			for (order, implicants) in sorted(implicants.items()):
 				for implicant in implicants:
-					print(f"   [{implicant.mask:04x}] HW={bit_count:<3d} {implicant}")
+					print(f"   HammWeight={hamming_weight:<3d} {implicant.binformat(self._vt.input_variable_count)} {implicant}")
 		print()
 
-	def _dump_eliminated_implicants(self, all_implicants, text):
-		for (group, implicants) in sorted(all_implicants.items()):
-			if group == 1:
-				print(f"Eliminiated prime implicants {text}:")
-			else:
-				print(f"Eliminiated size {1 << (group - 1)} implicants {text}:")
+	def _dump_merged_implicants(self, text: set, implicants_by_order: dict[int, Implicant]):
+		print(f"{text}:")
+		for (order, implicants) in sorted(implicants_by_order.items()):
 			for implicant in implicants:
-				print(f"    {implicant}")
-			print()
+				print(f"   {implicant.binformat(self._vt.input_variable_count)} {implicant}")
+		print()
 
 	def optimize(self, emit_dnf: bool = True):
 		# When we emit CNF, we add minterms for the inverse function and emit a
@@ -333,19 +299,19 @@ class QuineMcCluskey():
 
 		minterms = expr_minterms | dc_minterms
 		grouped_minterms = self._group_by_bitcount(minterms)
-		prime_implicants = self._create_prime_implicants(grouped_minterms)
-		if len(prime_implicants) == 0:
+		size_one_implicants = self._create_size_one_implicants(grouped_minterms)
+		if len(size_one_implicants) == 0:
 			# Constant zero function
 			return parse_expression("0" if emit_dnf else "1")
 
 		if self._verbose >= 2:
-			self._dump_implicants("Prime implicants", prime_implicants)
-		all_implicants = self._create_merged_implicant_groups(prime_implicants)
+			self._dump_implicants("Initial size-1 implicants", size_one_implicants)
+		all_implicants = self._create_merged_implicant_groups(size_one_implicants)
 		all_implicants = self._discard_mask_information(all_implicants)
 		all_implicants = self._eliminate_suboptimal_implicants(all_implicants)
 
 		if self._verbose >= 2:
-			self._dump_eliminated_implicants(all_implicants, "after removal of redundant implicants")
+			self._dump_merged_implicants("Remaining implicants after merging/redundant removal", all_implicants)
 
 		required_minterms = self._determine_required_minterms(all_implicants, mandatory_minterms = expr_minterms)
 		if self._verbose >= 2:
@@ -354,16 +320,17 @@ class QuineMcCluskey():
 
 		(required_implicants, all_implicants) = self._eliminate_required_implicants(all_implicants, required_minterms)
 		if self._verbose >= 2:
-			print(f"Required implicants: {required_implicants}")
-			self._dump_eliminated_implicants(all_implicants, "after removal of required implicants")
+			print(f"Essential implicants: {required_implicants}")
+			print()
+			self._dump_merged_implicants("Remaining implicants after removal of essential implicants", all_implicants)
 
 		remaining_minterms = self._compute_remaining_minterms(expr_minterms, required_implicants)
 		if self._verbose >= 2:
-			print(f"{len(remaining_minterms)} remaining minterms: {sorted(list(remaining_minterms))}")
+			print(f"{len(remaining_minterms)} remaining minterms which need to be selected by prime implicant chart: {sorted(list(remaining_minterms))}")
 
 		grouped_implicants = self._group_implicants_by_minterm(all_implicants)
-		self._print_prime_implicant_chart(remaining_minterms, grouped_implicants)
-		#optimal_solution = self._find_minimal_expression(remaining_minterms, grouped_implicants)
+		if self._verbose >= 2:
+			self._print_prime_implicant_chart(remaining_minterms, grouped_implicants)
 		optimal_solution = self._find_minimal_expression_petricks_method(remaining_minterms, grouped_implicants)
 
 		solution_implicants = set(required_implicants) | set(optimal_solution)

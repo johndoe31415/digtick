@@ -30,14 +30,19 @@ class ActionSynthesize(BaseAction):
 		with open_file(self._args.filename) as f:
 			vt = ValueTable.parse_from_file(f, set_undefined_values_to = self._args.unused_value_is)
 
-		dc_expr = vt.cdnf_dc(self._args.output_variable_name)
-		cdnf = vt.cdnf(self._args.output_variable_name)
-		ccnf = vt.ccnf(self._args.output_variable_name)
-		print(f"CDNF: {format_expression(expression = cdnf, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and)}")
-		print(f"CCNF: {format_expression(expression = ccnf, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and)}")
-
 		qmc = QuineMcCluskey(vt, self._args.output_variable_name, verbosity = self._args.verbose)
-		opt_dnf = qmc.optimize(emit_dnf = True)
-		opt_cnf = qmc.optimize(emit_dnf = False)
-		print(f"DNF : {format_expression(expression = opt_dnf, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and)}")
-		print(f"CNF : {format_expression(expression = opt_cnf, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and)}")
+		dc_expr = vt.cdnf_dc(self._args.output_variable_name)
+
+		if self._args.compute in [ "dnf", "both" ]:
+			cdnf = vt.cdnf(self._args.output_variable_name)
+			print(f"CDNF: {format_expression(expression = cdnf, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and)}")
+			opt_dnf = qmc.optimize(emit_dnf = True)
+			print(f"DNF : {format_expression(expression = opt_dnf, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and)}")
+
+		if self._args.compute in [ "cnf", "both" ]:
+			if self._args.compute == "both":
+				print()
+			ccnf = vt.ccnf(self._args.output_variable_name)
+			print(f"CCNF: {format_expression(expression = ccnf, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and)}")
+			opt_cnf = qmc.optimize(emit_dnf = False)
+			print(f"CNF : {format_expression(expression = opt_cnf, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and)}")
