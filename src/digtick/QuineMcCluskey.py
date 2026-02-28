@@ -250,20 +250,25 @@ class QuineMcCluskey():
 			table.add_row(row)
 		table.print(*([ "_" ] + list(str(minterm) for minterm in sorted(remaining_minterms))))
 
-	def _absorb(self, terms: set[int]) -> set[int]:
-		# Remove all values that are completely covered by other values in
-		# terms of their bits. This is current O(n²) but I'm quite certain we
-		# could use a divide-and-conquery approach. Let's check first if this
-		# works
-		unique = set()
-		while len(terms) > 0:
-			term = terms.pop()
-			for other in terms:
-				if (term & other) == term:
+	@staticmethod
+	def _absorb(terms: set[int]) -> set[int]:
+		if len(terms) == 0:
+			return set()
+
+		kept_terms = [ ]
+		for term in sorted(terms, key = lambda term: (term.bit_count(), term)):
+			term_bit_count = term.bit_count()
+			absorbed = False
+			for (kept_term, kept_bitcount) in kept_terms:
+				if kept_bitcount >= term_bit_count:
 					break
-			else:
-				unique.add(term)
-		return unique
+				elif (kept_term & term) == kept_term:
+					absorbed = True
+					break
+			if not absorbed:
+				kept_terms.append((term, term_bit_count))
+
+		return set(term for (term, term_bitcount) in kept_terms)
 
 	def _filter_min_bit_count(self, terms: set[int]) -> set[int]:
 		result = None
@@ -294,11 +299,11 @@ class QuineMcCluskey():
 			else:
 				# Next term, multiply/absorb
 				possible_solutions = set(a | b for (a, b) in itertools.product(possible_solutions, next_minterm_implicants))
-				possible_solutions = self._filter_min_bit_count(possible_solutions)		# TODO: greedy matching. Is this correct?
 				possible_solutions = self._absorb(possible_solutions)
 
 		# We now have a list of solutions that all are correct. Choose one that
 		# has the fewest amount of literals (not all implicants have the same!).
+		possible_solutions = self._filter_min_bit_count(possible_solutions)
 		possible_solutions = list(possible_solutions)
 		if self._verbose >= 2:
 			print(f"Found {len(possible_solutions)} solutions with {possible_solutions[0].bit_count()} implicants each, minimizing total number of literals.")
