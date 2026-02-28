@@ -19,6 +19,7 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
+import enum
 import collections
 import itertools
 import dataclasses
@@ -100,6 +101,9 @@ class QuineMcCluskey():
 				else:
 					yield BinaryOperator.join(Operator.And, (implicant.as_mterm(variables, minterm = False) for implicant in sorted(solution_implicants)))
 
+	class FilterMethod(enum.IntEnum):
+		HeuristicFiltering = 0
+		MaxImplicantCountFiltering = 1
 
 	def __init__(self, value_table: "ValueTable", variable_name: str, verbosity = 0):
 		self._vt = value_table
@@ -281,7 +285,11 @@ class QuineMcCluskey():
 				result.add(value)
 		return result
 
-	def _find_minimal_expression_petricks_method(self, remaining_minterms: set[int], implicants_fulfilling_minterm: dict[int, list[Implicant]]):
+	@staticmethod
+	def _filter_above_bit_count(terms: set[int], max_bitcount: int) -> set[int]:
+		return set(term for term in terms if term.bit_count() <= max_bitcount)
+
+	def _find_minimal_expression_petricks_method(self, remaining_minterms: set[int], implicants_fulfilling_minterm: dict[int, list[Implicant]], filter_method: FilterMethod, max_implicant_count: int | None = None):
 		# Assign each candidate implicant a bit
 		candidate_implicants = { }
 		for minterm in remaining_minterms:
@@ -299,6 +307,15 @@ class QuineMcCluskey():
 			else:
 				# Next term, multiply/absorb
 				possible_solutions = set(a | b for (a, b) in itertools.product(possible_solutions, next_minterm_implicants))
+				if filter_method == self.FilterMethod.HeuristicFiltering:
+					# Greedy matching. This will make the algorithm very fast
+					# but produce suboptimal solutions. We will get an upper
+					# bound on the first run this way.
+					possible_solutions = self._filter_min_bit_count(possible_solutions)
+				elif filter_method == self.FilterMethod.MaxImplicantCountFiltering:
+					# We know the upper bound (second run) and filter all terms with more bits
+					possible_solutions = self._filter_above_bit_count(possible_solutions, max_implicant_count)
+
 				possible_solutions = self._absorb(possible_solutions)
 
 		# We now have a list of solutions that all are correct. Choose one that
@@ -389,9 +406,12 @@ class QuineMcCluskey():
 				print(f"No remaining minterms which need to be selected by prime implicant chart.")
 
 		if len(remaining_minterms) > 0:
+			heuristic_solutions = self._find_minimal_expression_petricks_method(remaining_minterms, grouped_implicants, filter_method = self.FilterMethod.HeuristicFiltering)
+			max_implicant_count = len(heuristic_solutions[0])
+
 			# All of these are identical in count of min/maxterms and in
 			# literal count
-			optimal_solutions = self._find_minimal_expression_petricks_method(remaining_minterms, grouped_implicants)
+			optimal_solutions = self._find_minimal_expression_petricks_method(remaining_minterms, grouped_implicants, filter_method = self.FilterMethod.MaxImplicantCountFiltering, max_implicant_count = max_implicant_count)
 		else:
 			# We only have required implicants.
 			optimal_solutions = [ [ ] ]
