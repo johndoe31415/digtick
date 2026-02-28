@@ -61,3 +61,12 @@ class QMCTests(unittest.TestCase):
 		self._assert_satisfies(vt, generated)
 		minterms = list(generated.find_minterms())
 		self.assertEqual(len(minterms), 4)
+
+	def test_qmc_absorb(self):
+		# Implicands are represented by bitsets, ORing them together means the
+		# logical AND of those implicants.
+		(I1, I2, I3) = (1, 2, 4)
+		self.assertEqual(QuineMcCluskey._absorb(set([ I1, I1 | I2 ])), set([ I1 ]))
+		self.assertEqual(QuineMcCluskey._absorb(set([ I1 | I2, I1 | I3 ])), set([ I1 | I2, I1 | I3 ]))
+		self.assertEqual(QuineMcCluskey._absorb(set([ I1 | I2, I1 | I3, I1 ])), set([ I1 ]))
+		self.assertEqual(QuineMcCluskey._absorb(set([ I1 | I2, I1 | I3, I3 ])), set([ I1 | I2, I3 ]))
