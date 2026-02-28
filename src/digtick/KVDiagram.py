@@ -41,7 +41,7 @@ class KVDiagram():
 		x_values: list[dict]
 		y_values: list[dict]
 
-	def __init__(self, value_table: "ValueTable", output_variable_name: str | None = None, variable_order: list[str] | None = None, x_offset: int = 0, y_offset: int = 0, x_invert: bool = False, y_invert: bool = False, row_heavy: bool = True):
+	def __init__(self, value_table: "ValueTable", output_variable_name: str | None = None, variable_order: list[str] | None = None, x_offset: int = 0, y_offset: int = 0, x_invert: bool = False, y_invert: bool = False, row_heavy: bool = True, render_indices: bool = False):
 		self._value_table = value_table
 		self._output_variable_name = output_variable_name
 		self._variable_order = variable_order
@@ -50,6 +50,7 @@ class KVDiagram():
 		self._x_invert = x_invert
 		self._y_invert = y_invert
 		self._row_heavy = row_heavy
+		self._render_indices = render_indices
 		if output_variable_name is None:
 			if self._value_table.output_variable_count == 1:
 				output_variable_name = self._value_table.output_variable_names[0]
@@ -115,7 +116,11 @@ class KVDiagram():
 			cell_value = dict(yvalue)
 			for (x, xvalue) in enumerate(self._rkvd.x_values):
 				cell_value.update(xvalue)
-				row[f"x{x}"] = self._value_table.at(cell_value, self._output_variable_name).as_str
+				if self._render_indices:
+					# Do not render value, render index
+					row[f"x{x}"] = f"{self._value_table.dict_to_index(cell_value):<3d} {self._value_table.at(cell_value, self._output_variable_name).as_str}"
+				else:
+					row[f"x{x}"] = self._value_table.at(cell_value, self._output_variable_name).as_str
 
 			table.add_separator_row()
 			table.add_row(row)

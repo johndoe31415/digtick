@@ -26,12 +26,17 @@ from .ExpressionParser import BinaryOperator, Operator, Variable, Constant
 from .ValueTable import CompactStorage
 from .TableFormatter import Table
 
+
 class QuineMcCluskey():
-	@dataclasses.dataclass(frozen = True, slots = True, order = True)
+	@dataclasses.dataclass(frozen = True, slots = True)
 	class Implicant():
 		minterms: frozenset[int]
 		value: int
 		mask: int
+
+		@property
+		def order(self):
+			return len(self.minterms).bit_length() - 1
 
 		def binformat(self, bit_count: int):
 			bitstr = [ ]
@@ -54,8 +59,47 @@ class QuineMcCluskey():
 					literals.append(~variable if inverted else variable)
 			return BinaryOperator.join(Operator.And if minterm else Operator.Or, literals)
 
+		def _cmpkey(self):
+			return (-self.order, self.minterms, self.value, self.mask)
+
+		def __lt__(self, other: "Implicant"):
+			return self._cmpkey() < other._cmpkey()
+
+		def __eq__(self, other: "Implicant"):
+			return self._cmpkey() == other._cmpkey()
+
+		def literal_count(self, variable_count: int):
+			return variable_count - self.order
+
 		def __repr__(self):
 			return f"size-{len(self.minterms)} implicant {{{','.join(str(minterm) for minterm in sorted(self.minterms))}}}"
+
+
+	@dataclasses.dataclass(frozen = True, slots = True)
+	class QuineMcCluskeySolution():
+		mode: str
+		value_table: "ValueTable"
+		required_implicants: list["Implicant"]
+		additional_implicants: list[list["Implicant"]]
+
+		@property
+		def solution_count(self):
+			return len(self.additional_implicants)
+
+		@property
+		def any_solution(self):
+			return next(iter(self))
+
+		def __iter__(self):
+			variables = [ Variable(varname) for varname in self.value_table.input_variable_names ]
+			required = set(self.required_implicants)
+			for additional in self.additional_implicants:
+				solution_implicants = required | set(additional)
+				if self.mode == "dnf":
+					yield BinaryOperator.join(Operator.Or, (implicant.as_mterm(variables, minterm = True) for implicant in sorted(solution_implicants)))
+				else:
+					yield BinaryOperator.join(Operator.And, (implicant.as_mterm(variables, minterm = False) for implicant in sorted(solution_implicants)))
+
 
 	def __init__(self, value_table: "ValueTable", variable_name: str, verbosity = 0):
 		self._vt = value_table
@@ -253,32 +297,29 @@ class QuineMcCluskey():
 				possible_solutions = self._filter_min_bit_count(possible_solutions)		# TODO: greedy matching. Is this correct?
 				possible_solutions = self._absorb(possible_solutions)
 
-
-		remaining_solutions = self._filter_min_bit_count(possible_solutions)
 		# We now have a list of solutions that all are correct. Choose one that
 		# has the fewest amount of literals (not all implicants have the same!).
+		possible_solutions = list(possible_solutions)
+		if self._verbose >= 2:
+			print(f"Found {len(possible_solutions)} solutions with {possible_solutions[0].bit_count()} implicants each, minimizing total number of literals.")
 
-		final_solution = remaining_solutions.pop()		# TODO: implement me
-		impl = [ ]
-		for bit in range(final_solution.bit_length()):
-			impl.append(inverse[1 << bit])
-		return impl
+		categorized_solutions = collections.defaultdict(list)
+		for solution_candidate in possible_solutions:
+			implicants = list()
+			for bit in range(solution_candidate.bit_length()):
+				if (solution_candidate >> bit) & 1:
+					implicants.append(inverse[1 << bit])
+			literal_count = sum(implicant.literal_count(self._vt.input_variable_count) for implicant in implicants)
+			categorized_solutions[literal_count].append(implicants)
 
+		if self._verbose >= 2:
+			for (literal_count, solutions) in sorted(categorized_solutions.items()):
+				print(f"Found {len(solutions)} solutions with {literal_count} literals:")
+				for solution in solutions:
+					print(f"    {solution}")
 
-#	def _format_implicant(self, implicant: Implicant, cnf: bool = False):
-#		terms = [ ]
-#		for (no, var_name) in enumerate(reversed(self._vt.input_variable_names)):
-#			if ((1 << no) & implicant.mask) == 0:
-#				inverted = ((1 << no) & implicant.value) == 0
-#				terms.append(f"{'-' if (inverted ^ cnf) else ''}{var_name}")
-#		if cnf:
-#			if len(terms) == 0:
-#				return "0"
-#			return "+".join(reversed(terms))
-#		else:
-#			if len(terms) == 0:
-#				return "1"
-#			return " ".join(reversed(terms))
+		# Return all solutions which have the minimal amount of literals
+		return categorized_solutions[min(categorized_solutions.keys())]
 
 	def _dump_implicants(self, text: set, implicants_by_hamming_weight: dict[int, dict[int, Implicant]]):
 		print(f"{text}:")
@@ -295,10 +336,9 @@ class QuineMcCluskey():
 				print(f"   {implicant.binformat(self._vt.input_variable_count)} {implicant}")
 		print()
 
-	def optimize(self, emit_dnf: bool = True):
+	def all_solutions(self, emit_dnf: bool = True):
 		# When we emit CNF, we add minterms for the inverse function and emit a
 		# differnet equation in the end.
-
 		expr_minterms = set()
 		dc_minterms = set()
 		for (index, output) in enumerate(self._vt.iter_output_variable(self._varname)):
@@ -335,18 +375,23 @@ class QuineMcCluskey():
 			self._dump_merged_implicants("Remaining implicants after removal of essential implicants", all_implicants)
 
 		remaining_minterms = self._compute_remaining_minterms(expr_minterms, required_implicants)
-		if self._verbose >= 2:
-			print(f"{len(remaining_minterms)} remaining minterms which need to be selected by prime implicant chart: {sorted(list(remaining_minterms))}")
-
 		grouped_implicants = self._group_implicants_by_minterm(all_implicants)
 		if self._verbose >= 2:
-			self._print_prime_implicant_chart(remaining_minterms, grouped_implicants)
-		optimal_solution = self._find_minimal_expression_petricks_method(remaining_minterms, grouped_implicants)
+			if len(remaining_minterms) > 0:
+				print(f"{len(remaining_minterms)} remaining minterms which need to be selected by prime implicant chart: {sorted(list(remaining_minterms))}")
+				self._print_prime_implicant_chart(remaining_minterms, grouped_implicants)
+			else:
+				print(f"No remaining minterms which need to be selected by prime implicant chart.")
 
-		solution_implicants = set(required_implicants) | set(optimal_solution)
-
-		variables = [ Variable(varname) for varname in self._vt.input_variable_names ]
-		if emit_dnf:
-			return BinaryOperator.join(Operator.Or, (implicant.as_mterm(variables, minterm = True) for implicant in sorted(solution_implicants)))
+		if len(remaining_minterms) > 0:
+			# All of these are identical in count of min/maxterms and in
+			# literal count
+			optimal_solutions = self._find_minimal_expression_petricks_method(remaining_minterms, grouped_implicants)
 		else:
-			return BinaryOperator.join(Operator.And, (implicant.as_mterm(variables, minterm = False) for implicant in sorted(solution_implicants)))
+			# We only have required implicants.
+			optimal_solutions = [ [ ] ]
+		return self.QuineMcCluskeySolution(mode = "dnf" if emit_dnf else "cnf", value_table = self._vt, required_implicants = required_implicants, additional_implicants = optimal_solutions)
+
+	def optimize(self, emit_dnf: bool = True):
+		qmc_solution = self.all_solutions(emit_dnf = emit_dnf)
+		return qmc_solution.any_solution

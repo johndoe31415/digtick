@@ -1,4 +1,6 @@
 # digtick
+[![Test status](https://github.com/johndoe31415/digtick/actions/workflows/CI.yml/badge.svg)](https://github.com/johndoe31415/digtick/actions/workflows/CI.yml)
+
 digtick (the mnemonic for "dig tk", i.e., digital toolkit) is a
 command-line-tool tool for creating and solving problems in digital systems.
 The primary target audience are educators (who can use it to create and

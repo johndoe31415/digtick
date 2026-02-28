@@ -72,11 +72,13 @@ def main():
 		parser.add_argument("-d", "--literal-order", metavar = "vars", help = "Print literals in the given order. Can be a comma-separated list (\"A,C,D,B\") or simply a string like \"ACDB\" in case of single-letter literals.")
 		parser.add_argument("-u", "--unused-value-is", choices = [ "forbidden", "0", "1", "*" ], default = "forbidden", help = "Treat values that do not appear in truth table as the specified value (0, 1, or \"don't care\" value). By default, strict parsing is performed which means unused values are forbidden and all values need to be set explicitly.")
 		parser.add_argument("-O", "--output-filename", metavar = "name", help = "Instead of printing in the console, do a SVG rendering and write that to the given filename.")
+		parser.add_argument("-I", "--render-indices", action = "store_true", help = "Do not put the actual value, but the implicant number in their respective fields.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
 		parser.add_argument("filename", nargs = "?", help = "Filename containing the truth table, tab-separated. Reads from stdin when argument omitted.")
 	mc.register("kv", "Print a truth table as KV-diagram", genparser, action = ActionKVDiagram)
 
 	def genparser(parser):
+		parser.add_argument("-a", "--show-all-solutions", action = "store_true", help = "By default, only a single solution is shown. However, there may be multiple solutions which are identical in minterm/maxterm count as well as identical in number of used literals. In those cases, show all solutions.")
 		parser.add_argument("-o", "--output-variable-name", metavar = "name", default = "Y", help = "Name of the output variable to use. Defaults to %(default)s.")
 		parser.add_argument("-N", "--no-implicit-and", action = "store_true", help = "By default, AND operations are implicity expressed (using a space character). This causes an actual operator to be emitted here.")
 		parser.add_argument("-f", "--expr-format", choices = [ "text", "pretty-text", "tex-tech", "tex-math", "dot", "internal" ], default = "text", help = "Print the expression in the desired format. Can be one of %(choices)s, defaults to %(default)s.")

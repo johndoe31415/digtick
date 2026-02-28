@@ -36,13 +36,25 @@ class ActionSynthesize(BaseAction):
 		if self._args.compute in [ "dnf", "both" ]:
 			cdnf = vt.cdnf(self._args.output_variable_name)
 			print(f"CDNF: {format_expression(expression = cdnf, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and)}")
-			opt_dnf = qmc.optimize(emit_dnf = True)
-			print(f"DNF : {format_expression(expression = opt_dnf, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and)}")
+			opt_expressions = qmc.all_solutions(emit_dnf = True)
+			for (expr_no, opt_expression) in enumerate(opt_expressions, 1):
+				opt_expr_str = format_expression(expression = opt_expression, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and)
+				if not self._args.show_all_solutions:
+					print(f"DNF : {opt_expr_str}")
+					break
+				else:
+					print(f"DNF {expr_no}/{opt_expressions.solution_count}: {opt_expr_str}")
 
 		if self._args.compute in [ "cnf", "both" ]:
 			if self._args.compute == "both":
 				print()
 			ccnf = vt.ccnf(self._args.output_variable_name)
 			print(f"CCNF: {format_expression(expression = ccnf, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and)}")
-			opt_cnf = qmc.optimize(emit_dnf = False)
-			print(f"CNF : {format_expression(expression = opt_cnf, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and)}")
+			opt_expressions = qmc.all_solutions(emit_dnf = False)
+			for (expr_no, opt_expression) in enumerate(opt_expressions, 1):
+				opt_expr_str = format_expression(expression = opt_expression, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and)
+				if not self._args.show_all_solutions:
+					print(f"CNF : {opt_expr_str}")
+					break
+				else:
+					print(f"CNF {expr_no}/{opt_expressions.solution_count}: {opt_expr_str}")
