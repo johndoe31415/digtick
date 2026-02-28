@@ -24,7 +24,7 @@ import itertools
 import dataclasses
 from .ExpressionParser import parse_expression
 from .ValueTable import CompactStorage
-
+from .TableFormatter import Table
 
 class QuineMcCluskey():
 	@dataclasses.dataclass(frozen = True, slots = True, order = True)
@@ -199,6 +199,26 @@ class QuineMcCluskey():
 				optimal_solution = implicants
 		return optimal_solution
 
+	def _print_prime_implicant_chart(self, remaining_minterms: set[int], implicants_fulfilling_minterm: dict[int, list[Implicant]]):
+		# Reverse dictionary
+		minterm_covered_by_implicant = collections.defaultdict(list)
+		for (minterm, fulfilling_implicants) in implicants_fulfilling_minterm.items():
+			for fulfilling_implicant in fulfilling_implicants:
+				minterm_covered_by_implicant[fulfilling_implicant].append(minterm)
+
+		table = Table()
+		heading = { str(minterm): str(minterm) for minterm in remaining_minterms }
+		heading.update({ "_": " " })
+		table.add_row(heading)
+		table.add_separator_row()
+
+		for (implicant, covered_minterms) in sorted(minterm_covered_by_implicant.items()):
+			row = { "_": str(implicant) }
+			for minterm in covered_minterms:
+				row[str(minterm)] = "*"
+			table.add_row(row)
+		table.print(*([ "_" ] + list(str(minterm) for minterm in sorted(remaining_minterms))))
+
 	def _format_implicant(self, implicant: Implicant, cnf: bool = False):
 		terms = [ ]
 		for (no, var_name) in enumerate(reversed(self._vt.input_variable_names)):
@@ -275,6 +295,7 @@ class QuineMcCluskey():
 			print(f"{len(remaining_minterms)} remaining minterms: {sorted(list(remaining_minterms))}")
 
 		grouped_implicants = self._group_implicants_by_minterm(all_implicants)
+		self._print_prime_implicant_chart(remaining_minterms, grouped_implicants)
 		optimal_solution = self._find_minimal_expression(remaining_minterms, grouped_implicants)
 
 		solution_implicants = set(required_implicants) | set(optimal_solution)
