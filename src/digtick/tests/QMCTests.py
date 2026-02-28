@@ -48,3 +48,16 @@ class QMCTests(unittest.TestCase):
 			qmc = QuineMcCluskey(vt, "Y")
 			expr = qmc.optimize(emit_dnf = False)
 			self._assert_satisfies(vt, expr)
+
+	def test_qmc_pruning(self):
+		# When greedy pruning during the Petrick's Method step of QMC is used,
+		# QMC will find a sub-optimal 5-minterm solution when there exists a
+		# 4-minterm solution.
+		vt = ValueTable.from_compact_representation(":A,B,C,D:Y:155144")
+		optimal = parse_expression("!A B !D + A !B !D + !B !C D + !A C D")
+		self._assert_satisfies(vt, optimal)
+
+		generated = QuineMcCluskey(vt, "Y").optimize()
+		self._assert_satisfies(vt, generated)
+		minterms = list(generated.find_minterms())
+		self.assertEqual(len(minterms), 4)
