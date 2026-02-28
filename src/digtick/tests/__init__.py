@@ -21,3 +21,4 @@
 
 from .ParserTests import ParserTests
 from .ExpressionFormatterTests import ExpressionFormatterTests
+from .QMCTests import QMCTests

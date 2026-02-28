@@ -143,7 +143,7 @@ class ValueTable():
 		self._output_values.append(storage)
 
 	@classmethod
-	def _from_compact_representation(cls, compact_str: str):
+	def from_compact_representation(cls, compact_str: str):
 		assert(compact_str.startswith(":"))
 		(input_variable_names, output_variable_names, compact_data) = compact_str[1:].split(":")
 		input_variable_names = input_variable_names.split(",")
@@ -163,7 +163,7 @@ class ValueTable():
 			if lineno == 1:
 				if line.startswith(":"):
 					# Compact format!
-					return cls._from_compact_representation(line)
+					return cls.from_compact_representation(line)
 
 				input_indices = [ ]
 				input_variables = [ ]

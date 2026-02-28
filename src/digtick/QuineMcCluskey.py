@@ -52,7 +52,7 @@ class QuineMcCluskey():
 					# We DO care
 					inverted = (((self.value >> bit) & 1) != 0) ^ minterm
 					literals.append(~variable if inverted else variable)
-			return BinaryOperator.join(Operator.And if minterm else Operator.And, literals)
+			return BinaryOperator.join(Operator.And if minterm else Operator.Or, literals)
 
 		def __repr__(self):
 			return f"size-{len(self.minterms)} implicant {{{','.join(str(minterm) for minterm in sorted(self.minterms))}}}"
