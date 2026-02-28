@@ -22,7 +22,7 @@
 import collections
 import itertools
 import dataclasses
-from .ExpressionParser import parse_expression
+from .ExpressionParser import BinaryOperator, Operator, Variable, Constant
 from .ValueTable import CompactStorage
 from .TableFormatter import Table
 
@@ -43,6 +43,16 @@ class QuineMcCluskey():
 				else:
 					bitstr.append("0")
 			return "".join(bitstr)
+
+		def as_mterm(self, variables: list[Variable], minterm: bool):
+			literals = [ ]
+			for (index, variable) in enumerate(variables):
+				bit = len(variables) - 1 - index
+				if ((self.mask >> bit) & 1) == 0:
+					# We DO care
+					inverted = (((self.value >> bit) & 1) != 0) ^ minterm
+					literals.append(~variable if inverted else variable)
+			return BinaryOperator.join(Operator.And if minterm else Operator.And, literals)
 
 		def __repr__(self):
 			return f"size-{len(self.minterms)} implicant {{{','.join(str(minterm) for minterm in sorted(self.minterms))}}}"
@@ -255,20 +265,20 @@ class QuineMcCluskey():
 		return impl
 
 
-	def _format_implicant(self, implicant: Implicant, cnf: bool = False):
-		terms = [ ]
-		for (no, var_name) in enumerate(reversed(self._vt.input_variable_names)):
-			if ((1 << no) & implicant.mask) == 0:
-				inverted = ((1 << no) & implicant.value) == 0
-				terms.append(f"{'-' if (inverted ^ cnf) else ''}{var_name}")
-		if cnf:
-			if len(terms) == 0:
-				return "0"
-			return "+".join(reversed(terms))
-		else:
-			if len(terms) == 0:
-				return "1"
-			return " ".join(reversed(terms))
+#	def _format_implicant(self, implicant: Implicant, cnf: bool = False):
+#		terms = [ ]
+#		for (no, var_name) in enumerate(reversed(self._vt.input_variable_names)):
+#			if ((1 << no) & implicant.mask) == 0:
+#				inverted = ((1 << no) & implicant.value) == 0
+#				terms.append(f"{'-' if (inverted ^ cnf) else ''}{var_name}")
+#		if cnf:
+#			if len(terms) == 0:
+#				return "0"
+#			return "+".join(reversed(terms))
+#		else:
+#			if len(terms) == 0:
+#				return "1"
+#			return " ".join(reversed(terms))
 
 	def _dump_implicants(self, text: set, implicants_by_hamming_weight: dict[int, dict[int, Implicant]]):
 		print(f"{text}:")
@@ -302,7 +312,7 @@ class QuineMcCluskey():
 		size_one_implicants = self._create_size_one_implicants(grouped_minterms)
 		if len(size_one_implicants) == 0:
 			# Constant zero function
-			return parse_expression("0" if emit_dnf else "1")
+			return Constant(0) if emit_dnf else Constant(1)
 
 		if self._verbose >= 2:
 			self._dump_implicants("Initial size-1 implicants", size_one_implicants)
@@ -335,7 +345,8 @@ class QuineMcCluskey():
 
 		solution_implicants = set(required_implicants) | set(optimal_solution)
 
+		variables = [ Variable(varname) for varname in self._vt.input_variable_names ]
 		if emit_dnf:
-			return parse_expression("+".join(self._format_implicant(implicant) for implicant in sorted(solution_implicants)))
+			return BinaryOperator.join(Operator.Or, (implicant.as_mterm(variables, minterm = True) for implicant in sorted(solution_implicants)))
 		else:
-			return parse_expression("".join(f"({self._format_implicant(implicant, cnf = True)})" for implicant in sorted(solution_implicants)))
+			return BinaryOperator.join(Operator.And, (implicant.as_mterm(variables, minterm = False) for implicant in sorted(solution_implicants)))

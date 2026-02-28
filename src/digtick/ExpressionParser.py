@@ -290,9 +290,14 @@ class BinaryOperator(ParseTreeElement):
 
 	@classmethod
 	def join(cls, op: Operator, terms: ParseTreeElement) -> ParseTreeElement:
-		result = terms[0]
-		for term in terms[1:]:
-			result = BinaryOperator(result, op, term)
+		result = None
+		for term in terms:
+			if result is None:
+				result = term
+			else:
+				result = BinaryOperator(result, op, term)
+		if result is None:
+			raise ValueError("Cannot join empty sequence.")
 		return result
 
 	def identical_to(self, other: ParseTreeElement) -> bool:
