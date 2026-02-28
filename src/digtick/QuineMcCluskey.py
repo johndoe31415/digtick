@@ -34,7 +34,7 @@ class QuineMcCluskey():
 		mask: int
 
 		def __repr__(self):
-			return f"{'Prime' if (len(self.minterms) == 1) else f'size-{len(self.minterms)}'} implicant {{{','.join(str(minterm) for minterm in sorted(self.minterms))}}}"
+			return f"size-{len(self.minterms)} implicant {{{','.join(str(minterm) for minterm in sorted(self.minterms))}}}"
 
 	def __init__(self, value_table: "ValueTable", variable_name: str, verbosity = 0):
 		self._vt = value_table
@@ -219,6 +219,73 @@ class QuineMcCluskey():
 			table.add_row(row)
 		table.print(*([ "_" ] + list(str(minterm) for minterm in sorted(remaining_minterms))))
 
+	def _absorb(self, terms: set[int]) -> set[int]:
+		# Remove all values that are completely covered by other values in
+		# terms of their bits. This is current O(n²) but I'm quite certain we
+		# could use a divide-and-conquery approach. Let's check first if this
+		# works
+		print("PRE AB ", len(terms))
+		unique = set()
+		while len(terms) > 0:
+			term = terms.pop()
+			for other in terms:
+				if (term & other) == term:
+					break
+			else:
+				unique.add(term)
+
+		print("POST AB", len(unique))
+		return unique
+
+	def _filter_min_bit_count(self, terms: set[int]) -> set[int]:
+		result = None
+		min_bit_count = None
+		for value in terms:
+			if (result is None) or (value.bit_count() < min_bit_count):
+				min_bit_count = value.bit_count()
+				result = set([ value ])
+			elif value.bit_count() == min_bit_count:
+				result.add(value)
+		return result
+
+	def _find_minimal_expression_petricks_method(self, remaining_minterms: set[int], implicants_fulfilling_minterm: dict[int, list[Implicant]]):
+		# Assign each candidate implicant a bit
+		candidate_implicants = { }
+		for minterm in remaining_minterms:
+			for implicant in implicants_fulfilling_minterm[minterm]:
+				if implicant not in candidate_implicants:
+					candidate_implicants[implicant] = 1 << len(candidate_implicants)
+		inverse = { bitvalue: implicant for (implicant, bitvalue) in candidate_implicants.items() }
+
+		possible_solutions = None
+		for minterm in remaining_minterms:
+			next_minterm_implicants = set(candidate_implicants[implicant] for implicant in implicants_fulfilling_minterm[minterm])
+#			for x in next_minterm_implicants:
+				#				print(x, inverse[x])
+#			print(next_minterm_implicants)
+#			fjdsio
+			if possible_solutions is None:
+				# First term
+				possible_solutions = next_minterm_implicants
+			else:
+				# Next term, multiply/absorb
+				print("MUL", possible_solutions, next_minterm_implicants)
+				possible_solutions = set(a | b for (a, b) in itertools.product(possible_solutions, next_minterm_implicants))
+				# TODO filter least amount of bits already????
+				print("RES", possible_solutions)
+				possible_solutions = self._filter_min_bit_count(possible_solutions)
+				possible_solutions = self._absorb(possible_solutions)
+
+
+		remaining_solutions = self._filter_min_bit_count(possible_solutions)
+
+		final_solution = remaining_solutions.pop()
+		impl = [ ]
+		for bit in range(final_solution.bit_length()):
+			impl.append(inverse[1 << bit])
+		return impl
+
+
 	def _format_implicant(self, implicant: Implicant, cnf: bool = False):
 		terms = [ ]
 		for (no, var_name) in enumerate(reversed(self._vt.input_variable_names)):
@@ -282,7 +349,7 @@ class QuineMcCluskey():
 
 		required_minterms = self._determine_required_minterms(all_implicants, mandatory_minterms = expr_minterms)
 		if self._verbose >= 2:
-			print(f"Essential minterms (only provided by a single implicant): {sorted(list(required_minterms))}")
+			print(f"Essential minterms (only provided by a single implicant that needs to be contained): {sorted(list(required_minterms))}")
 			print()
 
 		(required_implicants, all_implicants) = self._eliminate_required_implicants(all_implicants, required_minterms)
@@ -296,7 +363,8 @@ class QuineMcCluskey():
 
 		grouped_implicants = self._group_implicants_by_minterm(all_implicants)
 		self._print_prime_implicant_chart(remaining_minterms, grouped_implicants)
-		optimal_solution = self._find_minimal_expression(remaining_minterms, grouped_implicants)
+		#optimal_solution = self._find_minimal_expression(remaining_minterms, grouped_implicants)
+		optimal_solution = self._find_minimal_expression_petricks_method(remaining_minterms, grouped_implicants)
 
 		solution_implicants = set(required_implicants) | set(optimal_solution)
 
