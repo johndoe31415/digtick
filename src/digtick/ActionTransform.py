@@ -143,6 +143,15 @@ class SimplificationTransformer(ExpressionTransformer):
 
 		return UnaryOperator(expr.op, self._transform(expr.rhs))
 
+	@staticmethod
+	def _literal_sort_key(literal: ParseTreeElement):
+		if isinstance(literal, Variable):
+			return literal.varname
+		elif isinstance(literal, UnaryOperator):
+			return literal.rhs.varname
+		else:
+			raise NotImplementedError(f"Can only compare literals, not: {literal}")
+
 	def _transform_binary(self, expr: "Expression"):
 		match expr:
 			case BinaryOperator(_, Operator.And, Constant(0)):
@@ -150,6 +159,16 @@ class SimplificationTransformer(ExpressionTransformer):
 
 			case BinaryOperator(lhs, Operator.And, Constant(1)):
 				return lhs
+
+			case BinaryOperator(_, Operator.And, _) if expr.is_minterm():
+				terms = sorted(expr.collect_literals(), key = self._literal_sort_key)
+				replacement = BinaryOperator.join(Operator.And, terms)
+				return replacement
+
+			case BinaryOperator(_, Operator.Or, _) if expr.is_maxterm():
+				terms = sorted(expr.collect_literals(), key = self._literal_sort_key)
+				replacement = BinaryOperator.join(Operator.Or, terms)
+				return replacement
 
 			case BinaryOperator(_, Operator.Or, Constant(1)):
 				return Constant(1)

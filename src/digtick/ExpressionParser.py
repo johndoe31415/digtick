@@ -110,6 +110,22 @@ class ParseTreeElement():
 			if evaluation == 0:
 				yield value_dict
 
+	def _is_mterm(self, acceptable_binary_operator: Operator):
+		if isinstance(self, BinaryOperator) and (self.op == acceptable_binary_operator):
+			return self.lhs._is_mterm(acceptable_binary_operator) and self.rhs._is_mterm(acceptable_binary_operator)
+		elif isinstance(self, UnaryOperator) and (self.op == Operator.Not):
+			return self.rhs._is_mterm(acceptable_binary_operator)
+		elif isinstance(self, Variable):
+			return True
+		else:
+			return False
+
+	def is_minterm(self):
+		return self._is_mterm(acceptable_binary_operator = Operator.And)
+
+	def is_maxterm(self):
+		return self._is_mterm(acceptable_binary_operator = Operator.Or)
+
 	def find_minterms(self):
 		if isinstance(self, BinaryOperator) and (self.op == Operator.Or):
 			yield from self.lhs.find_minterms()
@@ -123,6 +139,15 @@ class ParseTreeElement():
 			yield from self.rhs.find_maxterms()
 		else:
 			yield self
+
+	def collect_literals(self):
+		if isinstance(self, Variable):
+			yield self
+		elif isinstance(self, UnaryOperator) and (self.op == Operator.Not):
+			yield self
+		elif isinstance(self, BinaryOperator):
+			yield from self.lhs.collect_literals()
+			yield from self.rhs.collect_literals()
 
 	def compare_to_expression(self, other: "ParseTreeElement"):
 		e1_vars = set(self.variables)
