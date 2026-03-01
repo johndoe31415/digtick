@@ -2,14 +2,17 @@
 [![Test status](https://github.com/johndoe31415/digtick/actions/workflows/CI.yml/badge.svg)](https://github.com/johndoe31415/digtick/actions/workflows/CI.yml)
 
 digtick (the mnemonic for "dig tk", i.e., digital toolkit) is a
-command-line-tool tool for creating and solving problems in digital systems.
-The primary target audience are educators (who can use it to create and
-validate exam questions) as well as students who want to improve their skills.
-It allows you to specify, parse and reformat Boolean equations (e.g., in LaTeX
-form for easy inclusion in documents). It can create tables from a given
-Boolean expression and rendering Karnaugh–Veitch (KV) maps with an arbitrary
-number of variables. It can check Boolean equations for equivalance.  A
-Quine-McCluskey implementation is used to minify expressions.
+command-line-tool tool for creating and solving digital logic design tasks.
+The primary target audiences are educators (who can use it to create and
+validate exam questions) and students who want to improve their skills.  The
+toolkit allows you to specify, parse and reformat Boolean equations (e.g.,
+output in LaTeX form for easy inclusion in documents). It can create truth
+tables from a given Boolean expression and rendering Karnaugh–Veitch (KV) maps
+with an arbitrary number of variables, both as SVG and to the command line. The
+output format is highly customizable to match your specific preference. It can
+check Boolean equations for equivalance and validate if expressions satisfy a
+given truth table (with counterexamples). A Quine-McCluskey implementation is
+used to minify expressions.
 
 
 ## Boolean expression syntax

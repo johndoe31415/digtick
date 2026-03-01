@@ -1,4 +1,4 @@
-#	digtick - Digital systems toolkit: simplify, minimize and transform Boolean expressions, draw KV-maps, etc.
+#	digtick - Digital logic design toolkit: simplify, minimize and transform Boolean expressions, draw KV-maps, etc.
 #	Copyright (C) 2015-2026 Johannes Bauer
 #
 #	This file is part of digtick.

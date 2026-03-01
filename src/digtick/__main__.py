@@ -1,4 +1,4 @@
-#	digtick - Digital systems toolkit: simplify, minimize and transform Boolean expressions, draw KV-maps, etc.
+#	digtick - Digital logic design toolkit: simplify, minimize and transform Boolean expressions, draw KV-maps, etc.
 #	Copyright (C) 2022-2026 Johannes Bauer
 #
 #	This file is part of digtick.
@@ -36,7 +36,7 @@ from .ActionDTDRender import ActionDTDRender
 from .MultiCommand import MultiCommand
 
 def main():
-	mc = MultiCommand(description = "Digital systems toolkit: simplify, minimize and transform Boolean expressions, draw KV-maps, etc.", trailing_text = f"digtick v{digtick.VERSION}")
+	mc = MultiCommand(description = "Digital logic design toolkit: simplify, minimize and transform Boolean expressions, draw KV-maps, etc.", trailing_text = f"digtick v{digtick.VERSION}")
 
 	def genparser(parser):
 		parser.add_argument("-F", "--read-as-filename", action = "store_true", help = "Instead of having an expression on the command line, specify a file name that contains multiple expressios and format each one linewise.")

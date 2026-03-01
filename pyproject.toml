@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "digtick"
 license = "GPL-3.0"
 version = "0.0.2rc0"
-description = "A command-line tool for computing digital circuits"
+description = "Digital logic design toolkit: simplify, minimize and transform Boolean expressions, draw KV-maps, etc."
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [ { name = "Johannes Bauer", email = "joe@johannes-bauer.com" } ]
