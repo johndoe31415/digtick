@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "digtick"
 license = "GPL-3.0"
-version = "0.0.1rc0"
+version = "0.0.1"
 description = "A command-line tool for computing digital circuits"
 readme = "README.md"
 requires-python = ">=3.10"

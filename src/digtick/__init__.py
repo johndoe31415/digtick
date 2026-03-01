@@ -1,5 +1,5 @@
 #	digtick - Digital systems toolkit: simplify, minimize and transform Boolean expressions, draw KV-maps, etc.
-#	Copyright (C) 2022-2022 Johannes Bauer
+#	Copyright (C) 2022-2026 Johannes Bauer
 #
 #	This file is part of digtick.
 #
@@ -19,4 +19,4 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
-VERSION = "0.0.1rc0"
+VERSION = "0.0.1"
