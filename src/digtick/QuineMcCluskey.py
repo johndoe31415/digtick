@@ -403,7 +403,7 @@ class QuineMcCluskey():
 				print(f"{len(remaining_minterms)} remaining minterms which need to be selected by prime implicant chart: {sorted(list(remaining_minterms))}")
 				self._print_prime_implicant_chart(remaining_minterms, grouped_implicants)
 			else:
-				print(f"No remaining minterms which need to be selected by prime implicant chart.")
+				print("No remaining minterms which need to be selected by prime implicant chart.")
 
 		if len(remaining_minterms) > 0:
 			heuristic_solutions = self._find_minimal_expression_petricks_method(remaining_minterms, grouped_implicants, filter_method = self.FilterMethod.HeuristicFiltering)
