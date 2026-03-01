@@ -46,7 +46,7 @@ class ActionRandomExpression(BaseAction):
 			vt = ValueTable.create_from_expression("Y", expression)
 			simplified = QuineMcCluskey(vt, "Y", verbosity = self._args.verbose).optimize()
 			simplified_str = format_expression(simplified)
-			if (len(simplified_str) < 20) and (try_no < 100):
+			if (not self._args.allow_trivial) and ((len(simplified_str) < 20) and (try_no < 100)):
 				# Too low simplified complexity or unable to fulfill
 				continue
 			print(f"Expression: {format_expression(expression)}")
