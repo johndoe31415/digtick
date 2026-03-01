@@ -80,18 +80,26 @@ class QuineMcCluskey():
 	class QuineMcCluskeySolution():
 		mode: str
 		value_table: "ValueTable"
-		required_implicants: list["Implicant"]
-		additional_implicants: list[list["Implicant"]]
+		required_implicants: list["Implicant"] | None
+		additional_implicants: list[list["Implicant"]] | None
+		constant_solution: "ParseTreeElement | None"
 
 		@property
 		def solution_count(self):
-			return len(self.additional_implicants)
+			if self.constant_solution is None:
+				return len(self.additional_implicants)
+			else:
+				return 1
 
 		@property
 		def any_solution(self):
 			return next(iter(self))
 
 		def __iter__(self):
+			if self.constant_solution is not None:
+				yield self.constant_solution
+				return
+
 			variables = [ Variable(varname) for varname in self.value_table.input_variable_names ]
 			required = set(self.required_implicants)
 			for additional in self.additional_implicants:
@@ -373,8 +381,8 @@ class QuineMcCluskey():
 		grouped_minterms = self._group_by_bitcount(minterms)
 		size_one_implicants = self._create_size_one_implicants(grouped_minterms)
 		if len(size_one_implicants) == 0:
-			# Constant zero function
-			return Constant(0) if emit_dnf else Constant(1)
+			# Constant zero/one function
+			return self.QuineMcCluskeySolution(mode = "dnf" if emit_dnf else "cnf", value_table = self._vt, required_implicants = None, additional_implicants = None, constant_solution = Constant(0) if emit_dnf else Constant(1))
 
 		if self._verbose >= 2:
 			self._dump_implicants("Initial size-1 implicants", size_one_implicants)
@@ -415,7 +423,7 @@ class QuineMcCluskey():
 		else:
 			# We only have required implicants.
 			optimal_solutions = [ [ ] ]
-		return self.QuineMcCluskeySolution(mode = "dnf" if emit_dnf else "cnf", value_table = self._vt, required_implicants = required_implicants, additional_implicants = optimal_solutions)
+		return self.QuineMcCluskeySolution(mode = "dnf" if emit_dnf else "cnf", value_table = self._vt, required_implicants = required_implicants, additional_implicants = optimal_solutions, constant_solution = None)
 
 	def optimize(self, emit_dnf: bool = True):
 		qmc_solution = self.all_solutions(emit_dnf = emit_dnf)
