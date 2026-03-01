@@ -255,8 +255,8 @@ class KVDiagram():
 		# By default, hide CNF terms
 		cnf_layer.style.hide()
 
-		dnf_terms = list(opt_dnf.find_minterms())
-		cnf_terms = list(opt_cnf.find_maxterms())
+		dnf_terms = list(opt_dnf.collect_minterms())
+		cnf_terms = list(opt_cnf.collect_maxterms())
 
 		self._svg_render_solution(dnf_layer, dnf_terms, compare_value = 1)
 		self._svg_render_solution(cnf_layer, cnf_terms, compare_value = 0)

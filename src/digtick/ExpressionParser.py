@@ -72,7 +72,7 @@ class ParseTreeElement():
 	_Elements = { }
 
 	@property
-	def state_count(self):
+	def input_combination_count(self):
 		return 1 << len(self.variables)
 
 	@functools.cached_property
@@ -95,7 +95,7 @@ class ParseTreeElement():
 			yield from self.inner._traverse()
 
 	def table(self):
-		for value in range(self.state_count):
+		for value in range(self.input_combination_count):
 			value_dict = { varname: int((value & (1 << (len(self.variables) - 1 - varno))) != 0) for (varno, varname) in enumerate(self.variables) }
 			evaluation = self.evaluate(value_dict)
 			yield (value_dict, evaluation)
@@ -116,17 +116,17 @@ class ParseTreeElement():
 	def is_maxterm(self):
 		return self._is_mterm(acceptable_binary_operator = Operator.Or)
 
-	def find_minterms(self):
+	def collect_minterms(self):
 		if isinstance(self, BinaryOperator) and (self.op == Operator.Or):
-			yield from self.lhs.find_minterms()
-			yield from self.rhs.find_minterms()
+			yield from self.lhs.collect_minterms()
+			yield from self.rhs.collect_minterms()
 		else:
 			yield self
 
-	def find_maxterms(self):
+	def collect_maxterms(self):
 		if isinstance(self, BinaryOperator) and (self.op == Operator.And):
-			yield from self.lhs.find_maxterms()
-			yield from self.rhs.find_maxterms()
+			yield from self.lhs.collect_maxterms()
+			yield from self.rhs.collect_maxterms()
 		else:
 			yield self
 

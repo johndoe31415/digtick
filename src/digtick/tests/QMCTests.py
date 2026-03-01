@@ -59,7 +59,7 @@ class QMCTests(unittest.TestCase):
 
 		generated = QuineMcCluskey(vt, "Y").optimize()
 		self._assert_satisfies(vt, generated)
-		minterms = list(generated.find_minterms())
+		minterms = list(generated.collect_minterms())
 		self.assertEqual(len(minterms), 4)
 
 	def test_qmc_absorb(self):
