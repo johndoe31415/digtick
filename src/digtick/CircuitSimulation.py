@@ -30,11 +30,10 @@ class UID():
 		return cls._Value
 
 class Level(enum.IntEnum):
-	Undefined = 0
-	WeakLow = 1
-	StrongLow = 2
-	WeakHigh = 4
-	StrongHigh = 8
+	Low = 0
+	High = 1
+	Undefined = 2
+	WeakLow = 3
 
 class Net():
 	def __init__(self, circuit: "Circuit"):
@@ -59,26 +58,33 @@ class Net():
 	@property
 	def level(self) -> int:
 		if self._level == Level.Undefined:
-			raise ValueError(f"Tried to read level of undefined network {self}")
+			raise ValueError(f"Tried to read level of net {self}, but level of that net is undefined")
 		return {
+			Level.Low: 0,
+			Level.High: 1,
 			Level.WeakLow: 0,
-			Level.StrongLow: 0,
-			Level.WeakHigh: 1,
-			Level.StrongHigh: 1,
 		}[self._level]
 
-	def force(self, level: Level):
-		if self._level != level:
-			self._circuit.notify_net_change(self)
-		self._level = Level(level)
-		self._next_level = 0
+	def reset(self):
+		self._level = Level.WeakLow
+		self._next_level = Level.Undefined
+
+	def deferred_drive(self, value: int):
+		assert(value in [ 0, 1 ])
+		assert(self._next_level == Level.Undefined)
+		self._next_level = {
+			0: Level.Low,
+			1: Level.High,
+		}[value]
 
 	def drive(self, value: int):
 		assert(value in [ 0, 1 ])
-		self._next_level |= {
-			0: Level.StrongLow,
-			1: Level.StrongHigh,
+		self._level = {
+			0: Level.Low,
+			1: Level.High,
 		}[value]
+		for (component, pin_name) in self._members:
+			component.notify_pin_change(pin_name)
 
 	def add_member(self, component: "Component", pin_name: str):
 		self._members.add((component, pin_name))
@@ -88,9 +94,10 @@ class Net():
 		for (component, pin_name) in self:
 			print(f"    {component}.{pin_name}")
 
-	def tick(self):
-		# TODO handle collision
-		self.force(self._next_level)
+	def update_deferred(self):
+		pass
+#		if self._next_level != Level.Undefined:
+#			self.
 
 	def __iter__(self):
 		return iter(self._members)
@@ -107,6 +114,12 @@ class Net():
 	def __repr__(self):
 		return f"Net{self.nid}"
 
+class Status(enum.IntEnum):
+	Settled = 0
+	RecomputationRequired = 1
+	RecomputationPerformed = 2
+	Retriggered = 3
+
 class Component():
 	_Inputs = [ ]
 	_Outputs = [ ]
@@ -117,6 +130,11 @@ class Component():
 		self._uid = UID.gen()
 		self._no = None
 		self._nets = { }
+		self._status = Status.RecomputationRequired
+
+	@property
+	def status(self):
+		return self._status
 
 	@property
 	def cid(self):
@@ -140,11 +158,33 @@ class Component():
 		return self._nets.get(pin_name)
 
 	def connect(self, pin_name: str, net: Net):
-		assert((pin_name in self._Inputs) or (pin_name in self._Outputs))
+		if (pin_name not in self._Inputs) and (pin_name not in self._Outputs):
+			raise ValueError(f"Trying to connect net {net} to component {self}.{pin_name} but no pin {pin_name} exists (have IN = {self._Inputs} and OUT = {self._Outputs})")
 		self._nets[pin_name] = net
 		net.add_member(self, pin_name)
 
+	def notify_pin_change(self, pin_name: str):
+		if pin_name in self._Inputs:
+			if (self.status == Status.Settled):
+				self._status = Status.RecomputationRequired
+				self.tick()
+			elif (self.status == Status.RecomputationRequired):
+				self.tick()
+			elif (self.status == Status.RecomputationPerformed):
+				self._status = Status.Retriggered
+
 	def tick(self):
+		if self._status == Status.RecomputationRequired:
+			self._status = Status.RecomputationPerformed
+			self.update()
+
+	def finish_tick(self):
+		if self.status == Status.RecomputationPerformed:
+			self._status = Status.Settled
+		elif self.status == Status.Retriggered:
+			self._status = Status.RecomputationRequired
+
+	def update(self):
 		pass
 
 	def __eq__(self, other: "Component"):
@@ -180,9 +220,14 @@ class CmpSource(Component):
 	def level(self, value: int):
 		assert(isinstance(value, int))
 		assert(value in [ 0, 1 ])
+		if self._level != value:
+			self._status = Status.RecomputationRequired
 		self._level = value
 
-	def tick(self):
+	def toggle(self):
+		self.level = self.level ^ 1
+
+	def update(self):
 		self["OUT"].drive(self._level)
 
 class CmpSink(Component):
@@ -191,8 +236,12 @@ class CmpSink(Component):
 	_NodeName = "Sink"
 	_Prefix = "SNK"
 
-class CmpInv(Component):
-	_Outputs = [ "A" ]
+	@property
+	def level(self):
+		return self["IN"].level
+
+class CmpNOT(Component):
+	_Inputs = [ "A" ]
 	_Outputs = [ "Y" ]
 	_Name = "NOT"
 	_NodeName = "~"
@@ -201,8 +250,8 @@ class CmpInv(Component):
 	def __init__(self):
 		super().__init__()
 
-	def tick(self):
-		self["OUT"].drive(self["IN"].level ^ 1)
+	def update(self):
+		self["Y"].drive(self["A"].level ^ 1)
 
 class CmpGate(Component):
 	_Inputs = [ "A", "B" ]
@@ -212,31 +261,36 @@ class CmpGate(Component):
 class CmpAND(CmpGate):
 	_Name = "AND"
 	_NodeName = "&&"
-	def tick(self):
+
+	def update(self):
 		self["Y"].drive(self["A"].level & self["B"].level)
 
 class CmpOR(CmpGate):
 	_Name = "OR"
 	_NodeName = "\\|\\|"
 	def tick(self):
+		super().tick()
 		self["Y"].drive(self["A"].level | self["B"].level)
 
 class CmpXOR(CmpGate):
 	_Name = "XOR"
 	_NodeName = "^"
-	def tick(self):
+
+	def update(self):
 		self["Y"].drive(self["A"].level ^ self["B"].level)
 
 class CmpNAND(CmpGate):
 	_Name = "NAND"
 	_NodeName = "~&&"
-	def tick(self):
+
+	def update(self):
 		self["Y"].drive((self["A"].level & self["B"].level) ^ 1)
 
 class CmpNOR(CmpGate):
 	_Name = "NOR"
 	_NodeName = "~\\|\\|"
-	def tick(self):
+
+	def update(self):
 		self["Y"].drive((self["A"].level | self["B"].level) ^ 1)
 
 
@@ -258,6 +312,7 @@ class Circuit():
 		return component
 
 	def _merge_nets(self, net1: Net, net2: Net):
+		print(net1,"AND", net2)
 		TODO
 
 	def connect(self, component1: Component, pin1_name: str, component2: Component, pin2_name: str):
@@ -270,32 +325,31 @@ class Circuit():
 		elif net1 is None:
 			# Only net2 exists
 			net = net2
-		elif net1 is None:
+		elif net2 is None:
 			# Only net1 exists
 			net = net1
 		else:
 			# Both nets exist
-			net = self.merge_nets(net1, net2)
+			net = self._merge_nets(net1, net2)
 		component1.connect(pin1_name, net)
 		component2.connect(pin2_name, net)
 
 	def reset(self):
 		for net in self._nets:
-			net.force(Level.WeakLow)
-		circ.settle()
+			net.reset()
 
 	def tick(self):
 		for component in self._components:
 			component.tick()
-		for net in self._nets:
-			net.tick()
+		for component in self._components:
+			component.finish_tick()
 
-	def settle(self):
-		while True:
-			self._nets_stable = True
-			self.tick()
-			if self._nets_stable:
-				break
+#	def settle(self):
+#		while True:
+#			self._nets_stable = True
+#			self.tick()
+#			if self._nets_stable:
+#				break
 
 	def dump(self):
 		for net in sorted(self._nets):
@@ -328,21 +382,50 @@ class Circuit():
 if __name__ == "__main__":
 	circ = Circuit()
 
-	xor = circ.add(CmpXOR())
-	pin1 = circ.add(CmpSource(0))
-	pin2 = circ.add(CmpSource(1))
-	out = circ.add(CmpSink())
+#	source = circ.add(CmpSource(0))
+#	gate1 = circ.add(CmpNOT())
+#	gate2 = circ.add(CmpNOT())
+	gate3 = circ.add(CmpNOT())
+	sink = circ.add(CmpSink())
 
-	circ.connect(xor, "A", pin1, "OUT")
-	circ.connect(xor, "B", pin2, "OUT")
-	circ.connect(xor, "Y", out, "IN")
+#	circ.connect(source, "OUT", gate1, "A")
+#	circ.connect(gate1, "Y", gate2, "A")
+#	circ.connect(gate2, "Y", gate3, "A")
+#	circ.connect(gate3, "Y", sink, "IN")
 
+#	circ.connect(source, "OUT", gate1, "A")
+#	circ.connect(gate1, "Y", gate2, "A")
+#	circ.connect(gate2, "Y", gate3, "A")
+	circ.connect(gate3, "Y", gate3, "A")
+	circ.connect(gate3, "Y", sink, "IN")
 	circ.reset()
-	circ.dump()
 
-	pin1.level = 0
-	circ.settle()
-	circ.dump()
+
+
+	for i in range(10):
+		circ.tick()
+		print(sink.level)
+#		print(source.level, sink.level)
+#		source.toggle()
+
+
+
+
+#	xor = circ.add(CmpXOR())
+#	pin1 = circ.add(CmpSource(0))
+#	pin2 = circ.add(CmpSource(1))
+#	out = circ.add(CmpSink())
+#
+#	circ.connect(xor, "A", pin1, "OUT")
+#	circ.connect(xor, "B", pin2, "OUT")
+#	circ.connect(xor, "Y", out, "IN")
+#
+#	circ.reset()
+#	circ.dump()
+#
+#	pin1.level = 0
+#	circ.settle()
+#	circ.dump()
 
 	#pin2.level = 1
 	#circ.tick()
