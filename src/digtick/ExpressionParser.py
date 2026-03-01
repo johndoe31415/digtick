@@ -100,16 +100,6 @@ class ParseTreeElement():
 			evaluation = self.evaluate(value_dict)
 			yield (value_dict, evaluation)
 
-	def minterms(self):
-		for (value_dict, evaluation) in self.table():
-			if evaluation == 1:
-				yield value_dict
-
-	def maxterms(self):
-		for (value_dict, evaluation) in self.table():
-			if evaluation == 0:
-				yield value_dict
-
 	def _is_mterm(self, acceptable_binary_operator: Operator):
 		if isinstance(self, BinaryOperator) and (self.op == acceptable_binary_operator):
 			return self.lhs._is_mterm(acceptable_binary_operator) and self.rhs._is_mterm(acceptable_binary_operator)
