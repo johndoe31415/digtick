@@ -1,0 +1,10 @@
+#!/bin/bash
+if [ "$#" != "2" ]; then
+	echo "$0 [svg-filename] [png-filename]"
+	exit 1
+fi
+
+SVG="$1"
+PNG="$2"
+inkscape -d 150 --export-area-drawing -o "/tmp/svg2png_temp.png" "$SVG"
+magick  "/tmp/svg2png_temp.png" -background white -alpha remove -alpha off -trim +repage "$PNG"
