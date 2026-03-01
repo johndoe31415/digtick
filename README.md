@@ -414,6 +414,61 @@ human consumption:
 \textnormal{B} \ (\textnormal{C} \ \textnormal{D} \vee \textnormal{A} \ \overline{\textnormal{D}}) \vee \textnormal{F} \ \textnormal{E}
 ```
 
+
+## "satisfied": Validate a solution against a truth table
+`satisfied` takes a truth table as input as well as a Boolean expression and
+verifies that the expression indeed fulfills the truth table. It prints the
+locations where it is not fulfilled, again in table format:
+
+```
+$ digtick satisfied -f pretty examples/table1.txt 'A !(A !B C)'
+┌───┬───┬───┬───┬───┬──────┬─────┐
+│ A │ B │ C │ D │ Y │ Eval │ Sat │
+├───┼───┼───┼───┼───┼──────┼─────┤
+│ 0 │ 0 │ 0 │ 0 │ 0 │ 0    │ 1   │
+│ 0 │ 0 │ 0 │ 1 │ 0 │ 0    │ 1   │
+│ 0 │ 0 │ 1 │ 0 │ 0 │ 0    │ 1   │
+│ 0 │ 0 │ 1 │ 1 │ 0 │ 0    │ 1   │
+│ 0 │ 1 │ 0 │ 0 │ 0 │ 0    │ 1   │
+│ 0 │ 1 │ 0 │ 1 │ * │ 0    │ 1   │
+│ 0 │ 1 │ 1 │ 0 │ 0 │ 0    │ 1   │
+│ 0 │ 1 │ 1 │ 1 │ * │ 0    │ 1   │
+│ 1 │ 0 │ 0 │ 0 │ 1 │ 1    │ 1   │
+│ 1 │ 0 │ 0 │ 1 │ 1 │ 1    │ 1   │
+│ 1 │ 0 │ 1 │ 0 │ 0 │ 0    │ 1   │
+│ 1 │ 0 │ 1 │ 1 │ 0 │ 0    │ 1   │
+│ 1 │ 1 │ 0 │ 0 │ 1 │ 1    │ 1   │
+│ 1 │ 1 │ 0 │ 1 │ 1 │ 1    │ 1   │
+│ 1 │ 1 │ 1 │ 0 │ 0 │ 1    │ 0   │
+│ 1 │ 1 │ 1 │ 1 │ * │ 1    │ 1   │
+└───┴───┴───┴───┴───┴──────┴─────┘
+Warning: the given expression does NOT satisfy the truth table
+
+
+$ digtick satisfied -f pretty examples/table1.txt 'A !(A !B C) !(A B C !D)'
+┌───┬───┬───┬───┬───┬──────┬─────┐
+│ A │ B │ C │ D │ Y │ Eval │ Sat │
+├───┼───┼───┼───┼───┼──────┼─────┤
+│ 0 │ 0 │ 0 │ 0 │ 0 │ 0    │ 1   │
+│ 0 │ 0 │ 0 │ 1 │ 0 │ 0    │ 1   │
+│ 0 │ 0 │ 1 │ 0 │ 0 │ 0    │ 1   │
+│ 0 │ 0 │ 1 │ 1 │ 0 │ 0    │ 1   │
+│ 0 │ 1 │ 0 │ 0 │ 0 │ 0    │ 1   │
+│ 0 │ 1 │ 0 │ 1 │ * │ 0    │ 1   │
+│ 0 │ 1 │ 1 │ 0 │ 0 │ 0    │ 1   │
+│ 0 │ 1 │ 1 │ 1 │ * │ 0    │ 1   │
+│ 1 │ 0 │ 0 │ 0 │ 1 │ 1    │ 1   │
+│ 1 │ 0 │ 0 │ 1 │ 1 │ 1    │ 1   │
+│ 1 │ 0 │ 1 │ 0 │ 0 │ 0    │ 1   │
+│ 1 │ 0 │ 1 │ 1 │ 0 │ 0    │ 1   │
+│ 1 │ 1 │ 0 │ 0 │ 1 │ 1    │ 1   │
+│ 1 │ 1 │ 0 │ 1 │ 1 │ 1    │ 1   │
+│ 1 │ 1 │ 1 │ 0 │ 0 │ 0    │ 1   │
+│ 1 │ 1 │ 1 │ 1 │ * │ 1    │ 1   │
+└───┴───┴───┴───┴───┴──────┴─────┘
+The given expression satisfies the truth table.
+```
+
 ## "random-expr": generate a random Boolean expression
 `random-expr` generates a random expression over a specified number of
 variables that has a certain "complexity" according to some metric (currently,
