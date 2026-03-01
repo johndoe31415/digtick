@@ -58,7 +58,11 @@ class QuineMcCluskey():
 					# We DO care
 					inverted = (((self.value >> bit) & 1) != 0) ^ minterm
 					literals.append(~variable if inverted else variable)
-			return BinaryOperator.join(Operator.And if minterm else Operator.Or, literals)
+			if len(literals) == 0:
+				# Constant term is the result
+				return Constant(1) if minterm else Constant(0)
+			else:
+				return BinaryOperator.join(Operator.And if minterm else Operator.Or, literals)
 
 		def _cmpkey(self):
 			return (-self.order, self.minterms, self.value, self.mask)
