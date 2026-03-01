@@ -21,6 +21,7 @@
 
 import enum
 import functools
+from typing import Iterator
 from . import tpg
 
 class Operator(enum.Enum):
@@ -94,7 +95,7 @@ class ParseTreeElement():
 		elif isinstance(self, Parenthesis):
 			yield from self.inner._traverse()
 
-	def table(self):
+	def table(self) -> Iterator[tuple[dict, int]]:
 		for value in range(self.input_combination_count):
 			value_dict = { varname: int((value & (1 << (len(self.variables) - 1 - varno))) != 0) for (varno, varname) in enumerate(self.variables) }
 			evaluation = self.evaluate(value_dict)
@@ -130,7 +131,7 @@ class ParseTreeElement():
 		else:
 			yield self
 
-	def collect_literals(self):
+	def collect_literals(self) -> Iterator["Variable | UnaryOperator"]:
 		if isinstance(self, Variable):
 			yield self
 		elif isinstance(self, UnaryOperator) and (self.op == Operator.Not):
@@ -139,7 +140,7 @@ class ParseTreeElement():
 			yield from self.lhs.collect_literals()
 			yield from self.rhs.collect_literals()
 
-	def compare_to_expression(self, other: "ParseTreeElement"):
+	def compare_to_expression(self, other: "ParseTreeElement") -> Iterator[tuple[dict, int, int]]:
 		e1_vars = set(self.variables)
 		e2_vars = set(other.variables)
 		intersection = e1_vars & e2_vars
@@ -180,17 +181,32 @@ class ParseTreeElement():
 	def __or__(self, rhs: "ParseTreeElement"):
 		return self._Elements["BinaryOperator"](self, Operator.Or, self._wrap(rhs))
 
+	def __ror__(self, lhs: "ParseTreeElement"):
+		return self._wrap(lhs) | self
+
 	def __and__(self, rhs: "ParseTreeElement"):
 		return self._Elements["BinaryOperator"](self, Operator.And, self._wrap(rhs))
+
+	def __rand__(self, lhs: "ParseTreeElement"):
+		return self._wrap(lhs) & self
 
 	def __xor__(self, rhs: "ParseTreeElement"):
 		return self._Elements["BinaryOperator"](self, Operator.Xor, self._wrap(rhs))
 
+	def __rxor__(self, lhs: "ParseTreeElement"):
+		return self._wrap(lhs) ^ self
+
 	def __matmul__(self, rhs: "ParseTreeElement"):
 		return self._Elements["BinaryOperator"](self, Operator.Nand, self._wrap(rhs))
 
+	def __rmatmul__(self, lhs: "ParseTreeElement"):
+		return self._wrap(lhs) @ self
+
 	def __mod__(self, rhs: "ParseTreeElement"):
 		return self._Elements["BinaryOperator"](self, Operator.Nor, self._wrap(rhs))
+
+	def __rmod__(self, lhs: "ParseTreeElement"):
+		return self._wrap(lhs) % self
 
 	def __init_subclass__(cls, **kwargs):
 		super().__init_subclass__(**kwargs)

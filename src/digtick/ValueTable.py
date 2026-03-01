@@ -136,6 +136,13 @@ class ValueTable():
 	def output_variable_count(self):
 		return len(self._output_variable_names)
 
+	@property
+	def compact_representation(self) -> str:
+		output = [ ]
+		output += [ f":{','.join(self.input_variable_names)}:{','.join(self.output_variable_names)}" ]
+		output += [ storage.to_string() for storage in self._output_values ]
+		return ":".join(output)
+
 	def add_output_variable(self, varname: str, storage: CompactStorage):
 		assert(storage.variable_count == self.input_variable_count)
 		self._output_variable_names.append(varname)
@@ -302,10 +309,7 @@ class ValueTable():
 		print("\\end{tabular}")
 
 	def _print_compact(self):
-		output = [ ]
-		output += [ f":{','.join(self.input_variable_names)}:{','.join(self.output_variable_names)}" ]
-		output += [ storage.to_string() for storage in self._output_values ]
-		print(":".join(output))
+		print(self.compact_representation)
 
 	def _print_logisim(self):
 		logisim_chars = {
