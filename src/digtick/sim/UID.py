@@ -19,5 +19,10 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
-from .CircuitSimulation import Circuit
-from .Components import Component, CmpSource, CmpSink, CmpNOT, CmpAND, CmpOR, CmpXOR, CmpNAND, CmpNOR, CmpDFlipFlop
+class UID():
+	_Value = 0
+
+	@classmethod
+	def gen(cls):
+		cls._Value += 1
+		return cls._Value
