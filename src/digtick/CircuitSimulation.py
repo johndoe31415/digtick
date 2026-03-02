@@ -93,7 +93,7 @@ class Net():
 		self._members.add((component, pin_name))
 
 	def dump(self):
-		print(f"{self} level {self._level.name} nextlevel {self._next_level} with {len(self._members)} members:")
+		print(f"{self} level {self._level.name} nextlevel {self._next_level.name} with {len(self._members)} members:")
 		for (component, pin_name) in self:
 			print(f"    {component}.{pin_name}")
 
@@ -101,6 +101,12 @@ class Net():
 		pass
 #		if self._next_level != Level.Undefined:
 #			self.
+
+	def output_devices(self):
+		for (member, pin_name) in self:
+			if member.is_pin_output(pin_name):
+				print("RECURSE", member, pin_name)
+				yield member
 
 	def __iter__(self):
 		return iter(self._members)
@@ -156,6 +162,26 @@ class Component():
 	@property
 	def name(self):
 		return f"{self._Prefix}{self.no}"
+
+	def reset(self):
+		pass
+
+	def is_pin_output(self, pin_name: str):
+		return pin_name in self._Inputs
+
+	def dependency_chain(self, seen: set | None = None):
+		if seen is None:
+			seen = set()
+
+		for input_pin_name in self._Inputs:
+			net = self[input_pin_name]
+			if net is None:
+				continue
+			for output_device in net.output_devices():
+				if output_device not in seen:
+					seen.add(output_device)
+					yield from output_device.dependency_chain(seen)
+		yield self
 
 	def __getitem__(self, pin_name: str):
 		return self._nets.get(pin_name)
@@ -308,6 +334,7 @@ class Circuit():
 		self._nets = set()
 		self._enumeration = collections.Counter()
 		self._nets_stable = False
+		self._was_reset = False
 
 	def notify_net_change(self, net: Net):
 		self._nets_stable = False
@@ -343,15 +370,38 @@ class Circuit():
 		component2.connect(pin2_name, net)
 
 	def reset(self):
+		missing = set(self._components)
+		ordered_list = [ ]
+		seen = set()
+		while len(missing) > 0:
+			component = missing.pop()
+			for dependent in component.dependency_chain():
+				if dependent not in seen:
+					ordered_list.append(dependent)
+					seen.add(dependent)
+		assert(set(ordered_list) == set(self._components))
+		self._components = ordered_list
+
+		for component in self._components:
+			component.reset()
 		for net in self._nets:
 			net.reset()
+		self._was_reset = True
+		for _ in range(2):
+			self.tick()
 
 	def tick(self):
+		if not self._was_reset:
+			raise ValueError("Circuit has not yet been reset.")
+		print("="*120)
 		for component in self._components:
 			print("TICK", component)
 			component.tick()
 		for component in self._components:
 			component.finish_tick()
+		print("Tick done")
+		print("="*120)
+
 
 #	def settle(self):
 #		while True:
@@ -360,9 +410,18 @@ class Circuit():
 #			if self._nets_stable:
 #				break
 
-	def dump(self):
+	def dump(self, text: str | None = None):
+		heading = f"{'~' * 50} {text or 'Dumping circuit'} {'~' * 50}"
+		print(heading)
+		for component in self._components:
+			if isinstance(component, CmpSource):
+				print(f"Source: {component} level {component.level} {component.status.name}")
+			else:
+				print(f"Component: {component} {component.status.name}")
+
 		for net in sorted(self._nets):
 			net.dump()
+		print("~" * len(heading))
 
 	def print(self):
 		print("digraph circuit {")
@@ -391,30 +450,31 @@ class Circuit():
 if __name__ == "__main__":
 	circ = Circuit()
 
-#	source = circ.add(CmpSource(0))
-#	gate1 = circ.add(CmpNOT())
+	source = circ.add(CmpSource(0))
+	gate1 = circ.add(CmpNOT())
 #	gate2 = circ.add(CmpNOT())
-	gate3 = circ.add(CmpNOT())
+#	gate3 = circ.add(CmpNOT())
 	sink = circ.add(CmpSink())
 
-#	circ.connect(source, "OUT", gate1, "A")
+	circ.connect(source, "OUT", gate1, "A")
 #	circ.connect(gate1, "Y", gate2, "A")
 #	circ.connect(gate2, "Y", gate3, "A")
-#	circ.connect(gate3, "Y", sink, "IN")
+	circ.connect(gate1, "Y", sink, "IN")
 
 #	circ.connect(source, "OUT", gate1, "A")
 #	circ.connect(gate1, "Y", gate2, "A")
 #	circ.connect(gate2, "Y", gate3, "A")
-	circ.connect(gate3, "Y", gate3, "A")
-	circ.connect(gate3, "Y", sink, "IN")
+#	circ.connect(gate3, "Y", gate3, "A")
+#	circ.connect(gate3, "Y", sink, "IN")
 	circ.reset()
 
 
 
 	for i in range(10):
+		source.toggle()
 		circ.tick()
-		print(sink.level)
-#		print(source.level, sink.level)
+		print(source.level, sink.level)
+		assert(source.level ^ 1  == sink.level)
 #		source.toggle()
 
 
