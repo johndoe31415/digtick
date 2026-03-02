@@ -48,6 +48,7 @@ class CircuitSimulationTests(unittest.TestCase):
 		circ.connect(source, "OUT", inverter1, "A")
 		circ.connect(inverter1, "Y", sink, "IN")
 		circ.reset()
+		circ.dump()
 
 		self.assertEqual(sink.level, 0)
 		# Propagation happens only on tick
@@ -56,7 +57,13 @@ class CircuitSimulationTests(unittest.TestCase):
 
 		source.level = 1
 		self.assertEqual(sink.level, 1)
+		print("="*120)
+		print("Up until here correct but following tick does not work:")
 		circ.tick()
+		print()
+		print()
+		print()
+		circ.dump()
 		self.assertEqual(sink.level, 0)
 
 	def test_inverter_2(self):

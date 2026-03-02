@@ -86,6 +86,7 @@ class Net():
 			1: Level.High,
 		}[value]
 		for (component, pin_name) in self._members:
+			print("NOTIFING", component, pin_name)
 			component.notify_pin_change(pin_name)
 
 	def add_member(self, component: "Component", pin_name: str):
@@ -166,6 +167,7 @@ class Component():
 		net.add_member(self, pin_name)
 
 	def notify_pin_change(self, pin_name: str):
+		print("NOTIFIED", self, pin_name, self.status.name)
 		if pin_name in self._Inputs:
 			if (self.status == Status.Settled):
 				self._status = Status.RecomputationRequired
@@ -178,7 +180,10 @@ class Component():
 	def tick(self):
 		if self._status == Status.RecomputationRequired:
 			self._status = Status.RecomputationPerformed
+			print("Updating!!!!")
 			self.update()
+		else:
+			print("Nothing done")
 
 	def finish_tick(self):
 		if self.status == Status.RecomputationPerformed:
@@ -253,6 +258,7 @@ class CmpNOT(Component):
 		super().__init__()
 
 	def update(self):
+		print(f"NOT gate: Y = ^A -> drive {self['A'].level ^ 1}")
 		self["Y"].drive(self["A"].level ^ 1)
 
 class CmpGate(Component):
@@ -342,6 +348,7 @@ class Circuit():
 
 	def tick(self):
 		for component in self._components:
+			print("TICK", component)
 			component.tick()
 		for component in self._components:
 			component.finish_tick()
