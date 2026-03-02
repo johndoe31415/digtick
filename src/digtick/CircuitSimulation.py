@@ -20,7 +20,6 @@
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 import enum
-import random
 import collections
 from .Exceptions import UndefinedInputUsedException, NoSuchPinException, WrongCircuitPowerStateException
 
@@ -342,7 +341,7 @@ class Circuit():
 
 		if len(additional_component_pin_names) > 0:
 			(component3, pin3_name, *additional_component_pin_names) = additional_component_pin_names
-			return self.connect(component1, pin1_name, component3, pin3_name, *additional_component_pin_names)
+			self.connect(component1, pin1_name, component3, pin3_name, *additional_component_pin_names)
 
 	def power_on(self):
 		for net in self._nets:
@@ -405,8 +404,8 @@ if __name__ == "__main__":
 	gate = circ.add(CmpNOT())
 	sink = circ.add(CmpSink())
 
-	circ.connect(source, "OUT", gate1, "A")
-	circ.connect(gate1, "Y", sink, "IN")
+	circ.connect(source, "OUT", gate, "A")
+	circ.connect(gate, "Y", sink, "IN")
 	circ.power_on()
 
 	for i in range(10):
