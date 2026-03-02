@@ -19,16 +19,19 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
+import os
 import unittest
 from digtick.ExpressionParser import parse_expression
 from digtick.ValueTable import ValueTable, CompactStorage
 from digtick.QuineMcCluskey import QuineMcCluskey
 
+_run_slow_tests = (os.environ.get("UNITTEST_RUN_ALL") == "1")
+
 class QMCTests(unittest.TestCase):
-	_VALUE_TABLES = [
-		ValueTable.from_compact_representation(":A,B,C,D:Y:61590100"),		# Wikipedia example
-		ValueTable.from_compact_representation(":A,B,C,D,E,F:Y:1064158620815865a044911508155600"),
-	]
+	_VALUE_TABLES = {
+		"wikipedia":	ValueTable.from_compact_representation(":A,B,C,D:Y:61590100"),									# Wikipedia example
+		"slow_dnf":		ValueTable.from_compact_representation(":A,B,C,D,E,F:Y:1064158620815865a044911508155600"),		# Slow DNF
+	}
 
 	def _assert_satisfies(self, vt: ValueTable, expr: "ParseTreeElement"):
 		for (index, (input_dict, output_dict)) in enumerate(vt.iter_inputdict):
@@ -38,16 +41,30 @@ class QMCTests(unittest.TestCase):
 			self.assertTrue(satisfied)
 
 	def test_qmc_dnf(self):
-		for vt in self._VALUE_TABLES:
+		for (name, vt) in self._VALUE_TABLES.items():
+			if name.startswith("slow"):
+				continue
 			qmc = QuineMcCluskey(vt, "Y")
 			expr = qmc.optimize()
 			self._assert_satisfies(vt, expr)
 
 	def test_qmc_cnf(self):
-		for vt in self._VALUE_TABLES:
+		for (name, vt) in self._VALUE_TABLES.items():
+			if name.startswith("slow"):
+				continue
 			qmc = QuineMcCluskey(vt, "Y")
 			expr = qmc.optimize(emit_dnf = False)
 			self._assert_satisfies(vt, expr)
+
+	@unittest.skipUnless(_run_slow_tests, "slow tests disabled (set environment variable UNITTEST_RUN_ALL=1)")
+	def test_qmc_slow(self):
+		for (name, vt) in self._VALUE_TABLES.items():
+			if not name.startswith("slow"):
+				continue
+			for emit_dnf in [ True, False ]:
+				qmc = QuineMcCluskey(vt, "Y")
+				expr = qmc.optimize(emit_dnf = emit_dnf)
+				self._assert_satisfies(vt, expr)
 
 	def test_qmc_pruning(self):
 		# When greedy pruning during the Petrick's Method step of QMC is used,

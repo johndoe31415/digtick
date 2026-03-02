@@ -19,8 +19,21 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
-from .ParserTests import ParserTests
-from .ExpressionFormatterTests import ExpressionFormatterTests
-from .QMCTests import QMCTests
-from .ExpressionTreeTests import ExpressionTreeTests
-from .CircuitSimulationTests import CircuitSimulationTests
+import unittest
+from digtick.CircuitSimulation import Circuit, CmpSource, CmpNOT, CmpSink
+
+class CircuitSimulationTests(unittest.TestCase):
+	def test_input_output(self):
+		circ = Circuit()
+		source = circ.add(CmpSource(0))
+		sink = circ.add(CmpSink())
+		circ.connect(source, "OUT", sink, "IN")
+		circ.reset()
+
+		circ.tick()
+		self.assertEqual(sink.level, 0)
+
+		source.level = 1
+		self.assertEqual(sink.level, 0)
+		circ.tick()
+		self.assertEqual(sink.level, 1)

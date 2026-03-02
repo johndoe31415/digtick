@@ -19,10 +19,13 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
+import os
 import unittest
 from digtick.ExpressionParser import parse_expression, Variable
 from digtick.ExpressionFormatter import format_expression
 from digtick.RandomExpressionGenerator import RandomExpressionGenerator
+
+_run_slow_tests = (os.environ.get("UNITTEST_RUN_ALL") == "1")
 
 class ExpressionFormatterTests(unittest.TestCase):
 	def _assert_expression_reformattable(self, expr_str: str):
@@ -102,6 +105,7 @@ class ExpressionFormatterTests(unittest.TestCase):
 		self.assertEqual(format_expression(A | (B % C)), "A + (B % C)")
 		self.assertEqual(format_expression(A % (B | C)), "A % (B + C)")
 
+	@unittest.skipUnless(_run_slow_tests, "slow tests disabled (set environment variable UNITTEST_RUN_ALL=1)")
 	def test_random_expressions(self):
 		reg = RandomExpressionGenerator(6)
 		for _ in range(100):
