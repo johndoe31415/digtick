@@ -20,10 +20,12 @@
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 import enum
+import itertools
 import collections
-from digtick.Exceptions import UndefinedInputUsedException, NoSuchPinException, WrongCircuitPowerStateException, CircuitAstableException
-from .Components import CmpSource
+from .Components import Component, CmpSource
 from .UID import UID
+from digtick.Exceptions import UndefinedInputUsedException, NoSuchPinException, WrongCircuitPowerStateException, CircuitAstableException
+from digtick.ValueTable import ValueTable, CompactStorage
 
 class Level(enum.IntEnum):
 	Low = 0
@@ -115,6 +117,10 @@ class Circuit():
 		self._nets_stable = False
 		self._powered_on = False
 		self._changed_inputs = set()
+
+	def new(self, component_name: str, *args, **kwargs):
+		component = Component.new(component_name, *args, **kwargs)
+		return self.add(component)
 
 	def add(self, component: "Component"):
 		if self._powered_on:
@@ -223,6 +229,23 @@ class Circuit():
 				((comp1, pin1), (comp2, pin2)) = list(net)
 				print(f"	{comp1.name}:{pin1} -> {comp2.name}:{pin2};")
 		print("}")
+
+	def build_table(self, input_variable_dict: dict[str, "CmpSource"], output_variable_dict: dict[str, "CmpSink"]):
+		input_variable_names = sorted(input_variable_dict)
+		output_variable_names = sorted(output_variable_dict)
+		output = [ CompactStorage(len(input_variable_names)) for _ in output_variable_names ]
+		for (index, input_values) in enumerate(itertools.product([ 0, 1 ], repeat = len(input_variable_names))):
+			for (input_variable_no, input_variable_name) in enumerate(input_variable_names):
+				input_value = input_values[input_variable_no]
+				source = input_variable_dict[input_variable_name]
+				source.level = input_value
+			self.tick()
+
+			for (output_storage, output_variable_name) in zip(output, output_variable_names):
+				output_value = output_variable_dict[output_variable_name].level
+				output_storage[index] = output_value
+		return ValueTable(input_variable_names, output_variable_names, output)
+
 
 if __name__ == "__main__":
 	circ = Circuit()

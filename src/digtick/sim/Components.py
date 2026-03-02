@@ -22,6 +22,7 @@
 from .UID import UID
 
 class Component():
+	_KNOWN_COMPONENTS = { }
 	_Inputs = [ ]
 	_Outputs = [ ]
 	_Name = None
@@ -32,6 +33,16 @@ class Component():
 		self._no = None
 		self._nets = { }
 		self._circuit = None
+
+	def __init_subclass__(cls, **kwargs):
+		if cls._Name is None:
+			return
+		assert(cls._Prefix is not None)
+		cls._KNOWN_COMPONENTS[cls._Name] = cls
+
+	@classmethod
+	def new(cls, name: str, *args, **kwargs):
+		return cls._KNOWN_COMPONENTS[name](*args, **kwargs)
 
 	@property
 	def circuit(self):
@@ -114,7 +125,7 @@ class CmpSource(Component):
 	_NodeName = "Src"
 	_Prefix = "SRC"
 
-	def __init__(self, level: int):
+	def __init__(self, level: int = 0):
 		super().__init__()
 		self._level = level
 

@@ -20,7 +20,7 @@
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 import unittest
-from digtick.sim import Circuit, CmpSource, CmpNOT, CmpSink, CmpAND, CmpOR, CmpXOR, CmpNAND, CmpDFlipFlop
+from digtick.sim import Circuit, Component, CmpSource, CmpNOT, CmpSink, CmpAND, CmpOR, CmpXOR, CmpNAND, CmpDFlipFlop
 from digtick.ExpressionParser import parse_expression
 from digtick.Exceptions import CircuitAstableException
 
@@ -284,3 +284,17 @@ class CircuitSimulationTests(unittest.TestCase):
 		r.level = 1
 		circ.tick()
 		self.assertEqual(q.level, 1 ^ notq.level)
+
+	def test_named_instances(self):
+		circ = Circuit()
+		a = circ.new("Source")
+		b = circ.new("Source")
+		gate = circ.new("NAND")
+		y = circ.new("Sink")
+		circ.connect(a, "OUT", gate, "A")
+		circ.connect(b, "OUT", gate, "B")
+		circ.connect(gate, "Y", y, "IN")
+		circ.power_on()
+
+		table = circ.build_table({ "A": a, "B": b }, { "Y": y })
+		self.assertEqual(table.compact_representation, ":A,B:Y:15")
