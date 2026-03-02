@@ -29,7 +29,7 @@ class CircuitSimulationTests(unittest.TestCase):
 		source = circ.add(CmpSource(0))
 		sink = circ.add(CmpSink())
 		circ.connect(source, "OUT", sink, "IN")
-		circ.reset()
+		circ.power_on()
 
 		circ.tick()
 		self.assertEqual(sink.level, 0)
@@ -47,20 +47,13 @@ class CircuitSimulationTests(unittest.TestCase):
 		sink = circ.add(CmpSink())
 		circ.connect(source, "OUT", inverter1, "A")
 		circ.connect(inverter1, "Y", sink, "IN")
-		circ.reset()
-		circ.dump("After reset")
+		circ.power_on()
 
 		self.assertEqual(sink.level, 1)
 
 		source.level = 1
 		self.assertEqual(sink.level, 1)
-		print("="*120)
-		print("Up until here correct but following tick does not work:")
 		circ.tick()
-		print()
-		print()
-		print()
-		circ.dump()
 		self.assertEqual(sink.level, 0)
 
 	def test_inverter_2(self):
@@ -73,7 +66,7 @@ class CircuitSimulationTests(unittest.TestCase):
 		circ.connect(source, "OUT", inverter1, "A")
 		circ.connect(inverter1, "Y", inverter2, "A")
 		circ.connect(inverter2, "Y", sink, "IN")
-		circ.reset()
+		circ.power_on()
 
 		self.assertEqual(sink.level, 0)
 		# Propagation happens only on tick
@@ -106,15 +99,11 @@ class CircuitSimulationTests(unittest.TestCase):
 		circ.connect(A, "OUT", g_and, "B")
 		circ.connect(g_and, "Y", g_or, "B")
 		circ.connect(g_or, "Y", Y, "IN")
-		circ.reset()
-
-		circ.dump()
-
+		circ.power_on()
 		for (input_values, output) in expression.table():
 			A.level = input_values["A"]
 			B.level = input_values["B"]
 			C.level = input_values["C"]
 			D.level = input_values["D"]
 			circ.tick()
-			circ.dump("After tick")
 			self.assertEqual(Y.level, output)

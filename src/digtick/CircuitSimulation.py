@@ -86,7 +86,6 @@ class Net():
 			1: Level.High,
 		}[value]
 		for (component, pin_name) in self._members:
-			print("NOTIFING", component, pin_name)
 			component.notify_pin_change(pin_name)
 
 	def add_member(self, component: "Component", pin_name: str):
@@ -99,14 +98,6 @@ class Net():
 
 	def update_deferred(self):
 		pass
-#		if self._next_level != Level.Undefined:
-#			self.
-
-	def output_devices(self):
-		for (member, pin_name) in self:
-			if member.is_pin_output(pin_name):
-				print("RECURSE", member, pin_name)
-				yield member
 
 	def __iter__(self):
 		return iter(self._members)
@@ -123,12 +114,6 @@ class Net():
 	def __repr__(self):
 		return f"Net{self.nid}"
 
-class Status(enum.IntEnum):
-	Settled = 0
-	RecomputationRequired = 1
-	RecomputationPerformed = 2
-	Retriggered = 3
-
 class Component():
 	_Inputs = [ ]
 	_Outputs = [ ]
@@ -139,11 +124,16 @@ class Component():
 		self._uid = UID.gen()
 		self._no = None
 		self._nets = { }
-		self._status = Status.RecomputationRequired
+		self._circuit = None
 
 	@property
-	def status(self):
-		return self._status
+	def circuit(self):
+		return self._circuit
+
+	@circuit.setter
+	def circuit(self, circuit: "Circuit"):
+		assert(self._circuit is None)
+		self._circuit = circuit
 
 	@property
 	def cid(self):
@@ -166,22 +156,25 @@ class Component():
 	def reset(self):
 		pass
 
-	def is_pin_output(self, pin_name: str):
-		return pin_name in self._Inputs
+	def tick(self):
+		pass
 
-	def dependency_chain(self, seen: set | None = None):
-		if seen is None:
-			seen = set()
+#	def is_pin_output(self, pin_name: str):
+#		return pin_name in self._Inputs
 
-		for input_pin_name in self._Inputs:
-			net = self[input_pin_name]
-			if net is None:
-				continue
-			for output_device in net.output_devices():
-				if output_device not in seen:
-					seen.add(output_device)
-					yield from output_device.dependency_chain(seen)
-		yield self
+#	def dependency_chain(self, seen: set | None = None):
+#		if seen is None:
+#			seen = set()
+#
+#		for input_pin_name in self._Inputs:
+#			net = self[input_pin_name]
+#			if net is None:
+#				continue
+#			for output_device in net.output_devices():
+#				if output_device not in seen:
+#					seen.add(output_device)
+#					yield from output_device.dependency_chain(seen)
+#		yield self
 
 	def __getitem__(self, pin_name: str):
 		return self._nets.get(pin_name)
@@ -193,31 +186,10 @@ class Component():
 		net.add_member(self, pin_name)
 
 	def notify_pin_change(self, pin_name: str):
-		print("NOTIFIED", self, pin_name, self.status.name)
-		if pin_name in self._Inputs:
-			if (self.status == Status.Settled):
-				self._status = Status.RecomputationRequired
-				self.tick()
-			elif (self.status == Status.RecomputationRequired):
-				self.tick()
-			elif (self.status == Status.RecomputationPerformed):
-				self._status = Status.Retriggered
-
-	def tick(self):
-		if self._status == Status.RecomputationRequired:
-			self._status = Status.RecomputationPerformed
-			print("Updating!!!!")
-			self.update()
-		else:
-			print("Nothing done")
+		if (pin_name in self._Inputs) and (self[pin_name] is not None):
+			self.circuit.notify_change(self)
 
 	def finish_tick(self):
-		if self.status == Status.RecomputationPerformed:
-			self._status = Status.Settled
-		elif self.status == Status.Retriggered:
-			self._status = Status.RecomputationRequired
-
-	def update(self):
 		pass
 
 	def __eq__(self, other: "Component"):
@@ -254,13 +226,13 @@ class CmpSource(Component):
 		assert(isinstance(value, int))
 		assert(value in [ 0, 1 ])
 		if self._level != value:
-			self._status = Status.RecomputationRequired
+			self.circuit.notify_change(self)
 		self._level = value
 
 	def toggle(self):
 		self.level = self.level ^ 1
 
-	def update(self):
+	def tick(self):
 		self["OUT"].drive(self._level)
 
 class CmpSink(Component):
@@ -283,8 +255,7 @@ class CmpNOT(Component):
 	def __init__(self):
 		super().__init__()
 
-	def update(self):
-		print(f"NOT gate: Y = ^A -> drive {self['A'].level ^ 1}")
+	def tick(self):
 		self["Y"].drive(self["A"].level ^ 1)
 
 class CmpGate(Component):
@@ -296,7 +267,7 @@ class CmpAND(CmpGate):
 	_Name = "AND"
 	_NodeName = "&&"
 
-	def update(self):
+	def tick(self):
 		self["Y"].drive(self["A"].level & self["B"].level)
 
 class CmpOR(CmpGate):
@@ -310,21 +281,21 @@ class CmpXOR(CmpGate):
 	_Name = "XOR"
 	_NodeName = "^"
 
-	def update(self):
+	def tick(self):
 		self["Y"].drive(self["A"].level ^ self["B"].level)
 
 class CmpNAND(CmpGate):
 	_Name = "NAND"
 	_NodeName = "~&&"
 
-	def update(self):
+	def tick(self):
 		self["Y"].drive((self["A"].level & self["B"].level) ^ 1)
 
 class CmpNOR(CmpGate):
 	_Name = "NOR"
 	_NodeName = "~\\|\\|"
 
-	def update(self):
+	def tick(self):
 		self["Y"].drive((self["A"].level | self["B"].level) ^ 1)
 
 
@@ -334,23 +305,29 @@ class Circuit():
 		self._nets = set()
 		self._enumeration = collections.Counter()
 		self._nets_stable = False
-		self._was_reset = False
-
-	def notify_net_change(self, net: Net):
-		self._nets_stable = False
+		self._powered_on = False
+		self._changed_inputs = set()
 
 	def add(self, component: Component):
+		if self._powered_on:
+			raise ValueError("Unable to add component to powered on circuit")
+		component.circuit = self
 		self._enumeration[component._Prefix] +=	1
 		no = self._enumeration[component._Prefix]
 		self._components.add(component)
 		component.no = no
 		return component
 
+	def notify_change(self, component: Component):
+		self._changed_inputs.add(component)
+
 	def _merge_nets(self, net1: Net, net2: Net):
 		print(net1,"AND", net2)
-		TODO
+		TODO_NOT_IMPLEMENTED
 
 	def connect(self, component1: Component, pin1_name: str, component2: Component, pin2_name: str):
+		if self._powered_on:
+			raise ValueError("Unable to rewire powered on circuit")
 		net1 = component1[pin1_name]
 		net2 = component2[pin2_name]
 		if (net1 is None) and (net2 is None):
@@ -369,55 +346,31 @@ class Circuit():
 		component1.connect(pin1_name, net)
 		component2.connect(pin2_name, net)
 
-	def reset(self):
-		missing = set(self._components)
-		ordered_list = [ ]
-		seen = set()
-		while len(missing) > 0:
-			component = missing.pop()
-			for dependent in component.dependency_chain():
-				if dependent not in seen:
-					ordered_list.append(dependent)
-					seen.add(dependent)
-		assert(set(ordered_list) == set(self._components))
-		self._components = ordered_list
-
-		for component in self._components:
-			component.reset()
+	def power_on(self):
 		for net in self._nets:
 			net.reset()
-		self._was_reset = True
-		for _ in range(2):
-			self.tick()
+		for component in self._components:
+			self.notify_change(component)
+		self._powered_on = True
+		self.tick()
 
 	def tick(self):
-		if not self._was_reset:
-			raise ValueError("Circuit has not yet been reset.")
-		print("="*120)
-		for component in self._components:
-			print("TICK", component)
-			component.tick()
-		for component in self._components:
-			component.finish_tick()
-		print("Tick done")
-		print("="*120)
-
-
-#	def settle(self):
-#		while True:
-#			self._nets_stable = True
-#			self.tick()
-#			if self._nets_stable:
-#				break
+		if not self._powered_on:
+			raise ValueError("Circuit has not yet been powered on.")
+		while len(self._changed_inputs) > 0:
+			needs_tick = self._changed_inputs
+			self._changed_inputs = set()
+			for component in needs_tick:
+				component.tick()
 
 	def dump(self, text: str | None = None):
 		heading = f"{'~' * 50} {text or 'Dumping circuit'} {'~' * 50}"
 		print(heading)
 		for component in self._components:
 			if isinstance(component, CmpSource):
-				print(f"Source: {component} level {component.level} {component.status.name}")
+				print(f"Source: {component} level {component.level}")
 			else:
-				print(f"Component: {component} {component.status.name}")
+				print(f"Component: {component}")
 
 		for net in sorted(self._nets):
 			net.dump()
@@ -445,58 +398,21 @@ class Circuit():
 			elif net.member_count == 2:
 				((comp1, pin1), (comp2, pin2)) = list(net)
 				print(f"	{comp1.name}:{pin1} -> {comp2.name}:{pin2};")
-
 		print("}")
+
 if __name__ == "__main__":
 	circ = Circuit()
 
 	source = circ.add(CmpSource(0))
-	gate1 = circ.add(CmpNOT())
-#	gate2 = circ.add(CmpNOT())
-#	gate3 = circ.add(CmpNOT())
+	gate = circ.add(CmpNOT())
 	sink = circ.add(CmpSink())
 
 	circ.connect(source, "OUT", gate1, "A")
-#	circ.connect(gate1, "Y", gate2, "A")
-#	circ.connect(gate2, "Y", gate3, "A")
 	circ.connect(gate1, "Y", sink, "IN")
-
-#	circ.connect(source, "OUT", gate1, "A")
-#	circ.connect(gate1, "Y", gate2, "A")
-#	circ.connect(gate2, "Y", gate3, "A")
-#	circ.connect(gate3, "Y", gate3, "A")
-#	circ.connect(gate3, "Y", sink, "IN")
-	circ.reset()
-
-
+	circ.power_on()
 
 	for i in range(10):
 		source.toggle()
 		circ.tick()
 		print(source.level, sink.level)
 		assert(source.level ^ 1  == sink.level)
-#		source.toggle()
-
-
-
-
-#	xor = circ.add(CmpXOR())
-#	pin1 = circ.add(CmpSource(0))
-#	pin2 = circ.add(CmpSource(1))
-#	out = circ.add(CmpSink())
-#
-#	circ.connect(xor, "A", pin1, "OUT")
-#	circ.connect(xor, "B", pin2, "OUT")
-#	circ.connect(xor, "Y", out, "IN")
-#
-#	circ.reset()
-#	circ.dump()
-#
-#	pin1.level = 0
-#	circ.settle()
-#	circ.dump()
-
-	#pin2.level = 1
-	#circ.tick()
-	#circ.tick()
-	#print(out["IN"].level)
