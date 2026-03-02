@@ -192,3 +192,38 @@ class CircuitSimulationTests(unittest.TestCase):
 		circ.tick()
 		self.assertEqual(q.level, 1)
 		self.assertEqual(notq.level, 0)
+
+	def test_d_flipflop_cyclic(self):
+		circ = Circuit()
+
+		d = circ.add(CmpSource(0))
+		clk = circ.add(CmpSource(0))
+		ff = circ.add(CmpDFlipFlop())
+		q = circ.add(CmpSink())
+		notq = circ.add(CmpSink())
+
+		circ.connect(ff, "!Q", ff, "D")
+		circ.connect(clk, "OUT", ff, "CLK")
+		circ.connect(ff, "Q", q, "IN")
+		circ.connect(ff, "!Q", notq, "IN")
+		circ.power_on()
+
+		self.assertEqual(d.level, 0)
+		self.assertEqual(clk.level, 0)
+		self.assertEqual(q.level, 0)
+		self.assertEqual(notq.level, 1)
+
+		clk.level = 1
+		circ.tick()
+		self.assertEqual(q.level, 1)
+		self.assertEqual(notq.level, 0)
+
+		clk.level = 0
+		circ.tick()
+		self.assertEqual(q.level, 1)
+		self.assertEqual(notq.level, 0)
+
+		clk.level = 1
+		circ.tick()
+		self.assertEqual(q.level, 0)
+		self.assertEqual(notq.level, 1)
