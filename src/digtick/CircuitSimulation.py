@@ -154,29 +154,6 @@ class Component():
 	def name(self):
 		return f"{self._Prefix}{self.no}"
 
-	def reset(self):
-		pass
-
-	def tick(self):
-		pass
-
-#	def is_pin_output(self, pin_name: str):
-#		return pin_name in self._Inputs
-
-#	def dependency_chain(self, seen: set | None = None):
-#		if seen is None:
-#			seen = set()
-#
-#		for input_pin_name in self._Inputs:
-#			net = self[input_pin_name]
-#			if net is None:
-#				continue
-#			for output_device in net.output_devices():
-#				if output_device not in seen:
-#					seen.add(output_device)
-#					yield from output_device.dependency_chain(seen)
-#		yield self
-
 	def __getitem__(self, pin_name: str):
 		return self._nets.get(pin_name)
 
@@ -189,6 +166,16 @@ class Component():
 	def notify_pin_change(self, pin_name: str):
 		if (pin_name in self._Inputs) and (self[pin_name] is not None):
 			self.circuit.notify_change(self)
+
+	def drive(self, pin_name: str, level: int):
+		if self[pin_name] is not None:
+			self[pin_name].drive(level)
+
+	def reset(self):
+		pass
+
+	def tick(self):
+		pass
 
 	def finish_tick(self):
 		pass
@@ -234,7 +221,7 @@ class CmpSource(Component):
 		self.level = self.level ^ 1
 
 	def tick(self):
-		self["OUT"].drive(self._level)
+		self.drive("OUT", self._level)
 
 class CmpSink(Component):
 	_Outputs = [ "IN" ]
@@ -257,7 +244,7 @@ class CmpNOT(Component):
 		super().__init__()
 
 	def tick(self):
-		self["Y"].drive(self["A"].level ^ 1)
+		self.drive("Y", self["A"].level ^ 1)
 
 class CmpGate(Component):
 	_Inputs = [ "A", "B" ]
@@ -269,35 +256,35 @@ class CmpAND(CmpGate):
 	_NodeName = "&&"
 
 	def tick(self):
-		self["Y"].drive(self["A"].level & self["B"].level)
+		self.drive("Y", self["A"].level & self["B"].level)
 
 class CmpOR(CmpGate):
 	_Name = "OR"
 	_NodeName = "\\|\\|"
 	def tick(self):
 		super().tick()
-		self["Y"].drive(self["A"].level | self["B"].level)
+		self.drive("Y", self["A"].level | self["B"].level)
 
 class CmpXOR(CmpGate):
 	_Name = "XOR"
 	_NodeName = "^"
 
 	def tick(self):
-		self["Y"].drive(self["A"].level ^ self["B"].level)
+		self.drive("Y", self["A"].level ^ self["B"].level)
 
 class CmpNAND(CmpGate):
 	_Name = "NAND"
 	_NodeName = "~&&"
 
 	def tick(self):
-		self["Y"].drive((self["A"].level & self["B"].level) ^ 1)
+		self.drive("Y", (self["A"].level & self["B"].level) ^ 1)
 
 class CmpNOR(CmpGate):
 	_Name = "NOR"
 	_NodeName = "~\\|\\|"
 
 	def tick(self):
-		self["Y"].drive((self["A"].level | self["B"].level) ^ 1)
+		self.drive("Y", (self["A"].level | self["B"].level) ^ 1)
 
 
 class Circuit():
