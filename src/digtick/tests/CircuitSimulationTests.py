@@ -22,6 +22,7 @@
 import unittest
 from digtick.CircuitSimulation import Circuit, CmpSource, CmpNOT, CmpSink, CmpAND, CmpOR, CmpXOR, CmpNAND
 from digtick.ExpressionParser import parse_expression
+from digtick.Exceptions import CircuitAstableException
 
 class CircuitSimulationTests(unittest.TestCase):
 	def test_input_output(self):
@@ -145,3 +146,10 @@ class CircuitSimulationTests(unittest.TestCase):
 		self.assertEqual(sink.level, 1)
 		circ.tick()
 		self.assertEqual(sink.level, 0)
+
+	def test_astable_circuit(self):
+		circ = Circuit()
+		gate = circ.add(CmpNOT())
+		circ.connect(gate, "A", gate, "Y")
+		with self.assertRaises(CircuitAstableException):
+			circ.power_on()

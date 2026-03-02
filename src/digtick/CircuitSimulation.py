@@ -21,7 +21,7 @@
 
 import enum
 import collections
-from .Exceptions import UndefinedInputUsedException, NoSuchPinException, WrongCircuitPowerStateException
+from .Exceptions import UndefinedInputUsedException, NoSuchPinException, WrongCircuitPowerStateException, CircuitAstableException
 
 class UID():
 	_Value = 0
@@ -354,7 +354,11 @@ class Circuit():
 	def tick(self):
 		if not self._powered_on:
 			raise WrongCircuitPowerStateException("Circuit has not yet been powered on.")
+		iteration = 0
 		while len(self._changed_inputs) > 0:
+			if iteration >= 50:
+				raise CircuitAstableException("Circuit does not settle, probably because of cyclic wiring/oscillating behavior. Unable to simulate.")
+			iteration += 1
 			needs_tick = self._changed_inputs
 			self._changed_inputs = set()
 			for component in needs_tick:
