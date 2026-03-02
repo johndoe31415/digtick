@@ -37,3 +37,45 @@ class CircuitSimulationTests(unittest.TestCase):
 		self.assertEqual(sink.level, 0)
 		circ.tick()
 		self.assertEqual(sink.level, 1)
+
+	def test_inverter(self):
+		# Single inverter circuit
+		circ = Circuit()
+		source = circ.add(CmpSource(0))
+		inverter1 = circ.add(CmpNOT())
+		sink = circ.add(CmpSink())
+		circ.connect(source, "OUT", inverter1, "A")
+		circ.connect(inverter1, "Y", sink, "IN")
+		circ.reset()
+
+		self.assertEqual(sink.level, 0)
+		# Propagation happens only on tick
+		circ.tick()
+		self.assertEqual(sink.level, 1)
+
+		source.level = 1
+		self.assertEqual(sink.level, 1)
+		circ.tick()
+		self.assertEqual(sink.level, 0)
+
+	def test_inverter_2(self):
+		# 2 inverters in a row
+		circ = Circuit()
+		source = circ.add(CmpSource(0))
+		inverter1 = circ.add(CmpNOT())
+		inverter2 = circ.add(CmpNOT())
+		sink = circ.add(CmpSink())
+		circ.connect(source, "OUT", inverter1, "A")
+		circ.connect(inverter1, "Y", inverter2, "A")
+		circ.connect(inverter2, "Y", sink, "IN")
+		circ.reset()
+
+		self.assertEqual(sink.level, 0)
+		# Propagation happens only on tick
+		circ.tick()
+		self.assertEqual(sink.level, 0)
+
+		source.level = 1
+		self.assertEqual(sink.level, 0)
+		circ.tick()
+		self.assertEqual(sink.level, 1)
