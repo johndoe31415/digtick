@@ -20,7 +20,8 @@
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 import unittest
-from digtick.CircuitSimulation import Circuit, CmpSource, CmpNOT, CmpSink
+from digtick.CircuitSimulation import Circuit, CmpSource, CmpNOT, CmpSink, CmpAND, CmpOR, CmpXOR, CmpNAND
+from digtick.ExpressionParser import parse_expression
 
 class CircuitSimulationTests(unittest.TestCase):
 	def test_input_output(self):
@@ -79,3 +80,34 @@ class CircuitSimulationTests(unittest.TestCase):
 		self.assertEqual(sink.level, 0)
 		circ.tick()
 		self.assertEqual(sink.level, 1)
+
+	def test_combinatorial_circuit(self):
+		expression = parse_expression("!((A^B) @ C) | D A")
+		circ = Circuit()
+		(A, B, C, D) = (circ.add(CmpSource(0)), circ.add(CmpSource(0)), circ.add(CmpSource(0)), circ.add(CmpSource(0)))
+		g_not = circ.add(CmpNOT())
+		g_and = circ.add(CmpAND())
+		g_or = circ.add(CmpOR())
+		g_xor = circ.add(CmpXOR())
+		g_nand = circ.add(CmpNAND())
+		Y = circ.add(CmpSink())
+
+		circ.connect(A, "OUT", g_xor, "A")
+		circ.connect(B, "OUT", g_xor, "B")
+		circ.connect(g_xor, "Y", g_nand, "A")
+		circ.connect(C, "OUT", g_nand, "B")
+		circ.connect(g_nand, "Y", g_not, "A")
+		circ.connect(g_not, "Y", g_or, "A")
+		circ.connect(D, "OUT", g_and, "A")
+		circ.connect(A, "OUT", g_and, "B")
+		circ.connect(g_and, "Y", g_or, "B")
+		circ.connect(g_or, "Y", Y, "IN")
+		circ.reset()
+
+		for (input_values, output) in expression.table():
+			A.level = input_values["A"]
+			B.level = input_values["B"]
+			C.level = input_values["C"]
+			D.level = input_values["D"]
+			circ.tick()
+			self.assertEqual(Y.level, output)

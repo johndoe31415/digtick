@@ -20,10 +20,12 @@
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 import enum
+import random
 import collections
 
 class UID():
 	_Value = 0
+
 	@classmethod
 	def gen(cls):
 		cls._Value += 1
