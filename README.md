@@ -362,6 +362,49 @@ DNF : A !C + B D
 CNF : (!C) (A)
 ```
 
+The Quine-McCluskey implementation uses the classical approach (creating the
+Prime Implicant chart, then run Petrick's Method to determine Implicant
+coverage). It tries to minimize the number of minterms/maxterms and only as a
+secondary objective tries to minimize the number of literals. I am not fully
+certain but am quite convinced that minimizing number of implicants also
+implicitly minimizes number of literals used. In any case I was unable to find
+a counterexample (if you have one, absolutely reach out please -- also if you
+do find proof that my reasoning is correct).
+
+The implementation is not the fastest because of the algorithm used and will,
+for complicated charts, take some time:
+
+```
+$ time echo ":A,B,C,D,E,F:Y:1064158620815865a044911508155600" | digtick synth -c dnf
+CDNF: A B C !D E !F + A B C !D !E F + A B C !D !E !F + A B !C D E F + A B !C D E !F + A B !C D !E F + A !B C D E F + A !B C D E !F + A !B C D !E F + A !B C !D E F + A !B C !D !E F + A !B !C D E !F + A !B !C D !E !F + !A B C D E F + !A B C D E !F + !A B C D !E !F + !A B C !D !E F + !A B C !D !E !F + !A B !C D E F + !A !B C D E !F + !A !B C !D E F + !A !B C !D E !F + !A !B C !D !E F + !A !B !C D E !F + !A !B !C D !E !F + !A !B !C !D !E F
+DNF : B C !D F + B !D !E F + !A B !C !F + !A !B !C D + A B !C !E + A D E !F + A !B !C F + !A !B C !D !E + A !B !D !E !F + !A !B C !D !F
+
+real	0m0,536s
+user	0m0,518s
+sys	0m0,018s
+```
+
+One advantage of this approach is that we get similar cost terms after the
+fact. Again, this is important for exam work (your exam question may have more
+than one valid, perfectly correct, answer):
+
+```
+$ echo ":A,B,C,D:Y:4285568" | digtick synth --show-all-solutions
+CDNF: A B !C !D + A !B C D + A !B C !D + A !B !C D + A !B !C !D + !A !B C !D
+DNF 1/2: !A B + !A D + !C D
+DNF 2/2: !A B + !A C + !C D
+
+CCNF: (!A + !B + !C + !D) (A + !B + !C + !D) (A + !B + C + D) (A + B + !C + !D) (A + B + C + !D) (A + B + C + D)
+CNF 1/2: (B + C) (!A + D) (!A + !C)
+CNF 2/2: (B + D) (!A + D) (!A + !C)
+```
+
+Note that there are two solutions identical in number of minterms/maxterms for
+both DNF and CNF, both with the identical number of literals and negations
+(although negations are ignored in judging cost of expressions). This allows
+you to randomly generate tables to either provoke or avoid such a scenario.
+
+
 ## "equal": check whether two expressions are equivalent
 `equal` compares two Boolean expressions by evaluating them over all possible
 input assignments of the involved variables. If they are equivalent, it reports
