@@ -21,7 +21,7 @@
 
 import enum
 import collections
-from .Exceptions import UndefinedInputUsedException, NoSuchPinException, WrongCircuitPowerStateException, CircuitAstableException
+from digtick.Exceptions import UndefinedInputUsedException, NoSuchPinException, WrongCircuitPowerStateException, CircuitAstableException
 
 class UID():
 	_Value = 0
