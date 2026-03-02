@@ -22,6 +22,7 @@
 import enum
 import random
 import collections
+from .Exceptions import UndefinedInputUsedException, NoSuchPinException, WrongCircuitPowerStateException
 
 class UID():
 	_Value = 0
@@ -60,7 +61,7 @@ class Net():
 	@property
 	def level(self) -> int:
 		if self._level == Level.Undefined:
-			raise ValueError(f"Tried to read level of net {self}, but level of that net is undefined")
+			raise UndefinedInputUsedException(f"Tried to read level of net {self}, but level of that net is undefined")
 		return {
 			Level.Low: 0,
 			Level.High: 1,
@@ -181,7 +182,7 @@ class Component():
 
 	def connect(self, pin_name: str, net: Net):
 		if (pin_name not in self._Inputs) and (pin_name not in self._Outputs):
-			raise ValueError(f"Trying to connect net {net} to component {self}.{pin_name} but no pin {pin_name} exists (have IN = {self._Inputs} and OUT = {self._Outputs})")
+			raise NoSuchPinException(f"Trying to connect net {net} to component {self}.{pin_name} but no pin {pin_name} exists (have IN = {self._Inputs} and OUT = {self._Outputs})")
 		self._nets[pin_name] = net
 		net.add_member(self, pin_name)
 
@@ -310,7 +311,7 @@ class Circuit():
 
 	def add(self, component: Component):
 		if self._powered_on:
-			raise ValueError("Unable to add component to powered on circuit")
+			raise WrongCircuitPowerStateException("Unable to add component to powered on circuit")
 		component.circuit = self
 		self._enumeration[component._Prefix] +=	1
 		no = self._enumeration[component._Prefix]
@@ -327,7 +328,7 @@ class Circuit():
 
 	def connect(self, component1: Component, pin1_name: str, component2: Component, pin2_name: str):
 		if self._powered_on:
-			raise ValueError("Unable to rewire powered on circuit")
+			raise WrongCircuitPowerStateException("Unable to change nets on powered on circuit")
 		net1 = component1[pin1_name]
 		net2 = component2[pin2_name]
 		if (net1 is None) and (net2 is None):
@@ -356,7 +357,7 @@ class Circuit():
 
 	def tick(self):
 		if not self._powered_on:
-			raise ValueError("Circuit has not yet been powered on.")
+			raise WrongCircuitPowerStateException("Circuit has not yet been powered on.")
 		while len(self._changed_inputs) > 0:
 			needs_tick = self._changed_inputs
 			self._changed_inputs = set()
