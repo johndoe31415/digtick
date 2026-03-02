@@ -95,7 +95,7 @@ class Net():
 	def dump(self):
 		print(f"{self} level {self._level.name} nextlevel {self._next_level.name} with {len(self._members)} members:")
 		for (component, pin_name) in self:
-			print(f"    {component}.{pin_name}")
+			print(f"    {component.type_name} {component.name}.{pin_name}")
 
 	def update_deferred(self):
 		pass
@@ -153,6 +153,10 @@ class Component():
 	@property
 	def name(self):
 		return f"{self._Prefix}{self.no}"
+
+	@property
+	def type_name(self):
+		return self._Name
 
 	def __getitem__(self, pin_name: str):
 		return self._nets.get(pin_name)
@@ -310,10 +314,12 @@ class Circuit():
 		self._changed_inputs.add(component)
 
 	def _merge_nets(self, net1: Net, net2: Net):
-		print(net1,"AND", net2)
-		TODO_NOT_IMPLEMENTED
+		for (component, pin_name) in net2:
+			component.connect(pin_name, net1)
+		self._nets.remove(net2)
+		return net1
 
-	def connect(self, component1: Component, pin1_name: str, component2: Component, pin2_name: str):
+	def connect(self, component1: Component, pin1_name: str, component2: Component, pin2_name: str, *additional_component_pin_names):
 		if self._powered_on:
 			raise WrongCircuitPowerStateException("Unable to change nets on powered on circuit")
 		net1 = component1[pin1_name]
@@ -333,6 +339,10 @@ class Circuit():
 			net = self._merge_nets(net1, net2)
 		component1.connect(pin1_name, net)
 		component2.connect(pin2_name, net)
+
+		if len(additional_component_pin_names) > 0:
+			(component3, pin3_name, *additional_component_pin_names) = additional_component_pin_names
+			return self.connect(component1, pin1_name, component3, pin3_name, *additional_component_pin_names)
 
 	def power_on(self):
 		for net in self._nets:

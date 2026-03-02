@@ -107,3 +107,41 @@ class CircuitSimulationTests(unittest.TestCase):
 			D.level = input_values["D"]
 			circ.tick()
 			self.assertEqual(Y.level, output)
+
+	def test_nand_net_both_pins(self):
+		circ = Circuit()
+		source = circ.add(CmpSource(0))
+		gate = circ.add(CmpNAND())
+		sink = circ.add(CmpSink())
+		circ.connect(source, "OUT", gate, "A", gate, "B")
+		circ.connect(gate, "Y", sink, "IN")
+		circ.power_on()
+
+		circ.tick()
+		self.assertEqual(sink.level, 1)
+
+		source.level = 1
+		self.assertEqual(sink.level, 1)
+		circ.tick()
+		self.assertEqual(sink.level, 0)
+
+	def test_nand_net_merge(self):
+		circ = Circuit()
+		source = circ.add(CmpSource(0))
+		unused_sink = circ.add(CmpSink())
+		gate = circ.add(CmpNAND())
+		sink = circ.add(CmpSink())
+
+		circ.connect(source, "OUT", gate, "A")
+		circ.connect(unused_sink, "IN", gate, "B")
+		circ.connect(gate, "A", gate, "B")
+		circ.connect(gate, "Y", sink, "IN")
+		circ.power_on()
+
+		circ.tick()
+		self.assertEqual(sink.level, 1)
+
+		source.level = 1
+		self.assertEqual(sink.level, 1)
+		circ.tick()
+		self.assertEqual(sink.level, 0)
