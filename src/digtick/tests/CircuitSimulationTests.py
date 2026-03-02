@@ -195,13 +195,11 @@ class CircuitSimulationTests(unittest.TestCase):
 
 	def test_d_flipflop_cyclic(self):
 		circ = Circuit()
-
 		d = circ.add(CmpSource(0))
 		clk = circ.add(CmpSource(0))
 		ff = circ.add(CmpDFlipFlop())
 		q = circ.add(CmpSink())
 		notq = circ.add(CmpSink())
-
 		circ.connect(ff, "!Q", ff, "D")
 		circ.connect(clk, "OUT", ff, "CLK")
 		circ.connect(ff, "Q", q, "IN")
@@ -227,3 +225,62 @@ class CircuitSimulationTests(unittest.TestCase):
 		circ.tick()
 		self.assertEqual(q.level, 0)
 		self.assertEqual(notq.level, 1)
+
+	def test_rs_nand_flipflop(self):
+		circ = Circuit()
+		s = circ.add(CmpSource(1))
+		r = circ.add(CmpSource(1))
+		nand1 = circ.add(CmpNAND())
+		nand2 = circ.add(CmpNAND())
+		q = circ.add(CmpSink())
+		notq = circ.add(CmpSink())
+
+		circ.connect(s, "OUT", nand1, "A")
+		circ.connect(r, "OUT", nand2, "A")
+		circ.connect(nand1, "Y", nand2, "B")
+		circ.connect(nand2, "Y", nand1, "B")
+		circ.connect(nand1, "Y", q, "IN")
+		circ.connect(nand2, "Y", notq, "IN")
+		circ.power_on()
+
+		# We cannot be sure which level we wake up in because we initialized in
+		# "keep"
+		self.assertEqual(q.level, 1 ^ notq.level)
+
+		# Set
+		s.level = 0
+		circ.tick()
+		self.assertEqual(q.level, 1)
+		self.assertEqual(notq.level, 0)
+
+		# Keep
+		s.level = 1
+		circ.tick()
+		self.assertEqual(q.level, 1)
+		self.assertEqual(notq.level, 0)
+
+		# Reset
+		r.level = 0
+		circ.tick()
+		self.assertEqual(q.level, 0)
+		self.assertEqual(notq.level, 1)
+
+		# Keep
+		r.level = 0
+		circ.tick()
+		self.assertEqual(q.level, 0)
+		self.assertEqual(notq.level, 1)
+
+		# "Illegal" state, Set & Reset
+		s.level = 0
+		r.level = 0
+		circ.tick()
+		self.assertEqual(q.level, 1)
+		self.assertEqual(notq.level, 1)
+
+		# Transition after which we do NOT know what state we're in (this is
+		# *truly* illegal)
+		s.level = 1
+		r.level = 1
+		circ.tick()
+		self.assertEqual(q.level, 1 ^ notq.level)

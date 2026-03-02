@@ -77,12 +77,14 @@ class Net():
 
 	def drive(self, value: int):
 		assert(value in [ 0, 1 ])
+		changed = self._level != value
 		self._level = {
 			0: Level.Low,
 			1: Level.High,
 		}[value]
-		for (component, pin_name) in self._members:
-			component.notify_pin_change(pin_name)
+		if changed:
+			for (component, pin_name) in self._members:
+				component.notify_pin_change(pin_name)
 
 	def add_member(self, component: "Component", pin_name: str):
 		self._members.add((component, pin_name))
