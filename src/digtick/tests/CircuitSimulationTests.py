@@ -20,7 +20,7 @@
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 import unittest
-from digtick.CircuitSimulation import Circuit, CmpSource, CmpNOT, CmpSink, CmpAND, CmpOR, CmpXOR, CmpNAND
+from digtick.CircuitSimulation import Circuit, CmpSource, CmpNOT, CmpSink, CmpAND, CmpOR, CmpXOR, CmpNAND, CmpDFlipFlop
 from digtick.ExpressionParser import parse_expression
 from digtick.Exceptions import CircuitAstableException
 
@@ -153,3 +153,42 @@ class CircuitSimulationTests(unittest.TestCase):
 		circ.connect(gate, "A", gate, "Y")
 		with self.assertRaises(CircuitAstableException):
 			circ.power_on()
+
+	def test_d_flipflop(self):
+		circ = Circuit()
+
+		d = circ.add(CmpSource(0))
+		clk = circ.add(CmpSource(0))
+		ff = circ.add(CmpDFlipFlop())
+		q = circ.add(CmpSink())
+		notq = circ.add(CmpSink())
+
+		circ.connect(d, "OUT", ff, "D")
+		circ.connect(clk, "OUT", ff, "CLK")
+		circ.connect(ff, "Q", q, "IN")
+		circ.connect(ff, "!Q", notq, "IN")
+		circ.power_on()
+
+		self.assertEqual(d.level, 0)
+		self.assertEqual(clk.level, 0)
+		self.assertEqual(q.level, 0)
+		self.assertEqual(notq.level, 1)
+
+		for i in range(10):
+			d.toggle()
+			circ.tick()
+			self.assertEqual(clk.level, 0)
+			self.assertEqual(q.level, 0)
+			self.assertEqual(notq.level, 1)
+
+		d.level = 1
+		circ.tick()
+		self.assertEqual(q.level, 0)
+		self.assertEqual(notq.level, 1)
+
+		clk.level = 1
+		self.assertEqual(q.level, 0)
+		self.assertEqual(notq.level, 1)
+		circ.tick()
+		self.assertEqual(q.level, 1)
+		self.assertEqual(notq.level, 0)

@@ -42,7 +42,7 @@ class Net():
 		self._circuit = circuit
 		self._uid = UID.gen()
 		self._level = Level.Undefined
-		self._next_level = Level.Undefined
+		self._deferred_level = Level.Undefined
 		self._members = set()
 
 	@property
@@ -69,15 +69,11 @@ class Net():
 
 	def reset(self):
 		self._level = Level.WeakLow
-		self._next_level = Level.Undefined
+		self._deferred_level = None
 
 	def deferred_drive(self, value: int):
 		assert(value in [ 0, 1 ])
-		assert(self._next_level == Level.Undefined)
-		self._next_level = {
-			0: Level.Low,
-			1: Level.High,
-		}[value]
+		self._deferred_level = value
 
 	def drive(self, value: int):
 		assert(value in [ 0, 1 ])
@@ -92,12 +88,14 @@ class Net():
 		self._members.add((component, pin_name))
 
 	def dump(self):
-		print(f"{self} level {self._level.name} nextlevel {self._next_level.name} with {len(self._members)} members:")
+		print(f"{self} level {self._level.name} nextlevel {self._deferred_level} with {len(self._members)} members:")
 		for (component, pin_name) in self:
 			print(f"    {component.type_name} {component.name}.{pin_name}")
 
-	def update_deferred(self):
-		pass
+	def commit(self):
+		if self._deferred_level is not None:
+			self.drive(self._deferred_level)
+			self._deferred_level = None
 
 	def __iter__(self):
 		return iter(self._members)
@@ -170,9 +168,12 @@ class Component():
 		if (pin_name in self._Inputs) and (self[pin_name] is not None):
 			self.circuit.notify_change(self)
 
-	def drive(self, pin_name: str, level: int):
+	def drive(self, pin_name: str, level: int, defer: bool = False):
 		if self[pin_name] is not None:
-			self[pin_name].drive(level)
+			if defer:
+				self[pin_name].deferred_drive(level)
+			else:
+				self[pin_name].drive(level)
 
 	def reset(self):
 		pass
@@ -243,9 +244,6 @@ class CmpNOT(Component):
 	_NodeName = "~"
 	_Prefix = "IC"
 
-	def __init__(self):
-		super().__init__()
-
 	def tick(self):
 		self.drive("Y", self["A"].level ^ 1)
 
@@ -264,6 +262,7 @@ class CmpAND(CmpGate):
 class CmpOR(CmpGate):
 	_Name = "OR"
 	_NodeName = "\\|\\|"
+
 	def tick(self):
 		super().tick()
 		self.drive("Y", self["A"].level | self["B"].level)
@@ -289,6 +288,40 @@ class CmpNOR(CmpGate):
 	def tick(self):
 		self.drive("Y", (self["A"].level | self["B"].level) ^ 1)
 
+class CmpDFlipFlop(Component):
+	_Inputs = [ "D", "CLK" ]
+	_Outputs = [ "Q", "!Q" ]
+	_Name = "D-FF"
+	_NodeName = "D-FF"
+	_Prefix = "IC"
+
+	def __init__(self):
+		super().__init__()
+		self._last_clk = None
+		self._state = 0
+		self._defer = True
+
+	@property
+	def state(self) -> int:
+		return self._state
+
+	@state.setter
+	def state(self, value: int):
+		assert(value in [ 0, 1 ])
+		if self._state != value:
+			# Changes via setter act immediately
+			self.circuit.notify_change(self)
+			self._defer = False
+		self._state = value
+
+	def tick(self):
+		if (self._last_clk == 0) and (self["CLK"].level == 1):
+			# Positive edge detected!
+			self._state = self["D"].level
+		self._last_clk = self["CLK"].level
+		self.drive("Q", self._state, defer = self._defer)
+		self.drive("!Q", self._state ^ 1, defer = self._defer)
+		self._defer = True
 
 class Circuit():
 	def __init__(self):
@@ -351,9 +384,7 @@ class Circuit():
 		self._powered_on = True
 		self.tick()
 
-	def tick(self):
-		if not self._powered_on:
-			raise WrongCircuitPowerStateException("Circuit has not yet been powered on.")
+	def _settle(self):
 		iteration = 0
 		while len(self._changed_inputs) > 0:
 			if iteration >= 50:
@@ -363,6 +394,14 @@ class Circuit():
 			self._changed_inputs = set()
 			for component in needs_tick:
 				component.tick()
+
+	def tick(self):
+		if not self._powered_on:
+			raise WrongCircuitPowerStateException("Circuit has not yet been powered on.")
+		self._settle()
+		for net in self._nets:
+			net.commit()
+		self._settle()
 
 	def dump(self, text: str | None = None):
 		heading = f"{'~' * 50} {text or 'Dumping circuit'} {'~' * 50}"
