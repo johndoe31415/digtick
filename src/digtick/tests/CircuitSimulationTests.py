@@ -324,14 +324,6 @@ class CircuitSimulationTests(unittest.TestCase):
 		circ = pkgutil.get_data("digtick.tests.data", "stateful.circ")
 		circuit = LogisimLoader.load_from_xmldata(circ).parse()
 		circuit.power_on()
-#		circuit.dump()
 
-		for i in range(20):
-			circuit["FF1"].state = 1
-			circuit["FF2"].state = 1
-			circuit["FF3"].state = 1
-			circuit["FF4"].state = 1
-			circuit.tick()
-			circuit.clock(circuit["CLK"])
-			print([ circuit[f"Q{i}"].level for i in range(1, 5) ])
-
+		computed_output = circuit.build_next_state_table(storage_element_labels = [ "FF1", "FF2", "FF3", "FF4" ], clock_label = "CLK")
+		computed_output.print()

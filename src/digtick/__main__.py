@@ -34,6 +34,7 @@ from .ActionRandomTable import ActionRandomTable
 from .ActionTransform import ActionTransform
 from .ActionDTDCreate import ActionDTDCreate
 from .ActionDTDRender import ActionDTDRender
+from .ActionStateTransitions import ActionStateTransitions
 from .MultiCommand import MultiCommand
 
 def main():
@@ -151,6 +152,12 @@ def main():
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increases verbosity. Can be specified multiple times to increase.")
 		parser.add_argument("filename", nargs = "?", help = "Filename containing the timing diagram data. Reads from stdin when omitted.")
 	mc.register("dtd-render", "Render a digital timing diagram to SVG", genparser, action = ActionDTDRender)
+
+	def genparser(parser):
+		parser.add_argument("-f", "--output-format", choices = [ "text", "dot" ], default = "text", help = "Print the analysis in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increases verbosity. Can be specified multiple times to increase.")
+		parser.add_argument("filename", nargs = "?", help = "Filename containing the state transition truth table, tab-separated. Reads from stdin when argument omitted.")
+	mc.register("state-transitions", "Print state transition values and show cycles", genparser, action = ActionStateTransitions)
 
 	sys.exit(mc.run(sys.argv[1:]) or 0)
 

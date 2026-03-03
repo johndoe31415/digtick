@@ -259,6 +259,23 @@ class Circuit():
 				output_storage[index] = output_value
 		return ValueTable(input_variable_names, output_variable_names, output)
 
+	def build_next_state_table(self, storage_element_labels: list[str], clock_label: str = "CLK"):
+		storage_elements = [ self[label] for label in storage_element_labels ]
+		output_storages = [ CompactStorage(len(storage_elements)) for _ in storage_elements ]
+		clock = self[clock_label]
+		table_data = [ CompactStorage(len(storage_elements)) for _ in storage_elements ]
+		for (index, input_values) in enumerate(itertools.product([ 0, 1 ], repeat = len(storage_elements))):
+			for (storage_element, input_value) in zip(storage_elements, input_values):
+				storage_element.state = input_value
+			self.tick()
+			self.clock(clock)
+
+			output_values = [ storage_element.state for storage_element in storage_elements]
+			for (output_storage, output_value) in zip(output_storages, output_values):
+				output_storage[index] = output_value
+		return ValueTable(input_variable_names = storage_element_labels, output_variable_names = [ label + "'" for label in storage_element_labels ], output_values = output_storages)
+
+
 	def clock(self, component: CmpSource):
 		component.level = 1
 		self.tick()

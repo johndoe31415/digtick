@@ -146,6 +146,9 @@ class ValueTable():
 		output += [ ",".join(storage.to_string() for storage in self._output_values) ]
 		return ":".join(output)
 
+	def has_output_named(self, varname: str) -> bool:
+		return varname in self._named_outputs
+
 	def add_output_variable(self, varname: str, storage: CompactStorage):
 		assert(storage.variable_count == self.input_variable_count)
 		self._output_variable_names.append(varname)
@@ -252,9 +255,12 @@ class ValueTable():
 	def dict_to_index(self, input_var_dict: dict) -> int:
 		return sum(self._index_weights[varname] for (varname, bit_value) in input_var_dict.items() if bit_value == 1)
 
+	def at_index(self, index: int, output_var_name: str) -> CompactStorage.Entry:
+		return self._named_outputs[output_var_name][index]
+
 	def at(self, input_var_dict: dict, output_var_name: str) -> CompactStorage.Entry:
 		index = self.dict_to_index(input_var_dict)
-		return self._named_outputs[output_var_name][index]
+		return self.at_index(index, output_var_name = output_var_name)
 
 	def __iter__(self):
 		yield from zip(*self._output_values)
