@@ -87,7 +87,10 @@ class Net():
 	def dump(self):
 		print(f"{self} level {self._level.name} nextlevel {self._deferred_level} with {len(self._members)} members:")
 		for (component, pin_name) in self:
-			print(f"    {component.type_name} {component.name}.{pin_name}")
+			if component.label is None:
+				print(f"    {component.type_name} {component.name}.{pin_name}")
+			else:
+				print(f"    {component.type_name} {component.label} {component.name}.{pin_name}")
 
 	def commit(self):
 		if self._deferred_level is not None:
@@ -255,6 +258,12 @@ class Circuit():
 				output_value = output_variable_dict[output_variable_name].level
 				output_storage[index] = output_value
 		return ValueTable(input_variable_names, output_variable_names, output)
+
+	def clock(self, component: CmpSource):
+		component.level = 1
+		self.tick()
+		component.level = 0
+		self.tick()
 
 	def __getitem__(self, component_label: str) -> Component:
 		return self._components_by_label[component_label]

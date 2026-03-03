@@ -185,7 +185,7 @@ class LogisimLoader():
 
 			case ("#Memory.D Flip-Flop", None):
 				assert(component.get(".appearance") == "logisim_evolution")
-				translated_component["type"] = "D-FlipFlop"
+				translated_component["type"] = "D-FF"
 				translated_component["pins"]["D"] = component["loc"] + Vec2D(-10, 10)
 				translated_component["pins"]["CLK"] = component["loc"] + Vec2D(-10, 50)
 				translated_component["pins"]["Q"] = component["loc"] + Vec2D(50, 10)
@@ -193,7 +193,7 @@ class LogisimLoader():
 
 			case ("#Memory.J-K Flip-Flop", None):
 				assert(component.get(".appearance") == "logisim_evolution")
-				translated_component["type"] = "JK-FlipFlop"
+				translated_component["type"] = "JK-FF"
 				translated_component["pins"]["J"] = component["loc"] + Vec2D(-10, 10)
 				translated_component["pins"]["K"] = component["loc"] + Vec2D(-10, 30)
 				translated_component["pins"]["CLK"] = component["loc"] + Vec2D(-10, 50)

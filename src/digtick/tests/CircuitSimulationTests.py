@@ -319,3 +319,23 @@ class CircuitSimulationTests(unittest.TestCase):
 		circuit.power_on()
 		computed_output = circuit.build_table()
 		self.assertEqual(computed_output, reference_output)
+
+	def test_parse_and_run_stateful(self):
+		circ = pkgutil.get_data("digtick.tests.data", "stateful.circ")
+		circuit = LogisimLoader.load_from_xmldata(circ).parse()
+		circuit.power_on()
+#		circuit.dump()
+
+		circuit["FF1"].state = 1
+		circuit["FF2"].state = 1
+		circuit["FF3"].state = 1
+		circuit["FF4"].state = 1
+		print([ circuit[f"Q{i}"].level for i in range(1, 5) ])
+		circuit.tick()
+
+		print([ circuit[f"Q{i}"].level for i in range(1, 5) ])
+
+#		for i in range(20):
+#			print([ circuit[f"Q{i}"].level for i in range(1, 5) ])
+#			circuit.clock(circuit["CLK"])
+

@@ -222,8 +222,8 @@ class CmpDFlipFlop(Component):
 	_NodeName = "D-FF"
 	_Prefix = "IC"
 
-	def __init__(self):
-		super().__init__()
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
 		self._last_clk = None
 		self._state = 0
 		self._defer = True
@@ -245,6 +245,50 @@ class CmpDFlipFlop(Component):
 		if (self._last_clk == 0) and (self["CLK"].level == 1):
 			# Positive edge detected!
 			self._state = self["D"].level
+		self._last_clk = self["CLK"].level
+		self.drive("Q", self._state, defer = self._defer)
+		self.drive("!Q", self._state ^ 1, defer = self._defer)
+		self._defer = True
+
+class CmpJKFlipFlop(Component):
+	_Inputs = [ "J", "K", "CLK" ]
+	_Outputs = [ "Q", "!Q" ]
+	_Name = "JK-FF"
+	_NodeName = "JK-FF"
+	_Prefix = "IC"
+
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self._last_clk = None
+		self._state = 0
+		self._defer = True
+
+	@property
+	def state(self) -> int:
+		return self._state
+
+	@state.setter
+	def state(self, value: int):
+		assert(value in [ 0, 1 ])
+		if self._state != value:
+			# Changes via setter act immediately
+			self.circuit.notify_change(self)
+			self._defer = False
+		self._state = value
+
+	def tick(self):
+		if (self._last_clk == 0) and (self["CLK"].level == 1):
+			# Positive edge detected!
+			jk = (self["J"].level, self["K"].level)
+			if jk == (1, 0):
+				# Set
+				self._state = 1
+			elif jk == (0, 1):
+				# Set
+				self._state = 0
+			elif jk == (1, 1):
+				# Toggle
+				self._state = self._state ^ 1
 		self._last_clk = self["CLK"].level
 		self.drive("Q", self._state, defer = self._defer)
 		self.drive("!Q", self._state ^ 1, defer = self._defer)
