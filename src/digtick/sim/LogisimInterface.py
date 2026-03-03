@@ -268,7 +268,10 @@ class LogisimLoader():
 
 if __name__ == "__main__":
 	circuit = LogisimLoader("examples/awful.circ").parse()
-	circuit.dump()
 	circuit.power_on()
 	computed_result = circuit.build_table()
-#	expected_result =
+	computed_result.print()
+
+#	circuit["C"].level = 1
+#	circuit.tick()
+#	print("V=",circuit["V"].level)
