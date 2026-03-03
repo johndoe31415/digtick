@@ -98,6 +98,9 @@ class CompactStorage():
 		bitpos = 2 * index
 		return self.Entry((self._value >> bitpos) & 3)
 
+	def __eq__(self, other: "ValueTable"):
+		return (self.variable_count == other.variable_count) and (self._value == other._value)
+
 	def __repr__(self):
 		return f"CompStor<{self.variable_count}>"
 
@@ -140,7 +143,7 @@ class ValueTable():
 	def compact_representation(self) -> str:
 		output = [ ]
 		output += [ f":{','.join(self.input_variable_names)}:{','.join(self.output_variable_names)}" ]
-		output += [ storage.to_string() for storage in self._output_values ]
+		output += [ ",".join(storage.to_string() for storage in self._output_values) ]
 		return ":".join(output)
 
 	def add_output_variable(self, varname: str, storage: CompactStorage):
@@ -357,6 +360,9 @@ class ValueTable():
 			return Constant(1)
 		else:
 			return BinaryOperator.join(Operator.And, terms)
+
+	def __eq__(self, other: "ValueTable"):
+		return all(self_values == other._named_outputs[varname] for (varname, self_values) in zip(self.output_variable_names, self._output_values))
 
 if __name__ == "__main__":
 	from .ExpressionParser import parse_expression

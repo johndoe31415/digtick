@@ -71,14 +71,23 @@ class Vec2D():
 		return f"<{self.x}, {self.y}>"
 
 class LogisimLoader():
-	def __init__(self, filename: str, circuit_name: str = "main"):
-		self._filename = filename
+	def __init__(self, doc: xml.etree.ElementTree.Element, circuit_name: str = "main"):
+		self._doc = doc
 		self._circuit_name = circuit_name
-		self._doc = xml.etree.ElementTree.parse(filename)
 		self._root = self._doc.getroot()
 		self._xml_circuit = self._root.find(f"./circuit[@name='{self._circuit_name}']")
 		self._libraries = { }
 		self._circuit = None
+
+	@classmethod
+	def load_from_file(cls, filename: str, circuit_name: str = "main"):
+		doc = xml.etree.ElementTree.parse(filename)
+		return cls(doc = doc, circuit_name = circuit_name)
+
+	@classmethod
+	def load_from_xmldata(cls, xmldata: bytes, circuit_name: str = "main"):
+		doc = xml.etree.ElementTree.ElementTree(xml.etree.ElementTree.fromstring(xmldata))
+		return cls(doc = doc, circuit_name = circuit_name)
 
 	@property
 	def circuit(self):
@@ -234,9 +243,6 @@ class LogisimLoader():
 		self._components = [ ]
 		for component_dict in self._iter_components():
 			resolved_component = self._resolve_component(component_dict)
-#			for (pin_name, loc) in resolved_component["pins"].items():
-#				if loc not in self._net_id_by_pos:
-#					print(f"No net for {resolved_component} {pin_name}")
 
 			component = Component.new(resolved_component["type"], label = resolved_component.get("label"))
 			self._circuit.add(component)

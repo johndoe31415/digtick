@@ -18,7 +18,3 @@
 #	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
-
-from .CircuitSimulation import Circuit
-from .Components import Component, CmpSource, CmpSink, CmpNOT, CmpAND, CmpOR, CmpXOR, CmpNAND, CmpNOR, CmpDFlipFlop
-from .LogisimInterface import LogisimLoader
