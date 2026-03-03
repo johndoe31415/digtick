@@ -262,6 +262,9 @@ class LogisimLoader():
 					connected_nets[net_id].append(pin_name)
 
 		for (net_id, connected_component_pins) in connected_nets.items():
+			if len(connected_component_pins) < 4:
+				# Lonely wire
+				continue
 			self._circuit.connect(*connected_component_pins)
 
 
