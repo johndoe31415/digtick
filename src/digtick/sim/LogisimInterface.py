@@ -152,7 +152,7 @@ class LogisimLoader():
 
 			case ("#Gates.OR Gate", None):
 				assert(component.get(".inputs", 2) == 2)
-				translated_component["type"] = "AND"
+				translated_component["type"] = "OR"
 				translated_component["pins"]["Y"] = component["loc"]
 				self._find_gate_pin_locations(component, translated_component)
 
@@ -268,6 +268,7 @@ class LogisimLoader():
 
 if __name__ == "__main__":
 	circuit = LogisimLoader("examples/awful.circ").parse()
+	#circuit.dump()
 	circuit.power_on()
 	computed_result = circuit.build_table()
 	computed_result.print()

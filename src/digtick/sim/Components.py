@@ -192,7 +192,6 @@ class CmpOR(CmpGate):
 	_NodeName = "\\|\\|"
 
 	def tick(self):
-		super().tick()
 		self.drive("Y", self["A"].level | self["B"].level)
 
 class CmpXOR(CmpGate):
