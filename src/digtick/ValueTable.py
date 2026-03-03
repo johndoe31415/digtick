@@ -221,11 +221,12 @@ class ValueTable():
 
 	@classmethod
 	def parse_from_file(cls, f: "_io.TextIOWrapper", set_undefined_values_to: str):
-		assert(set_undefined_values_to in [ "0", "1", "*", "forbidden" ])
+		assert(set_undefined_values_to in [ "0", "1", "*", "N/A", "forbidden" ])
 		return cls._parse_from_file(f = f, set_undefined_values_to = {
 			"0":			CompactStorage.Entry.Low,
 			"1":			CompactStorage.Entry.High,
 			"*":			CompactStorage.Entry.DontCare,
+			"N/A":			CompactStorage.Entry.Undefined,
 		}.get(set_undefined_values_to))
 
 	@classmethod

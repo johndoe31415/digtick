@@ -23,6 +23,7 @@ import enum
 import collections
 import dataclasses
 import xml.etree.ElementTree
+from digtick.sim import Circuit, Component
 
 class FaceDirection(enum.Enum):
 	North = "north"
@@ -122,17 +123,18 @@ class LogisimLoader():
 		translated_component["pins"]["B"] = component["loc"] + boffset.rotate_offset(component.get(".facing", FaceDirection.East))
 
 	def _resolve_component(self, component: dict):
-		print(component)
 		translated_component = {
 			"type": None,
 			"pins": { },
 		}
+		if ".label" in component:
+			translated_component["label"] = component[".label"]
 		match (component["name"], component.get(".type")):
-			case ("#Wiring.Pin", None):
+			case ("#Wiring.Pin", "output"):
 				translated_component["type"] = "Sink"
 				translated_component["pins"]["IN"] = component["loc"]
 
-			case ("#Wiring.Pin", "output"):
+			case ("#Wiring.Pin", None):
 				translated_component["type"] = "Source"
 				translated_component["pins"]["OUT"] = component["loc"]
 
@@ -227,22 +229,46 @@ class LogisimLoader():
 		for (pos, net_id) in sorted(self._net_id_by_pos.items(), key = lambda pnetid: (pnetid[1], pnetid[0])):
 			print(pos, net_id)
 
+	def _parse_components(self):
+		self._circuit = Circuit()
+		self._components = [ ]
+		for component_dict in self._iter_components():
+			resolved_component = self._resolve_component(component_dict)
+#			for (pin_name, loc) in resolved_component["pins"].items():
+#				if loc not in self._net_id_by_pos:
+#					print(f"No net for {resolved_component} {pin_name}")
+
+			component = Component.new(resolved_component["type"], label = resolved_component.get("label"))
+			self._circuit.add(component)
+			resolved_component["instance"] = component
+			self._components.append(resolved_component)
+
+	def _wire_components(self):
+		connected_nets = collections.defaultdict(list)
+		for resolved_component in self._components:
+			for (pin_name, loc) in resolved_component["pins"].items():
+				if loc in self._net_id_by_pos:
+					net_id = self._net_id_by_pos[loc]
+					connected_nets[net_id].append(resolved_component["instance"])
+					connected_nets[net_id].append(pin_name)
+
+		for (net_id, connected_component_pins) in connected_nets.items():
+			self._circuit.connect(*connected_component_pins)
+
+
 	def parse(self):
 		self._parse_libraries()
 		self._parse_nets()
-		self._dump_nets()
-
-
-		for component in self._iter_components():
-			resolved_component = self._resolve_component(component)
-			for (pin_name, loc) in resolved_component["pins"].items():
-				if loc not in self._net_id_by_pos:
-					print(f"No net for {resolved_component} {pin_name}")
-			print()
+#		self._dump_nets()
+		self._parse_components()
+		self._wire_components()
 		return self._circuit
 
 
 
 if __name__ == "__main__":
-	circuit = LogisimLoader("/tmp/awful.circ").parse()
-	print(circuit)
+	circuit = LogisimLoader("examples/awful.circ").parse()
+	circuit.dump()
+	circuit.power_on()
+	computed_result = circuit.build_table()
+#	expected_result =

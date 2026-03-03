@@ -119,7 +119,10 @@ class Component():
 		return hash(self.cid)
 
 	def __str__(self):
-		return f"{self.name}: {self._Name}"
+		if self.label is None:
+			return f"{self.name}: {self._Name}"
+		else:
+			return f"{self.name} ({self.label}): {self._Name}"
 
 	def __repr__(self):
 		return f"#{self.cid}<{str(self)}>"

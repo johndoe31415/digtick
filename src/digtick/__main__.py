@@ -24,6 +24,7 @@ import digtick
 from .ActionParse import ActionParse
 from .ActionMakeTable import ActionMakeTable
 from .ActionPrintTable import ActionPrintTable
+from .ActionDiffTable import ActionDiffTable
 from .ActionKVDiagram import ActionKVDiagram
 from .ActionSynthesize import ActionSynthesize
 from .ActionSatisfied import ActionSatisfied
@@ -60,7 +61,13 @@ def main():
 		parser.add_argument("-u", "--unused-value-is", choices = [ "forbidden", "0", "1", "*" ], default = "forbidden", help = "Treat values that do not appear in truth table as the specified value (0, 1, or \"don't care\" value). By default, strict parsing is performed which means unused values are forbidden and all values need to be set explicitly.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
 		parser.add_argument("filename", nargs = "?", help = "Filename containing the truth table, tab-separated")
-	mc.register("print-table", "Read a table file and print it out", genparser, action = ActionPrintTable)
+	mc.register("print-table", "Read a truth table file and print it out", genparser, action = ActionPrintTable)
+
+	def genparser(parser):
+		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
+		parser.add_argument("filename1", help = "Filename containing the first truth table, tab-separated")
+		parser.add_argument("filename2", nargs = "?", help = "Filename containing the second truth table, tab-separated")
+	mc.register("diff-table", "Read two truth table files and print the diff", genparser, action = ActionDiffTable)
 
 	def genparser(parser):
 		parser.add_argument("-o", "--output-variable-name", metavar = "name", default = "Y", help = "Name of the output variable to use. Defaults to %(default)s.")
