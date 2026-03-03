@@ -290,13 +290,13 @@ class CircuitSimulationTests(unittest.TestCase):
 		a = circ.new("Source", label = "A")
 		b = circ.new("Source", label = "B")
 		gate = circ.new("NAND")
-		y = circ.new("Sink")
+		y = circ.new("Sink", label = "Y")
 		circ.connect(a, "OUT", gate, "A")
 		circ.connect(b, "OUT", gate, "B")
 		circ.connect(gate, "Y", y, "IN")
 		circ.power_on()
 
-		table = circ.build_table({ "A": a, "B": b }, { "Y": y })
+		table = circ.build_table()
 		self.assertEqual(table.compact_representation, ":A,B:Y:15")
 
 	def test_label(self):

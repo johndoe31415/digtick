@@ -22,7 +22,7 @@
 import enum
 import itertools
 import collections
-from .Components import Component, CmpSource
+from .Components import Component, CmpSource, CmpSink
 from .UID import UID
 from digtick.Exceptions import UndefinedInputUsedException, NoSuchPinException, WrongCircuitPowerStateException, CircuitAstableException, DuplicateLabelException
 from digtick.ValueTable import ValueTable, CompactStorage
@@ -235,7 +235,12 @@ class Circuit():
 				print(f"	{comp1.name}:{pin1} -> {comp2.name}:{pin2};")
 		print("}")
 
-	def build_table(self, input_variable_dict: dict[str, "CmpSource"], output_variable_dict: dict[str, "CmpSink"]):
+	def build_table(self, input_variable_dict: dict[str, "CmpSource"] | None = None, output_variable_dict: dict[str, "CmpSink"] | None = None):
+		if input_variable_dict is None:
+			input_variable_dict = { source.label: source for source in self._components if isinstance(source, CmpSource) and (source.label is not None) }
+		if output_variable_dict is None:
+			output_variable_dict = { sink.label: sink for sink in self._components if isinstance(sink, CmpSink) and (sink.label is not None) }
+
 		input_variable_names = sorted(input_variable_dict)
 		output_variable_names = sorted(output_variable_dict)
 		output = [ CompactStorage(len(input_variable_names)) for _ in output_variable_names ]
