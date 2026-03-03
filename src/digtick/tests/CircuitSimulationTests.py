@@ -326,16 +326,12 @@ class CircuitSimulationTests(unittest.TestCase):
 		circuit.power_on()
 #		circuit.dump()
 
-		circuit["FF1"].state = 1
-		circuit["FF2"].state = 1
-		circuit["FF3"].state = 1
-		circuit["FF4"].state = 1
-		print([ circuit[f"Q{i}"].level for i in range(1, 5) ])
-		circuit.tick()
-
-		print([ circuit[f"Q{i}"].level for i in range(1, 5) ])
-
-#		for i in range(20):
-#			print([ circuit[f"Q{i}"].level for i in range(1, 5) ])
-#			circuit.clock(circuit["CLK"])
+		for i in range(20):
+			circuit["FF1"].state = 1
+			circuit["FF2"].state = 1
+			circuit["FF3"].state = 1
+			circuit["FF4"].state = 1
+			circuit.tick()
+			circuit.clock(circuit["CLK"])
+			print([ circuit[f"Q{i}"].level for i in range(1, 5) ])
 

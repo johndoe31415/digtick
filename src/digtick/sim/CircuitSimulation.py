@@ -77,6 +77,7 @@ class Net():
 			0: Level.Low,
 			1: Level.High,
 		}[value]
+		self._deferred_level = None
 		if changed:
 			for (component, pin_name) in self._members:
 				component.notify_pin_change(pin_name)
@@ -95,7 +96,6 @@ class Net():
 	def commit(self):
 		if self._deferred_level is not None:
 			self.drive(self._deferred_level)
-			self._deferred_level = None
 
 	def __iter__(self):
 		return iter(self._members)
