@@ -326,4 +326,6 @@ class CircuitSimulationTests(unittest.TestCase):
 		circuit.power_on()
 
 		computed_output = circuit.build_next_state_table(storage_element_labels = [ "FF1", "FF2", "FF3", "FF4" ], clock_label = "CLK")
-		computed_output.print()
+		# Reference table manually verified by Logisim Evolution v4.1.0
+		reference_output = ValueTable.from_compact_representation(":FF1,FF2,FF3,FF4:FF1',FF2',FF3',FF4':44444444,44441111,55005500,14141414")
+		self.assertEqual(computed_output, reference_output)
