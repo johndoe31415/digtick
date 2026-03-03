@@ -24,6 +24,7 @@ import collections
 import dataclasses
 import xml.etree.ElementTree
 from digtick.sim import Circuit, Component
+from digtick.Exceptions import NoSuchCircuitException
 
 class FaceDirection(enum.Enum):
 	North = "north"
@@ -76,6 +77,8 @@ class LogisimLoader():
 		self._circuit_name = circuit_name
 		self._root = self._doc.getroot()
 		self._xml_circuit = self._root.find(f"./circuit[@name='{self._circuit_name}']")
+		if self._xml_circuit is None:
+			raise NoSuchCircuitException(f"Unable to find a circuit named \"{self._circuit_name}\" in the provided file.")
 		self._libraries = { }
 		self._circuit = None
 

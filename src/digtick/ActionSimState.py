@@ -19,12 +19,15 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
-class DigTickException(Exception): pass
+from .MultiCommand import BaseAction
+from .ValueTable import ValueTable
+from .Tools import open_file
+from digtick.sim.LogisimInterface import LogisimLoader
 
-class SimulationException(DigTickException): pass
-class UndefinedInputUsedException(SimulationException): pass
-class NoSuchPinException(SimulationException): pass
-class WrongCircuitPowerStateException(SimulationException): pass
-class CircuitAstableException(SimulationException): pass
-class DuplicateLabelException(SimulationException): pass
-class NoSuchCircuitException(SimulationException): pass
+class ActionSimState(BaseAction):
+	def run(self):
+		circuit = LogisimLoader.load_from_file(self._args.circ_filename, circuit_name = self._args.circuit_name).parse()
+		circuit.power_on()
+
+		vt = circuit.build_next_state_table(storage_element_labels = self._args.storage_element_label, clock_label = self._args.clock_signal)
+		vt.print(ValueTable.PrintFormat(self._args.tbl_format))
