@@ -28,7 +28,8 @@ class Component():
 	_Name = None
 	_Prefix = None
 
-	def __init__(self):
+	def __init__(self, label: str | None = None):
+		self._label = label
 		self._uid = UID.gen()
 		self._no = None
 		self._nets = { }
@@ -39,6 +40,10 @@ class Component():
 			return
 		assert(cls._Prefix is not None)
 		cls._KNOWN_COMPONENTS[cls._Name] = cls
+
+	@property
+	def label(self):
+		return self._label
 
 	@classmethod
 	def new(cls, name: str, *args, **kwargs):
@@ -125,8 +130,8 @@ class CmpSource(Component):
 	_NodeName = "Src"
 	_Prefix = "SRC"
 
-	def __init__(self, level: int = 0):
-		super().__init__()
+	def __init__(self, label: str | None = None, level: int = 0):
+		super().__init__(label = label)
 		self._level = level
 
 	@property

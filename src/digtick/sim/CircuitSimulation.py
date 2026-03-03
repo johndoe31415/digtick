@@ -24,7 +24,7 @@ import itertools
 import collections
 from .Components import Component, CmpSource
 from .UID import UID
-from digtick.Exceptions import UndefinedInputUsedException, NoSuchPinException, WrongCircuitPowerStateException, CircuitAstableException
+from digtick.Exceptions import UndefinedInputUsedException, NoSuchPinException, WrongCircuitPowerStateException, CircuitAstableException, DuplicateLabelException
 from digtick.ValueTable import ValueTable, CompactStorage
 
 class Level(enum.IntEnum):
@@ -112,6 +112,7 @@ class Net():
 class Circuit():
 	def __init__(self):
 		self._components = set()
+		self._components_by_label = { }
 		self._nets = set()
 		self._enumeration = collections.Counter()
 		self._nets_stable = False
@@ -125,11 +126,15 @@ class Circuit():
 	def add(self, component: "Component"):
 		if self._powered_on:
 			raise WrongCircuitPowerStateException("Unable to add component to powered on circuit")
+		if component.label is not None:
+			if component.label in self._components_by_label:
+				raise DuplicateLabelException(f"Component already in circuit with label {component.label}.")
 		component.circuit = self
 		self._enumeration[component._Prefix] +=	1
 		no = self._enumeration[component._Prefix]
 		self._components.add(component)
 		component.no = no
+		self._components_by_label[component.label] = component
 		return component
 
 	def notify_change(self, component: "Component"):
@@ -245,6 +250,9 @@ class Circuit():
 				output_value = output_variable_dict[output_variable_name].level
 				output_storage[index] = output_value
 		return ValueTable(input_variable_names, output_variable_names, output)
+
+	def __getitem__(self, component_label: str) -> Component:
+		return self._components_by_label[component_label]
 
 
 if __name__ == "__main__":

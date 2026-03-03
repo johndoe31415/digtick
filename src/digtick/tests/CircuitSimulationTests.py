@@ -22,12 +22,12 @@
 import unittest
 from digtick.sim import Circuit, Component, CmpSource, CmpNOT, CmpSink, CmpAND, CmpOR, CmpXOR, CmpNAND, CmpDFlipFlop
 from digtick.ExpressionParser import parse_expression
-from digtick.Exceptions import CircuitAstableException
+from digtick.Exceptions import CircuitAstableException, DuplicateLabelException
 
 class CircuitSimulationTests(unittest.TestCase):
 	def test_input_output(self):
 		circ = Circuit()
-		source = circ.add(CmpSource(0))
+		source = circ.add(CmpSource(level = 0))
 		sink = circ.add(CmpSink())
 		circ.connect(source, "OUT", sink, "IN")
 		circ.power_on()
@@ -43,7 +43,7 @@ class CircuitSimulationTests(unittest.TestCase):
 	def test_inverter(self):
 		# Single inverter circuit
 		circ = Circuit()
-		source = circ.add(CmpSource(0))
+		source = circ.add(CmpSource(level = 0))
 		inverter1 = circ.add(CmpNOT())
 		sink = circ.add(CmpSink())
 		circ.connect(source, "OUT", inverter1, "A")
@@ -60,7 +60,7 @@ class CircuitSimulationTests(unittest.TestCase):
 	def test_inverter_2(self):
 		# 2 inverters in a row
 		circ = Circuit()
-		source = circ.add(CmpSource(0))
+		source = circ.add(CmpSource(level = 0))
 		inverter1 = circ.add(CmpNOT())
 		inverter2 = circ.add(CmpNOT())
 		sink = circ.add(CmpSink())
@@ -82,7 +82,7 @@ class CircuitSimulationTests(unittest.TestCase):
 	def test_combinatorial_circuit(self):
 		expression = parse_expression("!((A^B) @ C) | D A")
 		circ = Circuit()
-		(A, B, C, D) = (circ.add(CmpSource(0)), circ.add(CmpSource(0)), circ.add(CmpSource(0)), circ.add(CmpSource(0)))
+		(A, B, C, D) = (circ.add(CmpSource(level = 0)), circ.add(CmpSource(level = 0)), circ.add(CmpSource(level = 0)), circ.add(CmpSource(level = 0)))
 		g_not = circ.add(CmpNOT())
 		g_and = circ.add(CmpAND())
 		g_or = circ.add(CmpOR())
@@ -111,7 +111,7 @@ class CircuitSimulationTests(unittest.TestCase):
 
 	def test_nand_net_both_pins(self):
 		circ = Circuit()
-		source = circ.add(CmpSource(0))
+		source = circ.add(CmpSource(level = 0))
 		gate = circ.add(CmpNAND())
 		sink = circ.add(CmpSink())
 		circ.connect(source, "OUT", gate, "A", gate, "B")
@@ -128,7 +128,7 @@ class CircuitSimulationTests(unittest.TestCase):
 
 	def test_nand_net_merge(self):
 		circ = Circuit()
-		source = circ.add(CmpSource(0))
+		source = circ.add(CmpSource(level = 0))
 		unused_sink = circ.add(CmpSink())
 		gate = circ.add(CmpNAND())
 		sink = circ.add(CmpSink())
@@ -157,8 +157,8 @@ class CircuitSimulationTests(unittest.TestCase):
 	def test_d_flipflop(self):
 		circ = Circuit()
 
-		d = circ.add(CmpSource(0))
-		clk = circ.add(CmpSource(0))
+		d = circ.add(CmpSource(level = 0))
+		clk = circ.add(CmpSource(level = 0))
 		ff = circ.add(CmpDFlipFlop())
 		q = circ.add(CmpSink())
 		notq = circ.add(CmpSink())
@@ -195,8 +195,8 @@ class CircuitSimulationTests(unittest.TestCase):
 
 	def test_d_flipflop_cyclic(self):
 		circ = Circuit()
-		d = circ.add(CmpSource(0))
-		clk = circ.add(CmpSource(0))
+		d = circ.add(CmpSource(level = 0))
+		clk = circ.add(CmpSource(level = 0))
 		ff = circ.add(CmpDFlipFlop())
 		q = circ.add(CmpSink())
 		notq = circ.add(CmpSink())
@@ -228,8 +228,8 @@ class CircuitSimulationTests(unittest.TestCase):
 
 	def test_rs_nand_flipflop(self):
 		circ = Circuit()
-		s = circ.add(CmpSource(1))
-		r = circ.add(CmpSource(1))
+		s = circ.add(CmpSource(level = 1))
+		r = circ.add(CmpSource(level = 1))
 		nand1 = circ.add(CmpNAND())
 		nand2 = circ.add(CmpNAND())
 		q = circ.add(CmpSink())
@@ -287,8 +287,8 @@ class CircuitSimulationTests(unittest.TestCase):
 
 	def test_named_instances(self):
 		circ = Circuit()
-		a = circ.new("Source")
-		b = circ.new("Source")
+		a = circ.new("Source", label = "A")
+		b = circ.new("Source", label = "B")
 		gate = circ.new("NAND")
 		y = circ.new("Sink")
 		circ.connect(a, "OUT", gate, "A")
@@ -298,3 +298,12 @@ class CircuitSimulationTests(unittest.TestCase):
 
 		table = circ.build_table({ "A": a, "B": b }, { "Y": y })
 		self.assertEqual(table.compact_representation, ":A,B:Y:15")
+
+	def test_label(self):
+		circ = Circuit()
+		a = circ.new("Source", label = "blah")
+		with self.assertRaises(DuplicateLabelException):
+			b = circ.new("Source", label = "blah")
+		b = circ.new("Source", label = "blubb")
+		self.assertTrue(circ["blah"] is a)
+		self.assertTrue(circ["blubb"] is b)

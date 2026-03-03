@@ -26,3 +26,4 @@ class UndefinedInputUsedException(SimulationException): pass
 class NoSuchPinException(SimulationException): pass
 class WrongCircuitPowerStateException(SimulationException): pass
 class CircuitAstableException(SimulationException): pass
+class DuplicateLabelException(SimulationException): pass

@@ -20,6 +20,7 @@
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 import enum
+import collections
 import dataclasses
 import xml.etree.ElementTree
 
@@ -110,6 +111,16 @@ class LogisimLoader():
 		for node in self._xml_circuit.findall("./wire"):
 			yield (Vec2D.parse(node.get("from")), Vec2D.parse(node.get("to")))
 
+	def _find_gate_pin_locations(self, component: dict, translated_component: dict, xoffset: int = 0):
+		size = component.get(".size", 50)
+		(aoffset, boffset) = {
+			30: (Vec2D(-size + xoffset, -10), Vec2D(-size + xoffset, 10)),
+			50: (Vec2D(-size + xoffset, -20), Vec2D(-size + xoffset, 20)),
+			70: (Vec2D(-size + xoffset, -20), Vec2D(-size + xoffset, 20)),
+		}[size]
+		translated_component["pins"]["A"] = component["loc"] + aoffset.rotate_offset(component.get(".facing", FaceDirection.East))
+		translated_component["pins"]["B"] = component["loc"] + boffset.rotate_offset(component.get(".facing", FaceDirection.East))
+
 	def _resolve_component(self, component: dict):
 		print(component)
 		translated_component = {
@@ -135,42 +146,31 @@ class LogisimLoader():
 				assert(component.get(".inputs", 2) == 2)
 				translated_component["type"] = "AND"
 				translated_component["pins"]["Y"] = component["loc"]
-				size = component.get(".size", 50)
-				(aoffset, boffset) = {
-					30: (Vec2D(-size, -10), Vec2D(-size, 10)),
-					50: (Vec2D(-size, -20), Vec2D(-size, 20)),
-					70: (Vec2D(-size, -20), Vec2D(-size, 20)),
-				}[size]
-				translated_component["pins"]["A"] = component["loc"] + aoffset.rotate_offset(component.get(".facing", FaceDirection.East))
-				translated_component["pins"]["B"] = component["loc"] + boffset.rotate_offset(component.get(".facing", FaceDirection.East))
+				self._find_gate_pin_locations(component, translated_component)
 
 			case ("#Gates.OR Gate", None):
 				assert(component.get(".inputs", 2) == 2)
 				translated_component["type"] = "AND"
 				translated_component["pins"]["Y"] = component["loc"]
+				self._find_gate_pin_locations(component, translated_component)
 
 			case ("#Gates.NAND Gate", None):
 				assert(component.get(".inputs", 2) == 2)
 				translated_component["type"] = "NAND"
 				translated_component["pins"]["Y"] = component["loc"]
+				self._find_gate_pin_locations(component, translated_component, xoffset = -10)
 
 			case ("#Gates.NOR Gate", None):
 				assert(component.get(".inputs", 2) == 2)
 				translated_component["type"] = "NOR"
 				translated_component["pins"]["Y"] = component["loc"]
+				self._find_gate_pin_locations(component, translated_component, xoffset = -10)
 
 			case ("#Gates.XOR Gate", None):
 				assert(component.get(".inputs", 2) == 2)
 				translated_component["type"] = "XOR"
 				translated_component["pins"]["Y"] = component["loc"]
-				size = component.get(".size", 50)
-				(aoffset, boffset) = {
-					30: (Vec2D(-size - 10, -10), Vec2D(-size - 10, 10)),
-					50: (Vec2D(-size - 10, -20), Vec2D(-size - 10, 20)),
-					70: (Vec2D(-size - 10, -20), Vec2D(-size - 10, 20)),
-				}[size]
-				translated_component["pins"]["A"] = component["loc"] + aoffset.rotate_offset(component.get(".facing", FaceDirection.East))
-				translated_component["pins"]["B"] = component["loc"] + boffset.rotate_offset(component.get(".facing", FaceDirection.East))
+				self._find_gate_pin_locations(component, translated_component, xoffset = -10)
 
 			case ("#Memory.D Flip-Flop", None):
 				assert(component.get(".appearance") == "logisim_evolution")
@@ -180,26 +180,63 @@ class LogisimLoader():
 				translated_component["pins"]["Q"] = component["loc"] + Vec2D(50, 10)
 				translated_component["pins"]["!Q"] = component["loc"] + Vec2D(50, 50)
 
+			case ("#Memory.J-K Flip-Flop", None):
+				assert(component.get(".appearance") == "logisim_evolution")
+				translated_component["type"] = "JK-FlipFlop"
+				translated_component["pins"]["J"] = component["loc"] + Vec2D(-10, 10)
+				translated_component["pins"]["K"] = component["loc"] + Vec2D(-10, 30)
+				translated_component["pins"]["CLK"] = component["loc"] + Vec2D(-10, 50)
+				translated_component["pins"]["Q"] = component["loc"] + Vec2D(50, 10)
+				translated_component["pins"]["!Q"] = component["loc"] + Vec2D(50, 50)
+
 		if translated_component["type"] is None:
 			raise UnknownComponentException(f"Logisim component {component} is unknown to digtick.")
 
 		return translated_component
 
+	def _parse_nets(self):
+		self._net_id_by_pos = { }
+		pos_by_net_id = collections.defaultdict(set)
+		max_net_id = 0
+		for (src, dst) in self._iter_wires():
+			if (src in self._net_id_by_pos) and (dst not in self._net_id_by_pos):
+				# Continue existing net
+				net_id = self._net_id_by_pos[src]
+			elif (dst in self._net_id_by_pos) and (src not in self._net_id_by_pos):
+				# Continue existing net
+				net_id = self._net_id_by_pos[dst]
+			elif (dst not in self._net_id_by_pos) and (src not in self._net_id_by_pos):
+				# Create new net
+				net_id = max_net_id
+				max_net_id += 1
+			else:
+				# Join two self._net_id_by_pos
+				net_id = self._net_id_by_pos[src]
+				old_net_id = self._net_id_by_pos[dst]
+				for old_pos in pos_by_net_id[old_net_id]:
+					self._net_id_by_pos[old_pos] = net_id
+					pos_by_net_id[net_id].add(old_pos)
+				del pos_by_net_id[old_net_id]
+
+			self._net_id_by_pos[src] = net_id
+			self._net_id_by_pos[dst] = net_id
+			pos_by_net_id[net_id].add(src)
+			pos_by_net_id[net_id].add(dst)
+
+	def _dump_nets(self):
+		for (pos, net_id) in sorted(self._net_id_by_pos.items(), key = lambda pnetid: (pnetid[1], pnetid[0])):
+			print(pos, net_id)
 
 	def parse(self):
 		self._parse_libraries()
-		net_nodes = set()
-		for (src, dst) in self._iter_wires():
-			net_nodes.add(src)
-			net_nodes.add(dst)
+		self._parse_nets()
+		self._dump_nets()
 
-		for pos in sorted(net_nodes):
-			print(pos)
 
 		for component in self._iter_components():
 			resolved_component = self._resolve_component(component)
 			for (pin_name, loc) in resolved_component["pins"].items():
-				if loc not in net_nodes:
+				if loc not in self._net_id_by_pos:
 					print(f"No net for {resolved_component} {pin_name}")
 			print()
 		return self._circuit
