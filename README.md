@@ -1,5 +1,5 @@
 # digtick
-[![Test status](https://github.com/johndoe31415/digtick/actions/workflows/CI.yml/badge.svg)](https://github.com/johndoe31415/digtick/actions/workflows/CI.yml)
+[![Test status](https://github.com/johndoe31415/digtick/actions/workflows/tests.yml/badge.svg)](https://github.com/johndoe31415/digtick/actions/workflows/tests.yml)
 
 digtick (the mnemonic for "dig tk", i.e., digital toolkit) is a
 command-line-tool tool for creating and solving digital logic design tasks.
