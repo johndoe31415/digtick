@@ -19,7 +19,9 @@ jobs:
           python-version: "3.13"
 
       - name: Install Python environment
-        run: pip3 install .
+        run: pip3 install coverage .
 
-      - name: Run all testcases
-        run: UNITTEST_RUN_ALL="1" python3 -m unittest digtick.tests
+      - name: Run all testcases and view code coverage
+        run: |
+          UNITTEST_RUN_ALL="1" coverage run -m unittest digtick.tests
+          coverage xml
