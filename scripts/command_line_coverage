@@ -18,4 +18,4 @@ $DIGTICK parse -f internal "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
 	echo "A B C"
 	echo "B C A"
 	echo "A !B C"
-) | $DIGTICK parse -e -
+) | $DIGTICK parse -F -e -

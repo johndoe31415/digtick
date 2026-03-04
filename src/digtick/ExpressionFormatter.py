@@ -30,7 +30,8 @@ class ExpressionFormatterTex():
 			Operator.And: "\\wedge",
 			Operator.Xor: "\\oplus",
 			Operator.Not: "\\neg",
-			Operator.Nand: "\\boxdot",
+			Operator.Nand: "\\overset{\\sim}{\\wedge}",
+			Operator.Nor: "\\overset{\\sim}{\\vee}",
 		}
 		if implicit_and:
 			self._ops[Operator.And] = "\\ "
