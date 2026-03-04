@@ -1,0 +1,21 @@
+#!/bin/bash -e
+#
+#
+
+# Run example commands through coverage
+DIGTICK="coverage run -a --source digtick --omit 'tpg.py,PrefixMatcher.py,RandomDist.py,TableFormatter.py,MultiCommand.py' -m digtick.__main__"
+
+$DIGTICK parse "A B C"
+$DIGTICK parse -n "A B C"
+$DIGTICK parse -f text "A B C"
+$DIGTICK parse -f text "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
+$DIGTICK parse -f pretty-text "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
+$DIGTICK parse -f tex-tech "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
+$DIGTICK parse -f tex-math "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
+$DIGTICK parse -f dot "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
+$DIGTICK parse -f internal "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
+(
+	echo "A B C"
+	echo "B C A"
+	echo "A !B C"
+) | $DIGTICK parse -e -
