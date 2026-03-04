@@ -25,7 +25,7 @@ from digtick.ExpressionParser import parse_expression
 from digtick.ValueTable import ValueTable, CompactStorage
 from digtick.QuineMcCluskey import QuineMcCluskey
 
-_run_slow_tests = (os.environ.get("UNITTEST_RUN_ALL") == "1")
+_run_slow_tests = (os.getenv("UNITTEST_RUN_ALL") == "1")
 
 class QMCTests(unittest.TestCase):
 	_VALUE_TABLES = {

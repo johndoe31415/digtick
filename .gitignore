@@ -2,3 +2,6 @@
 __pycache__
 dist
 src/digtick.egg-info/
+.coverage
+htmlcov
+.tpp_state.json

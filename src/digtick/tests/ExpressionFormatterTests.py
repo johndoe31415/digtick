@@ -25,7 +25,7 @@ from digtick.ExpressionParser import parse_expression, Variable
 from digtick.ExpressionFormatter import format_expression
 from digtick.RandomExpressionGenerator import RandomExpressionGenerator
 
-_run_slow_tests = (os.environ.get("UNITTEST_RUN_ALL") == "1")
+_run_slow_tests = (os.getenv("UNITTEST_RUN_ALL") == "1")
 
 class ExpressionFormatterTests(unittest.TestCase):
 	def _assert_expression_reformattable(self, expr_str: str):
