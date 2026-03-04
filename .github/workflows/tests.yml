@@ -23,5 +23,11 @@ jobs:
 
       - name: Run all testcases and view code coverage
         run: |
-          UNITTEST_RUN_ALL="1" coverage run -m unittest digtick.tests
+          UNITTEST_RUN_ALL="1" coverage run --source digtick --omit "tpg.py,PrefixMatcher.py,RandomDist.py,TableFormatter.py,MultiCommand.py" -m unittest digtick.tests
           coverage xml
+
+      - name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          format: cobertura
+          file: coverage.xml
