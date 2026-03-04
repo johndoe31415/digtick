@@ -89,10 +89,10 @@ class ExpressionFormatterText():
 		return self._ops[op]
 
 	def _parenthesize(self, expr: ParseTreeElement, needs_parenthesis: bool):
-			if needs_parenthesis:
-				return f"({self.format_expression(expr)})"
-			else:
-				return f"{self.format_expression(expr)}"
+		if needs_parenthesis:
+			return f"({self.format_expression(expr)})"
+		else:
+			return f"{self.format_expression(expr)}"
 
 	def format_expression(self, expr: ParseTreeElement):
 		if isinstance(expr, Variable):

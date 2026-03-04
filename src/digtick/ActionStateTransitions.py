@@ -22,6 +22,7 @@
 from .MultiCommand import BaseAction
 from .ValueTable import ValueTable
 from .Tools import open_file
+from .Exceptions import OutputValueMissingException
 
 class ActionStateTransitions(BaseAction):
 	def _process_next_cycle(self, start_value: int):
@@ -55,7 +56,7 @@ class ActionStateTransitions(BaseAction):
 
 		for varname in self._vt.input_variable_names:
 			if not self._vt.has_output_named(varname + "'"):
-				raise Exception(f"Every input needs a nextstate input (the label plus an apostrophe). Found input {varname} but no output {varname}'")
+				raise OutputValueMissingException(f"Every input needs a nextstate input (the label plus an apostrophe). Found input {varname} but no output {varname}'")
 		self._output_vars = [ varname + "'" for varname in self._vt.input_variable_names ]
 		self._remaining = set(range(1 << len(self._vt.input_variable_names)))
 		if self._args.output_format == "text":
