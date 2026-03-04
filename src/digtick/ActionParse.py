@@ -23,6 +23,7 @@ import sys
 from .MultiCommand import BaseAction
 from .ExpressionParser import parse_expression
 from .ExpressionFormatter import format_expression
+from .Tools import open_file
 
 class ActionParse(BaseAction):
 	def _fmt(self, expr: "ParseTreeElement") -> str:
@@ -34,7 +35,7 @@ class ActionParse(BaseAction):
 			print(self._fmt(expr))
 		else:
 			validation_successful = True
-			with open(self._args.expression) as f:
+			with open_file(self._args.expression) as f:
 				prev_expression = None
 				prev_line = None
 

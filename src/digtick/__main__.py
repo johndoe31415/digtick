@@ -47,7 +47,7 @@ def main():
 		parser.add_argument("-f", "--expr-format", choices = [ "text", "pretty-text", "tex-tech", "tex-math", "dot", "internal" ], default = "text", help = "Print the expression in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-e", "--validate-equivalence", action = "store_true", help = "When reading a file, ensures that every parsed equation is semantically identical to that before it. Useful for validation of manual computation.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
-		parser.add_argument("expression", help = "Input expression to parse or filename (if the 'file' option was given)")
+		parser.add_argument("expression", help = "Input expression to parse or filename/stdin (if the \"--read-as-filename\" option was given, stdin when filename is \"-\")")
 	mc.register("parse", "Parse and reformat Boolean expression(s)", genparser, action = ActionParse)
 
 	def genparser(parser):
