@@ -19,6 +19,7 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
+from digtick.Exceptions import NoSuchPinException
 from .UID import UID
 
 class Component():

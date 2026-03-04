@@ -19,10 +19,9 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
+from digtick.sim.LogisimInterface import LogisimLoader
 from .MultiCommand import BaseAction
 from .ValueTable import ValueTable
-from .Tools import open_file
-from digtick.sim.LogisimInterface import LogisimLoader
 
 class ActionSimState(BaseAction):
 	def run(self):

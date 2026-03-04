@@ -24,7 +24,7 @@ import collections
 import dataclasses
 import xml.etree.ElementTree
 from digtick.sim import Circuit, Component
-from digtick.Exceptions import NoSuchCircuitException
+from digtick.Exceptions import NoSuchCircuitException, UnknownComponentException
 
 class FaceDirection(enum.Enum):
 	North = "north"

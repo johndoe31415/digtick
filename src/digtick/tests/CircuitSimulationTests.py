@@ -21,7 +21,7 @@
 
 import unittest
 import pkgutil
-from digtick.sim import Circuit, Component, CmpSource, CmpNOT, CmpSink, CmpAND, CmpOR, CmpXOR, CmpNAND, CmpDFlipFlop, LogisimLoader
+from digtick.sim import Circuit, CmpSource, CmpNOT, CmpSink, CmpAND, CmpOR, CmpXOR, CmpNAND, CmpDFlipFlop, LogisimLoader
 from digtick.ExpressionParser import parse_expression
 from digtick.Exceptions import CircuitAstableException, DuplicateLabelException
 from digtick.ValueTable import ValueTable

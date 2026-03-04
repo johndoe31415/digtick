@@ -22,10 +22,10 @@
 import enum
 import itertools
 import collections
+from digtick.Exceptions import UndefinedInputUsedException, WrongCircuitPowerStateException, CircuitAstableException, DuplicateLabelException
+from digtick.ValueTable import ValueTable, CompactStorage
 from .Components import Component, CmpSource, CmpSink
 from .UID import UID
-from digtick.Exceptions import UndefinedInputUsedException, NoSuchPinException, WrongCircuitPowerStateException, CircuitAstableException, DuplicateLabelException
-from digtick.ValueTable import ValueTable, CompactStorage
 
 class Level(enum.IntEnum):
 	Low = 0
@@ -284,21 +284,3 @@ class Circuit():
 
 	def __getitem__(self, component_label: str) -> Component:
 		return self._components_by_label[component_label]
-
-
-if __name__ == "__main__":
-	circ = Circuit()
-
-	source = circ.add(CmpSource(0))
-	gate = circ.add(CmpNOT())
-	sink = circ.add(CmpSink())
-
-	circ.connect(source, "OUT", gate, "A")
-	circ.connect(gate, "Y", sink, "IN")
-	circ.power_on()
-
-	for i in range(10):
-		source.toggle()
-		circ.tick()
-		print(source.level, sink.level)
-		assert(source.level ^ 1  == sink.level)

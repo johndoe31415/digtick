@@ -28,3 +28,4 @@ class WrongCircuitPowerStateException(SimulationException): pass
 class CircuitAstableException(SimulationException): pass
 class DuplicateLabelException(SimulationException): pass
 class NoSuchCircuitException(SimulationException): pass
+class UnknownComponentException(SimulationException): pass
