@@ -34,8 +34,7 @@ class ActionRandomTable(BaseAction):
 		zero_entries = round(self._args.zero_percentage / 100 * entry_count)
 		one_entries = round(self._args.one_percentage / 100 * entry_count)
 		dc_entries = entry_count - zero_entries - one_entries
-		if dc_entries < 0:
-			raise ValueError("Cannot have {dc_entries} D/C entries. Probabilities do not seem to add up.")
+		assert(dc_entries >= 0)
 
 		if len(self._args.output_variable_name) == 0:
 			output_var_names = [ "Y" ]

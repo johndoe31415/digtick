@@ -67,6 +67,8 @@ $digtick eq 'A(B C)' 'B(A C)'
 $digtick random-expr 4 10
 $digtick random-table 4
 $digtick random-table -1 100 -0 0 4
+$digtick random-table -1 100 -0 0 -o Z 4
+$digtick random-table -1 100 -0 50 4 || must_fail; assert_failed
 
 $digtick transform -t simplify 'A C B'
 $digtick transform -t nand 'A ^ B'
