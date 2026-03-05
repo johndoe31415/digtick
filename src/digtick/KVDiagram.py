@@ -63,14 +63,6 @@ class KVDiagram():
 	def _gray_code(x: int) -> int:
 		return x ^ (x >> 1)
 
-	@staticmethod
-	def _inv_gray_code(x: int) -> int:
-		result = 0
-		while x != 0:
-			result ^= x
-			x >>= 1
-		return result
-
 	def _compute(self):
 		def _create_kv_dict(var_names: list[str], offset: int = 0, invert_direction: bool = False):
 			result = [ ]

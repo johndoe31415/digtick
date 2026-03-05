@@ -20,7 +20,7 @@
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 import unittest
-from digtick.ExpressionParser import parse_expression
+from digtick.ExpressionParser import parse_expression, BinaryOperator, Operator
 
 class ParserTests(unittest.TestCase):
 	def _assert_expression_equal(self, expr1_str: str, expr2_str: str):
@@ -52,3 +52,30 @@ class ParserTests(unittest.TestCase):
 		self._assert_expression_equal("A ^ B % C % D", "((A ^ B) % C) % D")
 		self._assert_expression_equal("A % B ^ C % D", "((A % B) ^ C) % D")
 		self._assert_expression_equal("A % B % C ^ D", "((A % B) % C) ^ D")
+
+	def test_compare_impossible(self):
+		expr1 = parse_expression("A B D")
+		expr2 = parse_expression("A B C")
+		with self.assertRaises(ValueError):
+			list(expr1.compare_to_expression(expr2))
+
+	def test_compare_subset(self):
+		expr1 = parse_expression("A B")
+		expr2 = parse_expression("A B C")
+		list(expr1.compare_to_expression(expr2))
+
+	def test_wrap_failure(self):
+		with self.assertRaises(TypeError):
+			expr = parse_expression("A") | 1.2345
+			print(expr)
+
+	def test_join_empty(self):
+		with self.assertRaises(ValueError):
+			BinaryOperator.join(Operator.And, [ ])
+
+	def test_parse_empty_disallow(self):
+		with self.assertRaises(ValueError):
+			parse_expression("")
+
+	def test_parse_empty_allow(self):
+		self.assertEqual(parse_expression("", default_empty = "0"), parse_expression("0"))

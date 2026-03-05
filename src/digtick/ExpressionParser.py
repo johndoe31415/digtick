@@ -173,7 +173,7 @@ class ParseTreeElement():
 		elif isinstance(expr, str):
 			return self._Elements["Variable"](expr)
 		else:
-			raise ValueError(type(expr))
+			raise TypeError(f"Unable to wrap type to appear in an expression: {type(expr)}")
 
 	def __invert__(self):
 		return self._Elements["UnaryOperator"](Operator.Not, self)
@@ -204,9 +204,6 @@ class ParseTreeElement():
 
 	def __mod__(self, rhs: "ParseTreeElement"):
 		return self._Elements["BinaryOperator"](self, Operator.Nor, self._wrap(rhs))
-
-	def __rmod__(self, lhs: "ParseTreeElement"):
-		return self._wrap(lhs) % self
 
 	def __init_subclass__(cls, **kwargs):
 		super().__init_subclass__(**kwargs)
@@ -320,7 +317,7 @@ class BinaryOperator(ParseTreeElement):
 		return self._rhs
 
 	@classmethod
-	def join(cls, op: Operator, terms: ParseTreeElement) -> ParseTreeElement:
+	def join(cls, op: Operator, terms: "Iterator[ParseTreeElement]") -> ParseTreeElement:
 		result = None
 		for term in terms:
 			if result is None:
@@ -446,9 +443,9 @@ if __name__ == "__main__":
 		try:
 			parsed = parser(input_value)
 			print(parsed)
-		except Exception as e:
-			print(tpg.exc())
-			raise
+		except Exception as e:	# pragma unreachable
+			print(tpg.exc())	# pragma unreachable
+			raise				# pragma unreachable
 
 	A = Variable("A")
 	Zero = Constant(0)
