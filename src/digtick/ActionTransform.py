@@ -62,7 +62,7 @@ class NANDLogicTransformer(ExpressionTransformer):
 			case Operator.Not:
 				expr = expr.rhs @ 1
 
-			case _:
+			case _: # pragma unreachable
 				raise NotImplementedError(expr.op)
 		return self._transform(expr)
 
@@ -85,7 +85,7 @@ class NANDLogicTransformer(ExpressionTransformer):
 				option2 = expr.lhs @ ~expr.rhs
 				expr = option1 @ option2
 
-			case _:
+			case _: # pragma unreachable
 				raise NotImplementedError(expr.op)
 		return self._transform(expr)
 
@@ -95,7 +95,7 @@ class NORLogicTransformer(ExpressionTransformer):
 			case Operator.Not:
 				expr = expr.rhs % 0
 
-			case _:
+			case _: # pragma unreachable
 				raise NotImplementedError(expr.op)
 		return self._transform(expr)
 
@@ -118,7 +118,7 @@ class NORLogicTransformer(ExpressionTransformer):
 				option2 = expr.lhs % ~expr.rhs
 				expr = ~(option1 % option2)
 
-			case _:
+			case _: # pragma unreachable
 				raise NotImplementedError(expr.op)
 		return self._transform(expr)
 
@@ -225,7 +225,7 @@ class ActionTransform(BaseAction):
 				case "simplify":
 					transformer = SimplificationTransformer()
 
-				case _:
+				case _: # pragma unreachable
 					raise NotImplementedError(self._args.logic)
 
 			transformed = transformer.transform(expr)
