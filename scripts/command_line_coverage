@@ -2,20 +2,51 @@
 #
 #
 
-# Run example commands through coverage
-DIGTICK="coverage run -a --source digtick --omit 'tpg.py,PrefixMatcher.py,RandomDist.py,TableFormatter.py,MultiCommand.py' -m digtick.__main__"
+DID_FAIL="0"
+must_fail() {
+	DID_FAIL="1"
+}
 
-$DIGTICK parse "A B C"
-$DIGTICK parse -n "A B C"
-$DIGTICK parse -f text "A B C"
-$DIGTICK parse -f text "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
-$DIGTICK parse -f pretty-text "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
-$DIGTICK parse -f tex-tech "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
-$DIGTICK parse -f tex-math "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
-$DIGTICK parse -f dot "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
-$DIGTICK parse -f internal "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
+assert_failed() {
+	if [ "$DID_FAIL" == "0" ]; then
+		echo "Previous command should have failed, but DID NOT."
+		exit 1
+	fi
+	DID_FAIL="0"
+}
+
+# Run example commands through coverage
+digtick="coverage run -a --source digtick --omit 'tpg.py,PrefixMatcher.py,RandomDist.py,TableFormatter.py,MultiCommand.py' -m digtick.__main__"
+
+$digtick parse "A B C"
+$digtick parse -n "A B C"
+$digtick parse -f text "A B C"
+$digtick parse -f text "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
+$digtick parse -f pretty-text "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
+$digtick parse -f tex-tech "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
+$digtick parse -f tex-math "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
+$digtick parse -f dot "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
+$digtick parse -f internal "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
 (
 	echo "A B C"
 	echo "B C A"
 	echo "A !B C"
-) | $DIGTICK parse -F -e -
+) | $digtick parse -F -e -
+
+
+$digtick make-table 'A B C' '!B !C' >/tmp/table1
+cat /tmp/table1 | $digtick print-table -f text
+cat /tmp/table1 | $digtick print-table -f pretty
+cat /tmp/table1 | $digtick print-table -f tex
+cat /tmp/table1 | $digtick print-table -f compact
+cat /tmp/table1 | $digtick print-table -f logisim
+
+$digtick make-table 'A B + !B C' >/tmp/table2
+$digtick make-table 'A B + !B C + A !B !C' >/tmp/table3
+$digtick diff-table /tmp/table2 /tmp/table3
+
+$digtick kv /tmp/table1
+$digtick kv -r /tmp/table1
+$digtick kv -x 1 -y 2 -X -Y -d BCA /tmp/table1
+cat /tmp/table1 | head -n -1 | $digtick kv -x 1 -y 2 -X -Y -d BCA || must_fail; assert_failed
+cat /tmp/table1 | head -n -1 | $digtick kv -x 1 -y 2 -X -Y -d BCA --unused-value-is '*'
