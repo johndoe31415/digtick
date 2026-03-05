@@ -51,6 +51,9 @@ $digtick kv -r /tmp/table1
 $digtick kv -x 1 -y 2 -X -Y -d BCA /tmp/table1
 cat /tmp/table1 | head -n -1 | $digtick kv -x 1 -y 2 -X -Y -d BCA || must_fail; assert_failed
 cat /tmp/table1 | head -n -1 | $digtick kv -x 1 -y 2 -X -Y -d BCA --unused-value-is '*'
+$digtick kv -x 1 -y 2 -X -Y -d BCAA /tmp/table1 || must_fail; assert_failed
+$digtick kv -x 1 -y 2 -X -Y -d BCAX /tmp/table1 || must_fail; assert_failed
+$digtick kv -x 1 -y 2 -X -Y -d BCAX -O /tmp/kv.svg /tmp/table1 || must_fail; assert_failed
 
 $digtick synth /tmp/table1
 $digtick synth /tmp/table1 --show-all-solutions

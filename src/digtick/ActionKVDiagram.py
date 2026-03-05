@@ -32,7 +32,7 @@ class ActionKVDiagram(BaseAction):
 			variable_order = None
 		else:
 			if "," in self._args.literal_order:
-				variable_order = ",".split(self._args.literal_order)
+				variable_order = self._args.literal_order.split(",")
 			else:
 				variable_order = list(self._args.literal_order)
 
