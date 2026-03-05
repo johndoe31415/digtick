@@ -20,7 +20,6 @@
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 import unittest
-import contextlib
 import pysvgedit
 from digtick.DigitalTimingDiagram import DigitalTimingDiagram
 from digtick.Exceptions import UnknownCharacterException, UnsupportedTransitionException
