@@ -48,7 +48,20 @@ $digtick kv -x 1 -y 2 -X -Y -d BCA /tmp/table1
 cat /tmp/table1 | head -n -1 | $digtick kv -x 1 -y 2 -X -Y -d BCA || must_fail; assert_failed
 cat /tmp/table1 | head -n -1 | $digtick kv -x 1 -y 2 -X -Y -d BCA --unused-value-is '*'
 
+$digtick synth /tmp/table1
 $digtick synth /tmp/table1 --show-all-solutions
 
 $digtick sat /tmp/table1 'A B' || must_fail; assert_failed
 $digtick sat /tmp/table1 'A B C'
+
+$digtick eq 'A B C' 'A B !C' || must_fail; assert_failed
+$digtick eq 'A(B C)' 'B(A C)'
+
+$digtick random-expr 4 10
+$digtick random-table 4
+$digtick random-table -1 100 -0 0 4
+
+$digtick transform -t simplify 'A C B'
+$digtick transform -t nand 'A ^ B'
+$digtick transform -t nor 'A ^ B'
+$digtick transform -t nand -t nor -t nand 'A ^ B'
