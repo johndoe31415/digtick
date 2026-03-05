@@ -19,6 +19,7 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
+import os
 import pysvgedit
 from .MultiCommand import BaseAction
 from .DigitalTimingDiagram import DigitalTimingDiagram
@@ -26,6 +27,9 @@ from .Tools import open_file
 
 class ActionDTDRender(BaseAction):
 	def run(self):
+		if (not self._args.force) and os.path.exists(self._args.output_filename):
+			raise FileExistsError(f"Refusing to overwrite: {self._args.output_filename}")
+
 		dtd = DigitalTimingDiagram()
 		with open_file(self._args.filename) as f:
 			timing_diagram_text = f.read()

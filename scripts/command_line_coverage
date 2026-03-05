@@ -16,7 +16,11 @@ assert_failed() {
 }
 
 # Run example commands through coverage
-digtick="coverage run -a --source digtick --omit=tpg.py,PrefixMatcher.py,RandomDist.py,TableFormatter.py,MultiCommand.py,FriendlyArgumentParser.py -m digtick.__main__"
+cov="coverage run -a --source digtick --omit=tpg.py,PrefixMatcher.py,RandomDist.py,TableFormatter.py,MultiCommand.py,FriendlyArgumentParser.py -m"
+digtick="$cov digtick.__main__"
+
+# Run some tests that are in modules __main__
+$cov digtick.ExpressionParser
 
 $digtick parse "A B C"
 $digtick parse -n "A B C"
@@ -65,3 +69,19 @@ $digtick transform -t simplify 'A C B'
 $digtick transform -t nand 'A ^ B'
 $digtick transform -t nor 'A ^ B'
 $digtick transform -t nand -t nor -t nand 'A ^ B'
+$digtick transform -t simplify '(A + 1)(B & 0)((1))'
+$digtick transform -t simplify '(A + 1)(B & 0)((1)) + (!B !C !A) + (A + A) + (A A) + (X @ 1 @ 1)'
+
+for dev in sr-nand-ff d-ff jk-ff jk-ms-ff; do
+	$digtick dtd-create --random-seed 12345 -d $dev
+done
+$digtick dtd-create --random-seed 12345 -i >/tmp/dtd
+
+rm -f /tmp/dtd.svg
+$digtick dtd-render -o /tmp/dtd.svg /tmp/dtd
+$digtick dtd-render -o /tmp/dtd.svg /tmp/dtd || must_fail; assert_failed
+$digtick dtd-render -o /tmp/dtd.svg -f /tmp/dtd
+
+$digtick sim-state -s FF1 -s FF2 -s FF3 -s FF4 src/digtick/tests/data/stateful.circ >/tmp/state_table.txt
+$digtick analyze-state /tmp/state_table.txt
+$digtick analyze-state -f dot /tmp/state_table.txt
