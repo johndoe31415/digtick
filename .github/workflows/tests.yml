@@ -46,7 +46,9 @@ jobs:
         run: scripts/command_line_coverage
 
       - name: Create coverage output file
-        run: coverage xml
+        run: |
+          coverage report
+          coverage xml
 
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2

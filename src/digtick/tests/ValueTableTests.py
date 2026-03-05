@@ -70,3 +70,51 @@ class ValueTableTests(unittest.TestCase):
 				0 0
 				1 1
 			"""), set_undefined_values_to = "0")
+
+	def test_str_display(self):
+		vt = ValueTable.parse_string(self._prepstr("""
+			A B >Y
+			0 0 1
+			0 1 0
+			1 0 *
+			1 1 1
+		"""), set_undefined_values_to = "0")
+		self.assertEqual(list(vt), [ (CompactStorage.Entry.High, ), (CompactStorage.Entry.Low, ), (CompactStorage.Entry.DontCare, ), (CompactStorage.Entry.High, ) ])
+		self.assertEqual([ entries[0].as_str for entries in vt ], [ "1", "0", "*", "1" ])
+
+	def test_undefined_values(self):
+		vt = ValueTable.parse_string(self._prepstr("""
+			A B >Y
+			1 0 1
+		"""), set_undefined_values_to = "*")
+		self.assertEqual([ entries[0].as_str for entries in vt ], [ "*", "*", "1", "*" ])
+
+	def test_set_values(self):
+		vt = ValueTable.parse_string(self._prepstr("""
+			A B >Y
+		"""), set_undefined_values_to = "0")
+		self.assertEqual([ entries[0].as_str for entries in vt ], [ "0", "0", "0", "0" ])
+		cs = vt.get_storage("Y")
+		cs[1] = "1"
+		cs[2] = "*"
+		cs[3] = "*"
+		cs[0] = 1
+		self.assertEqual([ entries[0].as_str for entries in vt ], [ "1", "1", "*", "*" ])
+		cs[1] = "0"
+		cs[2] = "*"
+		cs[3] = "*"
+		self.assertEqual([ entries[0].as_str for entries in vt ], [ "1", "0", "*", "*" ])
+		cs[0] = 0
+		self.assertEqual([ entries[0].as_str for entries in vt ], [ "0", "0", "*", "*" ])
+
+	def test_add_set(self):
+		vt = ValueTable.parse_string(self._prepstr("""
+			A B >Y
+		"""), set_undefined_values_to = "0")
+		self.assertTrue(vt.has_output_named("Y"))
+		self.assertFalse(vt.has_output_named("Z"))
+
+		cs = CompactStorage(2, initial_value = 0)
+		vt.add_output_variable("Z", cs)
+		self.assertTrue(vt.has_output_named("Y"))
+		self.assertTrue(vt.has_output_named("Z"))

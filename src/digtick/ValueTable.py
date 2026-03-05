@@ -260,6 +260,9 @@ class ValueTable():
 			storage[index] = output
 		return ValueTable(input_variable_names = list(expression.variables), output_variable_names = [ output_variable_name ], output_values = [ storage ])
 
+	def get_storage(self, output_var_name: str):
+		return self._named_outputs[output_var_name]
+
 	def index_to_list(self, index: int) -> list[int]:
 		return [ (index >> i) & 1 for i in reversed(range(self.input_variable_count)) ]
 
