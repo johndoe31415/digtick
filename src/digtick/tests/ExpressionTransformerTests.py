@@ -19,11 +19,18 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
-from .ParserTests import ParserTests
-from .ExpressionFormatterTests import ExpressionFormatterTests
-from .QMCTests import QMCTests
-from .ExpressionTreeTests import ExpressionTreeTests
-from .CircuitSimulationTests import CircuitSimulationTests
-from .DTDTests import DTDTests
-from .ValueTableTests import ValueTableTests
-from .ExpressionTransformerTests import ExpressionTransformerTests
+import unittest
+from digtick.ExpressionParser import parse_expression
+from digtick.ExpressionFormatter import format_expression
+from digtick.ExpressionTransformer import ExpressionTransformer
+
+class ExpressionTransformerTests(unittest.TestCase):
+	def setUp(self):
+		self._simplify_transformer = ExpressionTransformer.new("simplify")
+
+	def _simplify(self, expr_str: str):
+		return self._simplify_transformer.transform(parse_expression(expr_str))
+
+	def test_simplify_move_parenthesis(self):
+		self.assertEqual(format_expression(self._simplify("(((A + B)))((X))")), "(A + B) X")
+		#self.assertEqual(format_expression(self._simplify("(((A + B)))((X Y))")), "(A + B) X Y")
