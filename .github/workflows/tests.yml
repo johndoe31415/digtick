@@ -22,12 +22,13 @@ jobs:
         run: pip3 install coverage .
 
       - name: Run testcases and determine coverage
-        run: |
-          UNITTEST_RUN_ALL="1" coverage run --source digtick --omit "tpg.py,PrefixMatcher.py,RandomDist.py,TableFormatter.py,MultiCommand.py" -m unittest digtick.tests
-          coverage xml
+        run: UNITTEST_RUN_ALL="1" coverage run --source digtick --omit "tpg.py,PrefixMatcher.py,RandomDist.py,TableFormatter.py,MultiCommand.py" -m unittest digtick.tests
 
       - name: Determine coverage for the CLI tools
         run: scripts/command_line_coverage
+
+      - name: Create coverage output file
+        run: coverage xml
 
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
