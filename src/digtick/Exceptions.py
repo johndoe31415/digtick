@@ -35,3 +35,4 @@ class UnknownCharacterException(DTDException): pass
 class UnsupportedTransitionException(DTDException): pass
 
 class OutputValueMissingException(DigTickException): pass
+class InvalidValueTableException(DigTickException): pass

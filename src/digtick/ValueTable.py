@@ -19,11 +19,13 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
+import io
 import re
 import enum
 import collections
 from .TableFormatter import Table
 from .ExpressionParser import Operator, Constant, Variable, BinaryOperator
+from .Exceptions import InvalidValueTableException
 
 class CompactStorage():
 	class Entry(enum.IntEnum):
@@ -119,6 +121,12 @@ class ValueTable():
 		assert(all(storage.variable_count == len(input_variable_names) for storage in output_values))
 		self._input_variable_names = input_variable_names
 		self._output_variable_names = output_variable_names
+
+		all_variable_names = input_variable_names + output_variable_names
+		if len(all_variable_names) != len(set(all_variable_names)):
+			duplicate_variable_names = { var_name for (var_name, count) in collections.Counter(all_variable_names).items() if count > 1 }
+			raise InvalidValueTableException(f"Duplicate variable name(s) used in truth table: {', '.join(sorted(duplicate_variable_names))}")
+
 		self._output_values = output_values
 		self._named_outputs = { output_variable_name: storage for (output_variable_name, storage) in zip(self._output_variable_names, self._output_values) }
 		self._index_weights = { varname: 1 << bitno for (bitno, varname) in enumerate(reversed(self._input_variable_names)) }
@@ -159,11 +167,15 @@ class ValueTable():
 	def from_compact_representation(cls, compact_str: str):
 		assert(compact_str.startswith(":"))
 		(input_variable_names, output_variable_names, compact_data) = compact_str[1:].split(":")
-		input_variable_names = input_variable_names.split(",")
-		output_variable_names = output_variable_names.split(",")
+		input_variable_names = [ split_item for split_item in input_variable_names.split(",") if split_item != "" ]
+		if len(input_variable_names) == 0:
+			raise InvalidValueTableException("Syntax error when parsing compact truth table: No input variables found")
+		output_variable_names = [ split_item for split_item in output_variable_names.split(",") if split_item != "" ]
+		if len(output_variable_names) == 0:
+			raise InvalidValueTableException("Syntax error when parsing compact truth table: No output variables found")
 		compact_data = compact_data.split(",")
 		if len(output_variable_names) != len(compact_data):
-			raise ValueError(f"Format specifies {len(output_variable_names)} output variables, but present data section indicates {len(compact_data)}.")
+			raise InvalidValueTableException(f"Format specifies {len(output_variable_names)} output variables, but present data section indicates {len(compact_data)}.")
 		output_values = [ CompactStorage.from_string(len(input_variable_names), compact_data_string) for compact_data_string in compact_data ]
 		return cls(input_variable_names = input_variable_names, output_variable_names = output_variable_names, output_values = output_values)
 
@@ -192,19 +204,14 @@ class ValueTable():
 						input_variables.append(name)
 						input_indices.append(index)
 				if len(input_variables) == 0:
-					raise ValueError(f"Syntax error when parsing truth table in line {lineno}: No input variables found")
+					raise InvalidValueTableException(f"Syntax error when parsing truth table in line {lineno}: No input variables found")
 				if len(output_variables) == 0:
-					raise ValueError(f"Syntax error when parsing truth table in line {lineno}: No output variables found")
-
-				all_variables = input_variables + output_variables
-				if len(all_variables) != len(set(all_variables)):
-					duplicate_variables = { var_name for (var_name, count) in collections.Counter(all_variables).items() if count > 1 }
-					raise ValueError(f"Syntax error when parsing truth table in line {lineno}: Duplicate variable name(s) used: {', '.join(sorted(duplicate_variables))}")
+					raise InvalidValueTableException(f"Syntax error when parsing truth table in line {lineno}: No output variables found")
 
 				output_values = [ CompactStorage(variable_count = len(input_variables)) for _ in range(len(output_variables)) ]
 			else:
 				if len(tokens) != len(input_variables) + len(output_variables):
-					raise ValueError(f"Syntax error when parsing truth table in line {lineno}: expected {len(input_variables) + len(output_variables)} tokens, but saw {len(tokens)}")
+					raise InvalidValueTableException(f"Syntax error when parsing truth table in line {lineno}: expected {len(input_variables) + len(output_variables)} tokens, but saw {len(tokens)}")
 
 				input_bits = [ int(tokens[i]) for i in input_indices ]
 				index = sum(value << bitpos for (bitpos, value) in enumerate(reversed(input_bits)))
@@ -215,11 +222,11 @@ class ValueTable():
 						print(f"Warning when parsing truth table: value overwritten in line {lineno}")
 					storage[index] = output_bit
 		if output_values is None:
-			raise ValueError("Unable to read table data from source.")
+			raise InvalidValueTableException("Unable to read table data from source.")
 
 		if output_values[0].has_undefined_values:
 			if set_undefined_values_to is None:
-				raise ValueError("Strict parsing was requested but not all input patterns were explicitly specified.")
+				raise InvalidValueTableException("Strict parsing was requested but not all input patterns were explicitly specified.")
 			else:
 				for storage in output_values:
 					storage.set_undefined_values_to(set_undefined_values_to)
@@ -234,6 +241,13 @@ class ValueTable():
 			"*":			CompactStorage.Entry.DontCare,
 			"N/A":			CompactStorage.Entry.Undefined,
 		}.get(set_undefined_values_to))
+
+	@classmethod
+	def parse_string(cls, text: str, set_undefined_values_to: str):
+		buffer = io.StringIO()
+		buffer.write(text)
+		buffer.seek(0)
+		return cls.parse_from_file(f = buffer, set_undefined_values_to = set_undefined_values_to)
 
 	@classmethod
 	def create_from_expression(self, output_variable_name: str, expression: "ParseTreeElement", dc_expression: "ParseTreeElement | None" = None):
@@ -369,8 +383,3 @@ class ValueTable():
 
 	def __eq__(self, other: "ValueTable"):
 		return all(self_values == other._named_outputs[varname] for (varname, self_values) in zip(self.output_variable_names, self._output_values))
-
-if __name__ == "__main__":
-	from .ExpressionParser import parse_expression
-	vt = ValueTable.create_from_expression("Q", parse_expression("A B + C !D + (A (C + !C))"), dc_expression = parse_expression("A !B !C"))
-	vt.print()
