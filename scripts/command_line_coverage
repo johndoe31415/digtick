@@ -39,6 +39,8 @@ done
 $digtick make-table 'A B + !B C' >/tmp/table2
 $digtick make-table 'A B + !B C + A !B !C' >/tmp/table3
 $digtick diff-table /tmp/table2 /tmp/table3
+echo ':A,B,C:Z:5404' | $digtick diff /tmp/table2 || must_fail; assert_failed
+echo ':A,D,C:Y:5404' | $digtick diff /tmp/table2 || must_fail; assert_failed
 
 $digtick kv /tmp/table1
 $digtick kv -r /tmp/table1
