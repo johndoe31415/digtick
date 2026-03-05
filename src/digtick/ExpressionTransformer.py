@@ -172,43 +172,55 @@ class SimplificationTransformer(ExpressionTransformer):
 
 	def _transform_binary(self, expr: "Expression"):
 		match expr:
-			case BinaryOperator(_, Operator.And, Constant(0)):
+			# Annulment
+			case BinaryOperator(_, Operator.And, Constant(0)) | BinaryOperator(Constant(0), Operator.And, _):
 				return Constant(0)
 
-			case BinaryOperator(lhs, Operator.And, Constant(1)):
+			# Identity
+			case BinaryOperator(side, Operator.And, Constant(1)) | BinaryOperator(Constant(1), Operator.And, side):
+				return side
+
+			# Annulment
+			case BinaryOperator(_, Operator.Or, Constant(1)) | BinaryOperator(Constant(1), Operator.Or, _):
+				return Constant(1)
+
+			# Identity
+			case BinaryOperator(side, Operator.Or, Constant(0)) | BinaryOperator(Constant(0), Operator.Or, side):
+				return side
+
+			# Idempotence
+			case BinaryOperator(lhs, Operator.Or, rhs) if lhs.identical_to(rhs):
 				return lhs
 
+			# Idempotence
+			case BinaryOperator(lhs, Operator.And, rhs) if lhs.identical_to(rhs):
+				return lhs
+
+			# Sort minterm literals alphabetically
 			case BinaryOperator(_, Operator.And, _) if expr.is_minterm():
 				terms = sorted(expr.collect_literals(), key = self._literal_sort_key)
 				replacement = BinaryOperator.join(Operator.And, terms)
 				return replacement
 
+			# Sort maxterm literals alphabetically
 			case BinaryOperator(_, Operator.Or, _) if expr.is_maxterm():
 				terms = sorted(expr.collect_literals(), key = self._literal_sort_key)
 				replacement = BinaryOperator.join(Operator.Or, terms)
 				return replacement
 
-			case BinaryOperator(_, Operator.Or, Constant(1)):
-				return Constant(1)
-
-			case BinaryOperator(lhs, Operator.Or, Constant(0)):
-				return lhs
-
-			case BinaryOperator(lhs, Operator.Or, rhs) if lhs.identical_to(rhs):
-				return lhs
-
-			case BinaryOperator(lhs, Operator.And, rhs) if lhs.identical_to(rhs):
-				return lhs
-
+			# Cascaded NAND inverter
 			case BinaryOperator(BinaryOperator(other, Operator.Nand, Constant(1)), Operator.Nand, Constant(1)):
 				return other
 
+			# Cascaded NOR inverter
 			case BinaryOperator(BinaryOperator(other, Operator.Nor, Constant(0)), Operator.Nor, Constant(0)):
 				return other
 
+			# Complement
 			case BinaryOperator(lhs, Operator.And, rhs) if (lhs.variables == rhs.variables) and (lhs == ~rhs):
 				return Constant(0)
 
+			# Complement
 			case BinaryOperator(lhs, Operator.Or, rhs) if (lhs.variables == rhs.variables) and (lhs == ~rhs):
 				return Constant(1)
 
