@@ -25,6 +25,7 @@ import collections
 import dataclasses
 from pysvgedit import SVGDocument, SVGGroup, SVGPath, SVGText, Vector2D
 from .TextWidthEstimator import TextWidthEstimator
+from .Exceptions import UnknownCharacterException, UnsupportedTransitionException
 
 class DigitalTimingType(enum.Enum):
 	Low = "0"
@@ -77,7 +78,7 @@ class DigitalTimingCmd():
 				case " ":
 					continue
 				case _:
-					raise NotImplementedError(f"Unknown character in sequence diagram: {char}")
+					raise UnknownCharacterException(f"Unknown character in sequence diagram: {char}")
 			sequence.append(cmd)
 		return sequence
 
@@ -253,8 +254,8 @@ class DigitalTimingDiagram():
 					self._markers.append(self._Marker(x = mid_x + self._xdiv / 2, label = cur.argument))
 					continue
 
-				case _ as transition:
-					raise NotImplementedError(f"Unsupported digital sequence diagram transition: {transition}")
+				case (trans_from, trans_to):
+					raise UnsupportedTransitionException(f"Unsupported digital sequence diagram transition: {trans_from} -> {trans_to}")
 			prev = cur
 		self._clock_ticks = max(self._clock_ticks, round(self._path.pos.x / self._xdiv))
 
@@ -321,3 +322,4 @@ class DigitalTimingDiagram():
 		self._render_markers()
 		self._do_render_clock_ticks()
 		self._do_render_low_high_lines()
+		return self

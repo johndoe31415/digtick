@@ -24,3 +24,4 @@ from .ExpressionFormatterTests import ExpressionFormatterTests
 from .QMCTests import QMCTests
 from .ExpressionTreeTests import ExpressionTreeTests
 from .CircuitSimulationTests import CircuitSimulationTests
+from .DTDTests import DTDTests

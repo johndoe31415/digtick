@@ -30,4 +30,8 @@ class DuplicateLabelException(SimulationException): pass
 class NoSuchCircuitException(SimulationException): pass
 class UnknownComponentException(SimulationException): pass
 
+class DTDException(DigTickException): pass
+class UnknownCharacterException(DTDException): pass
+class UnsupportedTransitionException(DTDException): pass
+
 class OutputValueMissingException(DigTickException): pass
