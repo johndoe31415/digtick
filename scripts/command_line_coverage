@@ -16,7 +16,7 @@ assert_failed() {
 }
 
 # Run example commands through coverage
-digtick="coverage run -a --source digtick --omit 'tpg.py,PrefixMatcher.py,RandomDist.py,TableFormatter.py,MultiCommand.py,FriendlyArgumentParser.py' -m digtick.__main__"
+digtick="coverage run -a --source digtick --omit=tpg.py,PrefixMatcher.py,RandomDist.py,TableFormatter.py,MultiCommand.py,FriendlyArgumentParser.py -m digtick.__main__"
 
 $digtick parse "A B C"
 $digtick parse -n "A B C"
@@ -30,7 +30,6 @@ done
 	echo "# test that comment works"
 	echo "A !B C"
 ) | $digtick parse -F -e -
-
 
 $digtick make-table 'A B C' '!B !C' >/tmp/table1
 for format in text pretty tex compact logisim; do
