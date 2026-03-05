@@ -37,13 +37,10 @@ jobs:
         run: pip3 install -e .
 
       - name: Lint code, fail if there are linter errors
-        run: jbin/tpp -l
+        run: jbin/tpp --lint-code
 
       - name: Run testcases and determine coverage
-        run: UNITTEST_RUN_ALL="1" coverage run --source digtick --omit=tpg.py,PrefixMatcher.py,RandomDist.py,TableFormatter.py,MultiCommand.py,FriendlyArgumentParser.py -m unittest digtick.tests
-
-      - name: Determine coverage for the CLI tools
-        run: scripts/command_line_coverage
+        run: jbin/tpp --coverage-scripts
 
       - name: Create coverage output file
         run: |
