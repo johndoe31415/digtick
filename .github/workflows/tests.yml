@@ -19,12 +19,15 @@ jobs:
           python-version: "3.13"
 
       - name: Install Python code quality tools
-        run: pip3 install coverage
+        run: |
+          pip3 install coverage pylint
+          git clone --depth 1 https://github.com/johndoe31415/jbin
 
-      - name: Install digtick in venv and ensure it works
+      - name: Install digtick in venv, test and ensure linting works
         run: |
           pip3 install .
           UNITTEST_RUN_ALL="1" python3 -m unittest digtick.tests
+          jbin/tpp -l
 
       - name: Install digtick editable so coverage paths look nice
         run: pip3 install -e .
