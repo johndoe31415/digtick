@@ -71,6 +71,7 @@ $digtick transform -t nor 'A ^ B'
 $digtick transform -t nand -t nor -t nand 'A ^ B'
 $digtick transform -t simplify '(A + 1)(B & 0)((1))'
 $digtick transform -t simplify '(A + 1)(B & 0)((1)) + (!B !C !A) + (A + A) + (A A) + (X @ 1 @ 1)'
+$digtick transform -t simplify '-((A + 1)(B & 0)((1)) + (!B !C !A) + (A + A) + (A A) + (-X @ 1 @ 1))(C 1)(D + 0)((X)+(X))((Y)(Y))(Z % 0 % 0)(K + !K)'
 
 for dev in sr-nand-ff d-ff jk-ff jk-ms-ff; do
 	$digtick dtd-create --random-seed 12345 -d $dev
