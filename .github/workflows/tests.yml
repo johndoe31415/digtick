@@ -18,8 +18,16 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Install Python environment
-        run: pip3 install coverage .
+      - name: Install Python code quality tools
+        run: pip3 install coverage
+
+      - name: Install digtick in venv and ensure it works
+        run: |
+          pip3 install .
+          UNITTEST_RUN_ALL="1" python3 -m unittest digtick.tests
+
+      - name: Install digtick editable so coverage paths look nice
+        run: pip3 install -e .
 
       - name: Run testcases and determine coverage
         run: UNITTEST_RUN_ALL="1" coverage run --source digtick --omit "tpg.py,PrefixMatcher.py,RandomDist.py,TableFormatter.py,MultiCommand.py" -m unittest digtick.tests
