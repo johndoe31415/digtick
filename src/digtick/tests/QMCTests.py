@@ -88,8 +88,35 @@ class QMCTests(unittest.TestCase):
 		self.assertEqual(QuineMcCluskey._absorb(set([ I1 | I2, I1 | I3 ])), set([ I1 | I2, I1 | I3 ]))
 		self.assertEqual(QuineMcCluskey._absorb(set([ I1 | I2, I1 | I3, I1 ])), set([ I1 ]))
 		self.assertEqual(QuineMcCluskey._absorb(set([ I1 | I2, I1 | I3, I3 ])), set([ I1 | I2, I3 ]))
+		self.assertEqual(QuineMcCluskey._absorb(set([ ])), set([ ]))
 
 	def test_qmc_logging(self):
 		with contextlib.redirect_stdout(None):
 			qmc = QuineMcCluskey(self._VALUE_TABLES["wikipedia"], "Y", verbosity = 2)
 			expr = qmc.optimize()
+
+			# Only essential prime implicant, no selection possible (message emitted)
+			qmc = QuineMcCluskey(ValueTable.from_compact_representation(":A,B,C:Y:4000"), "Y", verbosity = 2)
+			expr = qmc.optimize()
+
+	def test_qmc_constant_zero(self):
+		vt = ValueTable.from_compact_representation(":A:Y:0")
+		qms = QuineMcCluskey(vt, "Y").all_solutions()
+		self.assertEqual(qms.solution_count, 1)
+		expr = qms.any_solution
+		self.assertEqual(list(qms), [ expr ])
+		self.assertTrue(expr.identical_to(parse_expression("0")))
+
+		qms = QuineMcCluskey(vt, "Y").all_solutions(emit_dnf = False)
+		expr = qms.any_solution
+		self.assertTrue(expr.identical_to(parse_expression("0")))
+
+	def test_qmc_constant_one(self):
+		vt = ValueTable.from_compact_representation(":A:Y:5")
+		qms = QuineMcCluskey(vt, "Y").all_solutions()
+		expr = qms.any_solution
+		self.assertTrue(expr.identical_to(parse_expression("1")))
+
+		qms = QuineMcCluskey(vt, "Y").all_solutions(emit_dnf = False)
+		expr = qms.any_solution
+		self.assertTrue(expr.identical_to(parse_expression("1")))

@@ -23,8 +23,9 @@ import unittest
 import pkgutil
 import contextlib
 from digtick.sim import Circuit, CmpSource, CmpNOT, CmpSink, CmpAND, CmpOR, CmpXOR, CmpNAND, CmpDFlipFlop, LogisimLoader
+from digtick.sim.LogisimInterface import Vec2D
 from digtick.ExpressionParser import parse_expression
-from digtick.Exceptions import CircuitAstableException, DuplicateLabelException, WrongCircuitPowerStateException
+from digtick.Exceptions import CircuitAstableException, DuplicateLabelException, WrongCircuitPowerStateException, UnknownComponentException, NoSuchCircuitException
 from digtick.ValueTable import ValueTable
 
 class CircuitSimulationTests(unittest.TestCase):
@@ -357,3 +358,30 @@ class CircuitSimulationTests(unittest.TestCase):
 		circuit = LogisimLoader.load_from_xmldata(circ).parse()
 		with contextlib.redirect_stdout(None):
 			circuit.print()
+
+	def test_circuit_snake(self):
+		circ = pkgutil.get_data("digtick.tests.data", "notgatesnake.circ")
+		logisim_loader = LogisimLoader.load_from_xmldata(circ)
+		logisim_loader.parse()
+		with contextlib.redirect_stdout(None):
+			logisim_loader.dump_nets()
+
+	def test_circuit_unknown_component(self):
+		circ = pkgutil.get_data("digtick.tests.data", "unknown_component.circ")
+		with self.assertRaises(UnknownComponentException):
+			circuit = LogisimLoader.load_from_xmldata(circ).parse()
+
+	def test_circuit_not_found(self):
+		circ = pkgutil.get_data("digtick.tests.data", "other_circuit_name.circ")
+		with self.assertRaises(NoSuchCircuitException):
+			LogisimLoader.load_from_xmldata(circ)
+		LogisimLoader.load_from_xmldata(circ, circuit_name = "schnubbelwurz")
+
+	def test_logisim_vec2d(self):
+		v = Vec2D(123, 456)
+		self.assertEqual(repr(v), "<123, 456>")
+		self.assertEqual(v.x, 123)
+		self.assertEqual(v.y, 456)
+		v = v + Vec2D(10, -10)
+		self.assertEqual(v.x, 133)
+		self.assertEqual(v.y, 446)

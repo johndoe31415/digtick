@@ -65,7 +65,7 @@ class Vec2D():
 			case FaceDirection.South:
 				return Vec2D(self.y, self.x)
 
-			case _:
+			case _:	# pragma unreachable
 				raise NotImplementedError(fd)
 
 	def __repr__(self):
@@ -91,10 +91,6 @@ class LogisimLoader():
 	def load_from_xmldata(cls, xmldata: bytes, circuit_name: str = "main"):
 		doc = xml.etree.ElementTree.ElementTree(xml.etree.ElementTree.fromstring(xmldata))
 		return cls(doc = doc, circuit_name = circuit_name)
-
-	@property
-	def circuit(self):
-		return self.circuit
 
 	def _parse_libraries(self):
 		for node in self._root.findall("./lib"):
@@ -203,6 +199,9 @@ class LogisimLoader():
 				translated_component["pins"]["Q"] = component["loc"] + Vec2D(50, 10)
 				translated_component["pins"]["!Q"] = component["loc"] + Vec2D(50, 50)
 
+			case ("#Base.Text", None):
+				return None
+
 		if translated_component["type"] is None:
 			raise UnknownComponentException(f"Logisim component {component} is unknown to digtick.")
 
@@ -237,7 +236,7 @@ class LogisimLoader():
 			pos_by_net_id[net_id].add(src)
 			pos_by_net_id[net_id].add(dst)
 
-	def _dump_nets(self):
+	def dump_nets(self):
 		for (pos, net_id) in sorted(self._net_id_by_pos.items(), key = lambda pnetid: (pnetid[1], pnetid[0])):
 			print(pos, net_id)
 
@@ -246,6 +245,8 @@ class LogisimLoader():
 		self._components = [ ]
 		for component_dict in self._iter_components():
 			resolved_component = self._resolve_component(component_dict)
+			if resolved_component is None:
+				continue
 
 			component = Component.new(resolved_component["type"], label = resolved_component.get("label"))
 			self._circuit.add(component)
@@ -271,20 +272,6 @@ class LogisimLoader():
 	def parse(self):
 		self._parse_libraries()
 		self._parse_nets()
-#		self._dump_nets()
 		self._parse_components()
 		self._wire_components()
 		return self._circuit
-
-
-
-if __name__ == "__main__":
-	circuit = LogisimLoader("examples/awful.circ").parse()
-	#circuit.dump()
-	circuit.power_on()
-	computed_result = circuit.build_table()
-	computed_result.print()
-
-#	circuit["C"].level = 1
-#	circuit.tick()
-#	print("V=",circuit["V"].level)

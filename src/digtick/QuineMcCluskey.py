@@ -122,13 +122,6 @@ class QuineMcCluskey():
 		self._varname = variable_name
 		self._verbose = verbosity
 
-	def _minterm2int(self, minterm):
-		result = 0
-		for (no, var_name) in enumerate(reversed(self._vt.input_variable_names)):
-			if minterm[var_name]:
-				result |= 1 << no
-		return result
-
 	def _group_by_bitcount(self, values):
 		result = collections.defaultdict(list)
 		for value in values:
