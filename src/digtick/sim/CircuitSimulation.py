@@ -49,6 +49,7 @@ class Net():
 	def name(self):
 		return repr(self)
 
+	@property
 	def member_count(self):
 		return len(self._members)
 

@@ -21,9 +21,10 @@
 
 import unittest
 import pkgutil
+import contextlib
 from digtick.sim import Circuit, CmpSource, CmpNOT, CmpSink, CmpAND, CmpOR, CmpXOR, CmpNAND, CmpDFlipFlop, LogisimLoader
 from digtick.ExpressionParser import parse_expression
-from digtick.Exceptions import CircuitAstableException, DuplicateLabelException
+from digtick.Exceptions import CircuitAstableException, DuplicateLabelException, WrongCircuitPowerStateException
 from digtick.ValueTable import ValueTable
 
 class CircuitSimulationTests(unittest.TestCase):
@@ -329,3 +330,30 @@ class CircuitSimulationTests(unittest.TestCase):
 		# Reference table manually verified by Logisim Evolution v4.1.0
 		reference_output = ValueTable.from_compact_representation(":FF1,FF2,FF3,FF4:FF1',FF2',FF3',FF4':44444444,44441111,55005500,14141414")
 		self.assertEqual(computed_output, reference_output)
+
+	def test_powered_only(self):
+		circ = Circuit()
+		a = circ.new("Source", label = "A")
+		with self.assertRaises(WrongCircuitPowerStateException):
+			circ.tick()
+
+	def test_unpowered_only(self):
+		circ = Circuit()
+		a = circ.new("Source", label = "A")
+		circ.power_on()
+		with self.assertRaises(WrongCircuitPowerStateException):
+			circ.new("Source", label = "B")
+		with self.assertRaises(WrongCircuitPowerStateException):
+			circ.connect(a, "OUT", a, "OUT")
+
+	def test_circuit_dump(self):
+		circ = pkgutil.get_data("digtick.tests.data", "stateful.circ")
+		circuit = LogisimLoader.load_from_xmldata(circ).parse()
+		with contextlib.redirect_stdout(None):
+			circuit.dump()
+
+	def test_circuit_print(self):
+		circ = pkgutil.get_data("digtick.tests.data", "stateful.circ")
+		circuit = LogisimLoader.load_from_xmldata(circ).parse()
+		with contextlib.redirect_stdout(None):
+			circuit.print()
