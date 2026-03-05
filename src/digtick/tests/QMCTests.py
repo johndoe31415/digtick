@@ -21,6 +21,7 @@
 
 import os
 import unittest
+import contextlib
 from digtick.ExpressionParser import parse_expression
 from digtick.ValueTable import ValueTable, CompactStorage
 from digtick.QuineMcCluskey import QuineMcCluskey
@@ -87,3 +88,8 @@ class QMCTests(unittest.TestCase):
 		self.assertEqual(QuineMcCluskey._absorb(set([ I1 | I2, I1 | I3 ])), set([ I1 | I2, I1 | I3 ]))
 		self.assertEqual(QuineMcCluskey._absorb(set([ I1 | I2, I1 | I3, I1 ])), set([ I1 ]))
 		self.assertEqual(QuineMcCluskey._absorb(set([ I1 | I2, I1 | I3, I3 ])), set([ I1 | I2, I3 ]))
+
+	def test_qmc_logging(self):
+		with contextlib.redirect_stdout(None):
+			qmc = QuineMcCluskey(self._VALUE_TABLES["wikipedia"], "Y", verbosity = 2)
+			expr = qmc.optimize()
