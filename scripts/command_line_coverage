@@ -21,12 +21,9 @@ digtick="coverage run -a --source digtick --omit 'tpg.py,PrefixMatcher.py,Random
 $digtick parse "A B C"
 $digtick parse -n "A B C"
 $digtick parse -f text "A B C"
-$digtick parse -f text "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
-$digtick parse -f pretty-text "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
-$digtick parse -f tex-tech "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
-$digtick parse -f tex-math "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
-$digtick parse -f dot "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
-$digtick parse -f internal "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
+for format in text pretty-text tex-tech tex-math dot internal; do
+	$digtick parse -f $format "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E + 1"
+done
 (
 	echo "A B C"
 	echo "B C A"
@@ -36,11 +33,9 @@ $digtick parse -f internal "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E"
 
 
 $digtick make-table 'A B C' '!B !C' >/tmp/table1
-cat /tmp/table1 | $digtick print-table -f text
-cat /tmp/table1 | $digtick print-table -f pretty
-cat /tmp/table1 | $digtick print-table -f tex
-cat /tmp/table1 | $digtick print-table -f compact
-cat /tmp/table1 | $digtick print-table -f logisim
+for format in text pretty tex compact logisim; do
+	cat /tmp/table1 | $digtick print-table -f $format
+done
 
 $digtick make-table 'A B + !B C' >/tmp/table2
 $digtick make-table 'A B + !B C + A !B !C' >/tmp/table3
@@ -51,3 +46,8 @@ $digtick kv -r /tmp/table1
 $digtick kv -x 1 -y 2 -X -Y -d BCA /tmp/table1
 cat /tmp/table1 | head -n -1 | $digtick kv -x 1 -y 2 -X -Y -d BCA || must_fail; assert_failed
 cat /tmp/table1 | head -n -1 | $digtick kv -x 1 -y 2 -X -Y -d BCA --unused-value-is '*'
+
+$digtick synth /tmp/table1 --show-all-solutions
+
+$digtick sat /tmp/table1 'A B' || must_fail; assert_failed
+$digtick sat /tmp/table1 'A B C'
