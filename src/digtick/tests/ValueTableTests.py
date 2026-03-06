@@ -19,6 +19,8 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
+import io
+import contextlib
 import unittest
 import textwrap
 from digtick.ValueTable import ValueTable, CompactStorage
@@ -118,3 +120,60 @@ class ValueTableTests(unittest.TestCase):
 		vt.add_output_variable("Z", cs)
 		self.assertTrue(vt.has_output_named("Y"))
 		self.assertTrue(vt.has_output_named("Z"))
+
+	def test_overwrite_warning(self):
+		iobuf = io.StringIO()
+		with contextlib.redirect_stdout(iobuf):
+			vt = ValueTable.parse_string(self._prepstr("""
+				A B >Y
+				0 0 1
+				0 1 0
+				0 1 0
+				1 0 *
+				1 1 1
+			"""), set_undefined_values_to = "0")
+		self.assertIn("value overwritten in line", iobuf.getvalue())
+
+	def test_dnf_zero(self):
+		vt = ValueTable.parse_string(self._prepstr("""
+			A B >Y
+			0 0 0
+			0 1 0
+			1 0 0
+			1 1 0
+		"""), set_undefined_values_to = "0")
+		self.assertEqual(vt.cdnf("Y").value, 0)
+
+	def test_cnf_one(self):
+		vt = ValueTable.parse_string(self._prepstr("""
+			A B >Y
+			0 0 1
+			0 1 1
+			1 0 1
+			1 1 1
+		"""), set_undefined_values_to = "0")
+		self.assertEqual(vt.ccnf("Y").value, 1)
+
+	def test_undefined_output(self):
+		vt = ValueTable.parse_string(self._prepstr("""
+			A B >Y
+			1 0 1
+		"""), set_undefined_values_to = "*")
+		with self.assertRaises(KeyError):
+			list(vt.iter_output_variable("F"))
+
+	def test_empty_file(self):
+		f = io.StringIO()
+		with self.assertRaises(InvalidValueTableException):
+			vt = ValueTable.parse_from_file(f, set_undefined_values_to = "0")
+
+	def test_broken_file(self):
+		f = io.StringIO()
+		f.write(self._prepstr("""
+		A >Y
+		0 1
+		1
+		"""))
+		f.seek(0)
+		with self.assertRaises(InvalidValueTableException):
+			vt = ValueTable.parse_from_file(f, set_undefined_values_to = "0")

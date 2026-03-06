@@ -261,6 +261,8 @@ class ValueTable():
 		return ValueTable(input_variable_names = list(expression.variables), output_variable_names = [ output_variable_name ], output_values = [ storage ])
 
 	def get_storage(self, output_var_name: str):
+		if output_var_name not in self._named_outputs:
+			raise KeyError(f"No output variable \"{output_var_name}\" in truth table, only: {', '.join(self.output_variable_names)}")
 		return self._named_outputs[output_var_name]
 
 	def index_to_list(self, index: int) -> list[int]:
@@ -273,7 +275,7 @@ class ValueTable():
 		return sum(self._index_weights[varname] for (varname, bit_value) in input_var_dict.items() if bit_value == 1)
 
 	def at_index(self, index: int, output_var_name: str) -> CompactStorage.Entry:
-		return self._named_outputs[output_var_name][index]
+		return self.get_storage(output_var_name)[index]
 
 	def at(self, input_var_dict: dict, output_var_name: str) -> CompactStorage.Entry:
 		index = self.dict_to_index(input_var_dict)
@@ -294,9 +296,7 @@ class ValueTable():
 			yield (self.index_to_dict(index), output_dict)
 
 	def iter_output_variable(self, output_var_name: str):
-		if output_var_name not in self._named_outputs:
-			raise KeyError(f"No output variable \"{output_var_name}\" in truth table, only: {', '.join(self.output_variable_names)}")
-		yield from self._named_outputs[output_var_name]
+		yield from self.get_storage(output_var_name)
 
 	def _print_text(self):
 		heading = self._input_variable_names + [ f">{name}" for name in self._output_variable_names ]
