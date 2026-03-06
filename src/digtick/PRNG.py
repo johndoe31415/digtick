@@ -1,5 +1,5 @@
 #	digtick - Digital logic design toolkit: simplify, minimize and transform Boolean expressions, draw KV-maps, etc.
-#	Copyright (C) 2022-2022 Johannes Bauer
+#	Copyright (C) 2022-2026 Johannes Bauer
 #
 #	This file is part of digtick.
 #
@@ -50,8 +50,3 @@ class PRNG():
 			value &= mask
 			if value < irange:
 				return value + minval
-
-if __name__ == "__main__":
-	prng = PRNG(b"foo")
-	for i in range(100000):
-		print(prng.randint(9, 10))
