@@ -700,23 +700,22 @@ analyzing it textually, this is only somewhat useful:
 ```
 $ digtick sim-state -s FF1 -s FF2 -s FF3 -s FF4 -s FF5 examples/complex-ff.circ >/tmp/states.txt
 $ digtick analyze-state /tmp/states.txt
-FF1, FF2, FF3, FF4, FF5 → FF1', FF2', FF3', FF4', FF5'
-0 → 10 → 23 → 5 → 12 → 16 → 2 → 10  Rho graph with tail length 1, cycle length 6
-1 → 10  Rho graph with tail length 1, cycle length 0
-3 → 11 → 23  Rho graph with tail length 2, cycle length 0
-4 → 9 → 22 → 1  Rho graph with tail length 3, cycle length 0
-6 → 9  Rho graph with tail length 1, cycle length 0
-7 → 13 → 20 → 1  Rho graph with tail length 3, cycle length 0
-8 → 23  Rho graph with tail length 1, cycle length 0
-14 → 16  Rho graph with tail length 1, cycle length 0
-15 → 21 → 4  Rho graph with tail length 2, cycle length 0
-17 → 2  Rho graph with tail length 1, cycle length 0
-18 → 2  Rho graph with tail length 1, cycle length 0
-19 → 3  Rho graph with tail length 1, cycle length 0
-24 → 31 → 29 → 28 → 24  full cycle length 4
-25 → 30 → 24  Rho graph with tail length 2, cycle length 0
-26 → 31  Rho graph with tail length 1, cycle length 0
-27 → 31  Rho graph with tail length 1, cycle length 0
+State transitions: FF1, FF2, FF3, FF4, FF5 → FF1', FF2', FF3', FF4', FF5'
+   Cycle ID=2 length 6: 2 → 10 → 23 → 5 → 12 → 16 → 2
+   Cycle ID=24 length 4: 24 → 31 → 29 → 28 → 24
+   Tail length 1: 0 → [ 10 of cycle ID=2 length 6 ]
+   Tail length 4: 6 → 9 → 22 → 1 → [ 10 of cycle ID=2 length 6 ]
+   Tail length 4: 7 → 13 → 20 → 1 → [ 10 of cycle ID=2 length 6 ]
+   Tail length 1: 8 → [ 23 of cycle ID=2 length 6 ]
+   Tail length 1: 14 → [ 16 of cycle ID=2 length 6 ]
+   Tail length 6: 15 → 21 → 4 → 9 → 22 → 1 → [ 10 of cycle ID=2 length 6 ]
+   Tail length 1: 17 → [ 2 of cycle ID=2 length 6 ]
+   Tail length 1: 18 → [ 2 of cycle ID=2 length 6 ]
+   Tail length 3: 19 → 3 → 11 → [ 23 of cycle ID=2 length 6 ]
+   Tail length 2: 25 → 30 → [ 24 of cycle ID=24 length 4 ]
+   Tail length 1: 26 → [ 31 of cycle ID=24 length 4 ]
+   Tail length 1: 27 → [ 31 of cycle ID=24 length 4 ]
+State graph has 2 cycles and 12 tails. Shortest cycle length: 4
 ```
 
 Much more clearly is the graphical representation:
