@@ -33,6 +33,7 @@ class UnknownComponentException(SimulationException): pass
 class DTDException(DigTickException): pass
 class UnknownCharacterException(DTDException): pass
 class UnsupportedTransitionException(DTDException): pass
+class InvalidDTDSpecException(DTDException): pass
 
 class OutputValueMissingException(DigTickException): pass
 class InvalidValueTableException(DigTickException): pass

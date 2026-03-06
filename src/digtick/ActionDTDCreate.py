@@ -23,6 +23,7 @@ import random
 import collections
 from .MultiCommand import BaseAction
 from .PRNG import PRNG
+from .Exceptions import InvalidDTDSpecException
 
 class SequenceDiagramGenerator():
 	_Signal = collections.namedtuple("Signal", [ "name", "values" ])
@@ -41,7 +42,7 @@ class SequenceDiagramGenerator():
 	def add_signal_alias(self, internal_name, apparent_name):
 		self._signal_name_alias[internal_name] = apparent_name
 
-	def add_signal(self, name, values):
+	def add_signal(self, name: str, values: str | list[int]):
 		values = [ int(value) for value in values ]
 		signal = self._Signal(name = name, values = values)
 		self._signals.append(signal)
@@ -75,7 +76,7 @@ class SequenceDiagramGenerator():
 			simulator.tick(self, index, prev, now)
 			prev = now
 
-	def _format_entry(self, signal, index):
+	def _format_entry(self, signal: "_Signal", index: int):
 		value = str(signal.values[index])
 		if index in self._annotations[signal.name]:
 			value += "|"
@@ -213,6 +214,10 @@ class ActionDTDCreate(BaseAction):
 			(name, value) = param.split("=")
 			value = "".join([ x for x in value if x in "01" ])
 			self._predetermined[name] = value
+
+		for (name, bitstring) in self._predetermined.items():
+			if len(bitstring) != self._args.length:
+				raise InvalidDTDSpecException(f"Requested length of {self._args.length} bits, but predefined signal {name} has length {len(bitstring)}")
 
 	def run(self):
 		self._initialize()

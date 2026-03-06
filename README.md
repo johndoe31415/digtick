@@ -603,6 +603,18 @@ behavior. Undefined behavior occurs only when out of this state there is a
 simultaneous transition into the "keep" state (both inputs inactive, i.e.,
 HIGH).
 
+You can also predefine certain values if you wish, but the specified signal
+length must match exactly with the length of the graph you choose:
+
+```
+$ digtick dtd-create -d d-ff C=00011100011100011100011100011100
+# Random seed: 1015274594
+C  = 000|111000|111000|111000|111000|11100
+D  = 000 000001 111111 011111 000000 00000
+Q  = 000 000000 111111 111111 111111 00000
+!Q = 111 111111 000000 000000 000000 11111
+```
+
 
 ## "dtd-render": render timing diagram data to SVG
 `dtd-render` reads timing-diagram source text (from a file or stdin) and

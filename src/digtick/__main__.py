@@ -138,7 +138,7 @@ def main():
 	mc.register("transform", "Transform a boolean expression", genparser, action = ActionTransform)
 
 	def genparser(parser):
-		parser.add_argument("-s", "--random-seed", help = "Specify a custom seed for reproducible traces. Defaults to a random value.")
+		parser.add_argument("-s", "--random-seed", metavar = "seed-string", help = "Specify a custom seed for reproducible traces. Defaults to a random value.")
 		parser.add_argument("-d", "--device", choices = [ "sr-nand-ff", "d-ff", "jk-ff", "jk-ms-ff" ], default = "sr-nand-ff", help = "Generate a timing diagram for this type of device. Can be one of %(choices)s, defaults to %(default)s")
 		parser.add_argument("-i", "--initial-state-high", action = "store_true", help = "For devices with an internal state, initialize them with HIGH.")
 		parser.add_argument("-n", "--negative-edge-triggered", action = "store_true", help = "For devices which are edge triggered, trigger on the negative edge.")

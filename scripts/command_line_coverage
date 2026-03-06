@@ -80,8 +80,11 @@ $digtick transform -t simplify '-((A + 1)(B & 0)((1)) + (!B !C !A) + (A + A) + (
 
 for dev in sr-nand-ff d-ff jk-ff jk-ms-ff; do
 	$digtick dtd-create --random-seed 12345 -d $dev
+	$digtick dtd-create --random-seed 23456 -n -d $dev
 done
-$digtick dtd-create --random-seed 12345 -i >/tmp/dtd
+$digtick dtd-create -i >/tmp/dtd
+$digtick dtd-create --random-seed blubb -d jk-ff "J=00001111000011110000111100001111"
+$digtick dtd-create --random-seed blubb -d jk-ff "J=000011110000111100001111000" || must_fail; assert_failed
 
 rm -f /tmp/dtd.svg
 $digtick dtd-render -o /tmp/dtd.svg /tmp/dtd
