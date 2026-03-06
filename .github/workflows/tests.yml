@@ -40,7 +40,7 @@ jobs:
         run: jbin/tpp --lint-code
 
       - name: Run testcases and determine coverage
-        run: jbin/tpp --coverage-scripts
+        run: jbin/tpp --coverage
 
       - name: Create coverage output file
         run: |
