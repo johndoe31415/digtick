@@ -121,14 +121,70 @@ class LogisimLoader():
 			yield (Vec2D.parse(node.get("from")), Vec2D.parse(node.get("to")))
 
 	def _find_gate_pin_locations(self, component: dict, translated_component: dict, xoffset: int = 0):
+		def _common_pin_offsets(x_value: int, input_count: int):
+			for i in reversed(range(1, (input_count // 2) + 1)):
+				yield Vec2D(x_value, -10 * i)
+			if (input_count % 2) != 0:
+				yield Vec2D(x_value, 0)
+			for i in range(1, (input_count // 2) + 1):
+				yield Vec2D(x_value, -10 * i)
+
+		# This is incredibly cursed. For a gate facing East (having the output right), the Y-offsets are
+		# Inputs	Narrow				Medium					Wide
+		# 2			-10/+10				-20/+20					-20/+20
+		# 3			-10/0/+10			-20/0/+20				-30/0/+30
+		# 4			-20/-10/+10/+20		-20/-10/+10/+20			-30/-10/+10/+30
+		# 5			-20/-10/0/+10/+20	-20/-10/0/+10/+20		-20/-10/0/+10/+20
+		# 6								-30/-20/-10/+10/...		-30/-20/-10/10/20/30
+		# 7														-30/-20/-10/0/10/20/30
+		# 8														-40/-30/-20/-10/+10/...
+		#
+		# Pin 1 is on top, counting happens from zero (i.e., "negate0" means Pin 1).
+		# For each negated input, the X-distance of the pin decreases by 10 units.
+
 		size = component.get(".size", 50)
-		(aoffset, boffset) = {
-			30: (Vec2D(-size + xoffset, -10), Vec2D(-size + xoffset, 10)),
-			50: (Vec2D(-size + xoffset, -20), Vec2D(-size + xoffset, 20)),
-			70: (Vec2D(-size + xoffset, -20), Vec2D(-size + xoffset, 20)),
-		}[size]
-		translated_component["pins"]["A"] = component["loc"] + aoffset.rotate_offset(component.get(".facing", FaceDirection.East))
-		translated_component["pins"]["B"] = component["loc"] + boffset.rotate_offset(component.get(".facing", FaceDirection.East))
+		input_count = component.get("inputs", 2)
+		match (size, input_count):
+			case (30, _):
+				pin_offsets = self._commmon_pin_offsets(x_value = -size + xoffset, input_count = input_count)
+
+			case (50, 2):
+				pin_offsets = [ Vec2D(-size + xoffset, y_offset) for y_offset in [ -20, 20 ] ]
+
+			case (50, 3):
+				pin_offsets = [ Vec2D(-size + xoffset, y_offset) for y_offset in [ -20, 0, 20 ] ]
+
+			case (50, _):
+				pin_offsets = self._commmon_pin_offsets(x_value = -size + xoffset, input_count = input_count)
+
+			case (70, 2):
+				pin_offsets = [ Vec2D(-size + xoffset, y_offset) for y_offset in [ -20, 20 ] ]
+
+			case (70, 3):
+				pin_offsets = [ Vec2D(-size + xoffset, y_offset) for y_offset in [ -30, 0, 30 ] ]
+
+			case (70, 4):
+				pin_offsets = [ Vec2D(-size + xoffset, y_offset) for y_offset in [ -30, -10, 10, 30 ] ]
+
+			case (70, _):
+				pin_offsets = self._commmon_pin_offsets(x_value = -size + xoffset, input_count = input_count)
+
+			case (_, _):
+				raise UnknownComponentException(f"Logisim component {component} has unhandled size/input count: {size}, {input_count}")
+
+		translated_component["inverted"] = set()
+		for (index, pin) in enumerate(pin_offsets):
+			if component.get(f"negate{index}", "false") == "true":
+				translated_component["inverted"].add(index)
+				pin_offsets[index] = pin + Vec2D(-10, 0)
+
+		if len(pin_offsets) == 2:
+			pin_names = [ "A", "B" ]
+		else:
+			pin_names = [ f"A{i}" for i in range(1, len(pin_offsets) + 1) ]
+
+		for (pin_name, offset) in zip(pin_names, pin_offsets):
+			translated_component["pins"][pin_name] = component["loc"] + offset.rotate_offset(component.get(".facing", FaceDirection.East))
 
 	def _resolve_component(self, component: dict):
 		translated_component = {
@@ -153,31 +209,26 @@ class LogisimLoader():
 				translated_component["pins"]["A"] = component["loc"] + Vec2D(-component.get(".size", 30), 0).rotate_offset(component.get(".facing", FaceDirection.East))
 
 			case ("#Gates.AND Gate", None):
-				assert(component.get(".inputs", 2) == 2)
 				translated_component["type"] = "AND"
 				translated_component["pins"]["Y"] = component["loc"]
 				self._find_gate_pin_locations(component, translated_component)
 
 			case ("#Gates.OR Gate", None):
-				assert(component.get(".inputs", 2) == 2)
 				translated_component["type"] = "OR"
 				translated_component["pins"]["Y"] = component["loc"]
 				self._find_gate_pin_locations(component, translated_component)
 
 			case ("#Gates.NAND Gate", None):
-				assert(component.get(".inputs", 2) == 2)
 				translated_component["type"] = "NAND"
 				translated_component["pins"]["Y"] = component["loc"]
 				self._find_gate_pin_locations(component, translated_component, xoffset = -10)
 
 			case ("#Gates.NOR Gate", None):
-				assert(component.get(".inputs", 2) == 2)
 				translated_component["type"] = "NOR"
 				translated_component["pins"]["Y"] = component["loc"]
 				self._find_gate_pin_locations(component, translated_component, xoffset = -10)
 
 			case ("#Gates.XOR Gate", None):
-				assert(component.get(".inputs", 2) == 2)
 				translated_component["type"] = "XOR"
 				translated_component["pins"]["Y"] = component["loc"]
 				self._find_gate_pin_locations(component, translated_component, xoffset = -10)

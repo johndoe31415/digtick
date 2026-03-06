@@ -205,83 +205,103 @@
     </comp>
     <comp lib="1" loc="(1060,520)" name="NAND Gate">
       <a name="facing" val="north"/>
+      <a name="label" val="NAND2"/>
       <a name="negate0" val="true"/>
     </comp>
     <comp lib="1" loc="(1060,970)" name="XOR Gate">
       <a name="facing" val="south"/>
+      <a name="label" val="XOR2"/>
       <a name="negate0" val="true"/>
     </comp>
     <comp lib="1" loc="(1150,520)" name="NAND Gate">
       <a name="facing" val="north"/>
+      <a name="label" val="NAND3"/>
       <a name="negate1" val="true"/>
     </comp>
     <comp lib="1" loc="(1150,970)" name="XOR Gate">
       <a name="facing" val="south"/>
+      <a name="label" val="XOR3"/>
       <a name="negate1" val="true"/>
     </comp>
     <comp lib="1" loc="(1240,520)" name="NAND Gate">
       <a name="facing" val="north"/>
+      <a name="label" val="NAND4"/>
       <a name="negate0" val="true"/>
       <a name="negate1" val="true"/>
     </comp>
     <comp lib="1" loc="(1240,970)" name="XOR Gate">
       <a name="facing" val="south"/>
+      <a name="label" val="XOR4"/>
       <a name="negate0" val="true"/>
       <a name="negate1" val="true"/>
     </comp>
     <comp lib="1" loc="(1330,520)" name="NOR Gate">
       <a name="facing" val="north"/>
+      <a name="label" val="NOR1"/>
     </comp>
     <comp lib="1" loc="(1420,520)" name="NOR Gate">
       <a name="facing" val="north"/>
+      <a name="label" val="NOR2"/>
       <a name="negate0" val="true"/>
     </comp>
     <comp lib="1" loc="(1510,520)" name="NOR Gate">
       <a name="facing" val="north"/>
+      <a name="label" val="NOR3"/>
       <a name="negate1" val="true"/>
     </comp>
     <comp lib="1" loc="(1600,520)" name="NOR Gate">
       <a name="facing" val="north"/>
+      <a name="label" val="NOR4"/>
       <a name="negate0" val="true"/>
       <a name="negate1" val="true"/>
     </comp>
     <comp lib="1" loc="(610,520)" name="AND Gate">
       <a name="facing" val="north"/>
+      <a name="label" val="AND1"/>
     </comp>
     <comp lib="1" loc="(610,970)" name="OR Gate">
       <a name="facing" val="south"/>
+      <a name="label" val="OR1"/>
     </comp>
     <comp lib="1" loc="(700,520)" name="AND Gate">
       <a name="facing" val="north"/>
+      <a name="label" val="AND2"/>
       <a name="negate0" val="true"/>
     </comp>
     <comp lib="1" loc="(700,970)" name="OR Gate">
       <a name="facing" val="south"/>
+      <a name="label" val="OR2"/>
       <a name="negate0" val="true"/>
     </comp>
     <comp lib="1" loc="(790,520)" name="AND Gate">
       <a name="facing" val="north"/>
+      <a name="label" val="AND3"/>
       <a name="negate1" val="true"/>
     </comp>
     <comp lib="1" loc="(790,970)" name="OR Gate">
       <a name="facing" val="south"/>
+      <a name="label" val="OR3"/>
       <a name="negate1" val="true"/>
     </comp>
     <comp lib="1" loc="(880,520)" name="AND Gate">
       <a name="facing" val="north"/>
+      <a name="label" val="AND4"/>
       <a name="negate0" val="true"/>
       <a name="negate1" val="true"/>
     </comp>
     <comp lib="1" loc="(880,970)" name="OR Gate">
       <a name="facing" val="south"/>
+      <a name="label" val="OR4"/>
       <a name="negate0" val="true"/>
       <a name="negate1" val="true"/>
     </comp>
     <comp lib="1" loc="(970,520)" name="NAND Gate">
       <a name="facing" val="north"/>
+      <a name="label" val="NAND1"/>
     </comp>
     <comp lib="1" loc="(970,970)" name="XOR Gate">
       <a name="facing" val="south"/>
+      <a name="label" val="XOR1"/>
     </comp>
     <wire from="(1040,590)" to="(1040,620)"/>
     <wire from="(1040,620)" to="(1130,620)"/>

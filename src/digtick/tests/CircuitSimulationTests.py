@@ -385,3 +385,10 @@ class CircuitSimulationTests(unittest.TestCase):
 		v = v + Vec2D(10, -10)
 		self.assertEqual(v.x, 133)
 		self.assertEqual(v.y, 446)
+
+	def test_circuit_invgates(self):
+		circ = pkgutil.get_data("digtick.tests.data", "invgates.circ")
+		circuit = LogisimLoader.load_from_xmldata(circ).parse()
+		circuit.dump()
+		circuit.power_on()
+		circuit.dump()
