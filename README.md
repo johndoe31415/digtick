@@ -13,7 +13,12 @@ with an arbitrary number of variables, both as SVG and to the command line. The
 output format is highly customizable to match your specific preference. It can
 check Boolean equations for equivalance and validate if expressions satisfy a
 given truth table (with counterexamples). A Quine-McCluskey implementation is
-used to minify expressions.
+used to minify expressions. digtick is able to read a subset of
+[Logisim Evolution](https://github.com/logisim-evolution/logisim-evolution)
+circuit files and is also able to simulate them. The reason for implementing
+this natively within digtick is that it allows for headless interaction with
+circuits, e.g., to create state diagrams from circuits in an automatic fashion
+(see documentation of "sim-state" and "analyze-state" to make this clearer).
 
 
 ## Boolean expression syntax
@@ -632,6 +637,101 @@ DAT = ZZZZ        ::::::        !:!:!:!:!:!:!:::::::        !:::ZZZZZZZ
 Which renders as:
 
 ![Made-up communication diagram](https://raw.githubusercontent.com/johndoe31415/digtick/main/docs/other_diagram.png)
+
+
+## "sim-state": Simulate a stateful Logisim Evolution circuit
+The `sim-state` command allows you to examine a stateful circuit regards the
+behavior after a clock edge. It iterates through all possible state
+combinations as inputs, simulates a clock cycle and reads the state values back
+out. The output is a truth table with n input values and n output values. For
+example, consider this circuit:
+
+![Simple circuit](https://raw.githubusercontent.com/johndoe31415/digtick/main/docs/simple-ff.png)
+
+A typical exam question could be to assume reset and show the outputs in the
+next 2 clock cycles. However, as an educator you need to deal with answers
+which are off by one bit, which can throw everything off. When you design a
+circuit that has a fix point, this could make the exam question much easier for
+certain combinations -- how do you fairly judge that answer? That problem goes
+away entirely when the circuit is designed so that any input combination is
+approximately the same difficulty as each other one, ideally forming a
+completely cyclic graph. In Logisim Evolution, this is a manual task and fairly
+labor intensive. This is why you can simply use digtick for that purpose:
+
+```
+$ digtick sim-state -s FF1 -s FF2 -f pretty examples/simple-ff.circ
+┌─────┬─────┬──────┬──────┐
+│ FF1 │ FF2 │ FF1' │ FF2' │
+├─────┼─────┼──────┼──────┤
+│ 0   │ 0   │ 0    │ 1    │
+│ 0   │ 1   │ 1    │ 0    │
+│ 1   │ 0   │ 0    │ 0    │
+│ 1   │ 1   │ 1    │ 1    │
+└─────┴─────┴──────┴──────┘
+```
+
+This allows you to create a table in which you can look up for each state what
+the successor state is. While this representation may be useful for certain
+things (like correcting an exam), it is not as easy to see where fixpoints are,
+especially when circuits are more complicated.  For this reason, the
+"analyze-state" tool is available.
+
+
+## "analyze-state": Analyze cycles in a state table
+After the `sim-state` command has generated a state truth table,
+`analyze-state` then takes that table as input and displays the topology of the
+state graph:
+
+```
+$ digtick sim-state -s FF1 -s FF2 examples/simple-ff.circ >/tmp/states.txt
+$ digtick analyze-state /tmp/states.txt
+FF1, FF2 → FF1', FF2'
+0 → 1 → 2 → 0  full cycle length 3
+3 → 3  full cycle length 1
+```
+
+While this is a fairly easy example, let's look at a more complex circuit:
+
+![Complex circuit](https://raw.githubusercontent.com/johndoe31415/digtick/main/docs/complex-ff.png)
+
+It is not straightforward to see how this circuit behaves and even when
+analyzing it textually, this is only somewhat useful:
+
+```
+$ digtick sim-state -s FF1 -s FF2 -s FF3 -s FF4 -s FF5 examples/complex-ff.circ >/tmp/states.txt
+$ digtick analyze-state /tmp/states.txt
+FF1, FF2, FF3, FF4, FF5 → FF1', FF2', FF3', FF4', FF5'
+0 → 10 → 23 → 5 → 12 → 16 → 2 → 10  Rho graph with tail length 1, cycle length 6
+1 → 10  Rho graph with tail length 1, cycle length 0
+3 → 11 → 23  Rho graph with tail length 2, cycle length 0
+4 → 9 → 22 → 1  Rho graph with tail length 3, cycle length 0
+6 → 9  Rho graph with tail length 1, cycle length 0
+7 → 13 → 20 → 1  Rho graph with tail length 3, cycle length 0
+8 → 23  Rho graph with tail length 1, cycle length 0
+14 → 16  Rho graph with tail length 1, cycle length 0
+15 → 21 → 4  Rho graph with tail length 2, cycle length 0
+17 → 2  Rho graph with tail length 1, cycle length 0
+18 → 2  Rho graph with tail length 1, cycle length 0
+19 → 3  Rho graph with tail length 1, cycle length 0
+24 → 31 → 29 → 28 → 24  full cycle length 4
+25 → 30 → 24  Rho graph with tail length 2, cycle length 0
+26 → 31  Rho graph with tail length 1, cycle length 0
+27 → 31  Rho graph with tail length 1, cycle length 0
+```
+
+Much more clearly is the graphical representation:
+
+```
+$ digtick analyze-state -f dot /tmp/states.txt | dot -Tpng -ostates.png
+```
+
+Which creates the following diagram:
+
+![State graph of complex circuit](https://raw.githubusercontent.com/johndoe31415/digtick/main/docs/complex-ff-states.png)
+
+From this, it is easy to see that the circuit is fixpoint-free and the
+worst-case cycle length is four (the subgraph in the upper right corner).
+
 
 ## License
 GNU GPL-3.

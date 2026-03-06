@@ -64,7 +64,7 @@ class ActionStateTransitions(BaseAction):
 
 		if self._args.output_format == "dot":
 			print("digraph g {")
-			print("	layout=circo;")
+			print("	layout=neato;")
 			print("	overlap=false;")
 			print("	splines=true;")
 			print("	node [shape=circle];")
