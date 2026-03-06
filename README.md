@@ -15,10 +15,11 @@ check Boolean equations for equivalance and validate if expressions satisfy a
 given truth table (with counterexamples). A Quine-McCluskey implementation is
 used to minify expressions. digtick is able to read a subset of
 [Logisim Evolution](https://github.com/logisim-evolution/logisim-evolution)
-circuit files and is also able to simulate them. The reason for implementing
-this natively within digtick is that it allows for headless interaction with
-circuits, e.g., to create state diagrams from circuits in an automatic fashion
-(see documentation of "sim-state" and "analyze-state" to make this clearer).
+circuit files and is also able to simulate them native (i.e., without relying
+on Logisim at all). The reason for implementing this natively within digtick is
+that it allows for headless interaction with circuits, e.g., to create state
+diagrams from circuits in an automatic fashion (see documentation of
+"sim-state" and "analyze-state" to make this clearer).
 
 
 ## Boolean expression syntax
