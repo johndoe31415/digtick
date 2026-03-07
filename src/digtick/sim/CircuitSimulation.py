@@ -209,7 +209,7 @@ class Circuit():
 			if isinstance(component, CmpSource):
 				print(f"Source: {component} level {component.level}")
 			else:
-				unconnected_input_pins = [ pin_name for pin_name in component._Inputs if component[pin_name] is None ]
+				unconnected_input_pins = [ pin_name for pin_name in component._inputs if component[pin_name] is None ]
 				if len(unconnected_input_pins) == 0:
 					print(f"Component: {component}")
 				else:
@@ -229,8 +229,8 @@ class Circuit():
 				print(f"	{net.name} [shape=plain, label=\"{net.name}\"];")
 
 		for component in sorted(self._components):
-			inputs = "|".join(f"<{name}>{name}" for name in component._Inputs)
-			outputs = "|".join(f"<{name}>{name}" for name in component._Outputs)
+			inputs = "|".join(f"<{name}>{name}" for name in component._inputs)
+			outputs = "|".join(f"<{name}>{name}" for name in component._outputs)
 			print(f"	{component.name} [label=\"{{ {{{inputs}}} | {component._NodeName} | {{{outputs}}} }}\"];")
 
 		for net in sorted(self._nets):

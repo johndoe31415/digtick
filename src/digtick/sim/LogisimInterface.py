@@ -127,7 +127,7 @@ class LogisimLoader():
 			if (input_count % 2) != 0:
 				yield Vec2D(x_value, 0)
 			for i in range(1, (input_count // 2) + 1):
-				yield Vec2D(x_value, -10 * i)
+				yield Vec2D(x_value, 10 * i)
 
 		# This is incredibly cursed, especially wide components. For a gate
 		# facing East (having the output right), the Y-offsets are:
@@ -188,19 +188,20 @@ class LogisimLoader():
 		if face_direction in [ FaceDirection.North ]:
 			pin_offsets.reverse()
 
-		print(f"Pin locations for {component.get('.label', 'unnamed')} {input_count}-input {component['name']} at {component['loc']} face direction {face_direction.name}")
-		print(f"    Pin offsets initial: {pin_offsets}")
-		translated_component["inverted"] = set()
-		for (index, pin) in enumerate(pin_offsets):
-			if component.get(f".negate{index}", "false") == "true":
-				translated_component["inverted"].add(index)
-				pin_offsets[index] = pin + Vec2D(-10, 0)
-		print(f"         With inversion: {pin_offsets}")
-
 		if len(pin_offsets) == 2:
 			pin_names = [ "A", "B" ]
 		else:
 			pin_names = [ f"A{i}" for i in range(1, len(pin_offsets) + 1) ]
+
+		print(f"Pin locations for {component.get('.label', 'unnamed')} {input_count}-input {component['name']} at {component['loc']} face direction {face_direction.name}")
+		print(f"    Pin offsets initial: {pin_offsets}")
+		translated_component["inverted_inputs"] = set()
+		for (index, pin) in enumerate(pin_offsets):
+			if component.get(f".negate{index}", "false") == "true":
+				translated_component["inverted_inputs"].add(pin_names[index])
+				pin_offsets[index] = pin + Vec2D(-10, 0)
+		print(f"         With inversion: {pin_offsets}")
+
 
 		for (pin_name, offset) in zip(pin_names, pin_offsets):
 			translated_component["pins"][pin_name] = component["loc"] + offset.rotate_offset(face_direction)
@@ -223,33 +224,37 @@ class LogisimLoader():
 				translated_component["pins"]["OUT"] = component["loc"]
 
 			case ("#Gates.NOT Gate", None):
-				assert(component.get(".inputs", 2) == 2)
 				translated_component["type"] = "NOT"
 				translated_component["pins"]["Y"] = component["loc"]
 				translated_component["pins"]["A"] = component["loc"] + Vec2D(-component.get(".size", 30), 0).rotate_offset(component.get(".facing", FaceDirection.East))
 
 			case ("#Gates.AND Gate", None):
 				translated_component["type"] = "AND"
+				translated_component["input_count"] = component.get(".inputs", 2)
 				translated_component["pins"]["Y"] = component["loc"]
 				self._find_gate_pin_locations(component, translated_component)
 
 			case ("#Gates.OR Gate", None):
 				translated_component["type"] = "OR"
+				translated_component["input_count"] = component.get(".inputs", 2)
 				translated_component["pins"]["Y"] = component["loc"]
 				self._find_gate_pin_locations(component, translated_component)
 
 			case ("#Gates.NAND Gate", None):
 				translated_component["type"] = "NAND"
+				translated_component["input_count"] = component.get(".inputs", 2)
 				translated_component["pins"]["Y"] = component["loc"]
 				self._find_gate_pin_locations(component, translated_component, xoffset = -10)
 
 			case ("#Gates.NOR Gate", None):
 				translated_component["type"] = "NOR"
+				translated_component["input_count"] = component.get(".inputs", 2)
 				translated_component["pins"]["Y"] = component["loc"]
 				self._find_gate_pin_locations(component, translated_component, xoffset = -10)
 
 			case ("#Gates.XOR Gate", None):
 				translated_component["type"] = "XOR"
+				translated_component["input_count"] = component.get(".inputs", 2)
 				translated_component["pins"]["Y"] = component["loc"]
 				self._find_gate_pin_locations(component, translated_component, xoffset = -10)
 
@@ -322,7 +327,7 @@ class LogisimLoader():
 			if resolved_component is None:
 				continue
 
-			component = Component.new(resolved_component["type"], label = resolved_component.get("label"))
+			component = Component.from_dict(resolved_component)
 			self._circuit.add(component)
 			resolved_component["instance"] = component
 			self._components.append(resolved_component)

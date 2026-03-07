@@ -19,13 +19,13 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
+import operator
+from functools import reduce
 from digtick.Exceptions import NoSuchPinException
 from .UID import UID
 
 class Component():
 	_KNOWN_COMPONENTS = { }
-	_Inputs = [ ]
-	_Outputs = [ ]
 	_Name = None
 	_Prefix = None
 
@@ -33,6 +33,8 @@ class Component():
 		self._label = label
 		self._uid = UID.gen()
 		self._no = None
+		self._inputs = [ ]
+		self._outputs = [ ]
 		self._nets = { }
 		self._circuit = None
 
@@ -49,6 +51,17 @@ class Component():
 	@classmethod
 	def new(cls, name: str, *args, **kwargs):
 		return cls._KNOWN_COMPONENTS[name](*args, **kwargs)
+
+	@classmethod
+	def from_dict(cls, component_dict: dict):
+		kwargs = { }
+		if "label" in component_dict:
+			kwargs["label"] = component_dict["label"]
+		if "input_count" in component_dict:
+			kwargs["input_count"] = component_dict["input_count"]
+		if "inverted_inputs" in component_dict:
+			kwargs["inverted_inputs"] = component_dict["inverted_inputs"]
+		return cls.new(name = component_dict["type"], **kwargs)
 
 	@property
 	def circuit(self):
@@ -81,17 +94,24 @@ class Component():
 	def type_name(self):
 		return self._Name
 
+	def add_pins(self, input_pin_names: list[str] | None = None, output_pin_names: list[str] | None = None):
+		if input_pin_names is not None:
+			self._inputs += input_pin_names
+		if output_pin_names is not None:
+			self._outputs += output_pin_names
+		return self
+
 	def __getitem__(self, pin_name: str):
 		return self._nets.get(pin_name)
 
 	def connect(self, pin_name: str, net: "Net"):
-		if (pin_name not in self._Inputs) and (pin_name not in self._Outputs):
-			raise NoSuchPinException(f"Trying to connect net {net} to component {self}.{pin_name} but no pin {pin_name} exists (have IN = {self._Inputs} and OUT = {self._Outputs})")
+		if (pin_name not in self._inputs) and (pin_name not in self._outputs):
+			raise NoSuchPinException(f"Trying to connect net {net} to component {self}.{pin_name} but no pin {pin_name} exists (have IN = {self._inputs} and OUT = {self._outputs})")
 		self._nets[pin_name] = net
 		net.add_member(self, pin_name)
 
 	def notify_pin_change(self, pin_name: str):
-		if (pin_name in self._Inputs) and (self[pin_name] is not None):
+		if (pin_name in self._inputs) and (self[pin_name] is not None):
 			self.circuit.notify_change(self)
 
 	def drive(self, pin_name: str, level: int, defer: bool = False):
@@ -129,13 +149,13 @@ class Component():
 		return f"#{self.cid}<{str(self)}>"
 
 class CmpSource(Component):
-	_Outputs = [ "OUT" ]
 	_Name = "Source"
 	_NodeName = "Src"
 	_Prefix = "SRC"
 
 	def __init__(self, label: str | None = None, level: int = 0):
 		super().__init__(label = label)
+		self.add_pins(output_pin_names = [ "OUT" ])
 		self._level = level
 
 	@property
@@ -157,74 +177,89 @@ class CmpSource(Component):
 		self.drive("OUT", self._level)
 
 class CmpSink(Component):
-	_Outputs = [ "IN" ]
 	_Name = "Sink"
 	_NodeName = "Sink"
 	_Prefix = "SNK"
+
+	def __init__(self, label: str | None = None):
+		super().__init__(label = label)
+		self.add_pins(input_pin_names = [ "IN" ])
 
 	@property
 	def level(self):
 		return self["IN"].level
 
 class CmpNOT(Component):
-	_Inputs = [ "A" ]
-	_Outputs = [ "Y" ]
 	_Name = "NOT"
 	_NodeName = "~"
 	_Prefix = "IC"
+
+	def __init__(self, label: str | None = None):
+		super().__init__(label = label)
+		self.add_pins(input_pin_names = [ "A" ], output_pin_names = [ "Y" ])
 
 	def tick(self):
 		self.drive("Y", self["A"].level ^ 1)
 
 class CmpGate(Component):
-	_Inputs = [ "A", "B" ]
-	_Outputs = [ "Y" ]
 	_Prefix = "IC"
+
+	def __init__(self, label: str | None = None, input_count: int = 2, inverted_inputs: set | None = None):
+		super().__init__(label = label)
+		self._inverted_inputs = set() if (inverted_inputs is None) else inverted_inputs
+		if input_count == 2:
+			self.add_pins(input_pin_names = [ "A", "B" ], output_pin_names = [ "Y" ])
+		else:
+			self._Name = f"{input_count}-{self._Name}"
+			self.add_pins(input_pin_names = [ f"A{n}" for n in range(1, input_count + 1) ], output_pin_names = [ "Y" ])
+
+	@property
+	def input_levels(self):
+		return [ (self[pin_name].level ^ 1) if (pin_name in self._inverted_inputs) else self[pin_name].level for pin_name in self._inputs ]
 
 class CmpAND(CmpGate):
 	_Name = "AND"
 	_NodeName = "&&"
 
 	def tick(self):
-		self.drive("Y", self["A"].level & self["B"].level)
+		self.drive("Y", reduce(operator.and_, self.input_levels))
 
 class CmpOR(CmpGate):
 	_Name = "OR"
 	_NodeName = "\\|\\|"
 
 	def tick(self):
-		self.drive("Y", self["A"].level | self["B"].level)
+		self.drive("Y", reduce(operator.or_, self.input_levels))
 
 class CmpXOR(CmpGate):
 	_Name = "XOR"
 	_NodeName = "^"
 
 	def tick(self):
-		self.drive("Y", self["A"].level ^ self["B"].level)
+		self.drive("Y", reduce(operator.xor, self.input_levels))
 
 class CmpNAND(CmpGate):
 	_Name = "NAND"
 	_NodeName = "~&&"
 
 	def tick(self):
-		self.drive("Y", (self["A"].level & self["B"].level) ^ 1)
+		self.drive("Y", reduce(operator.and_, self.input_levels) ^ 1)
 
 class CmpNOR(CmpGate):
 	_Name = "NOR"
 	_NodeName = "~\\|\\|"
 
 	def tick(self):
-		self.drive("Y", (self["A"].level | self["B"].level) ^ 1)
+		self.drive("Y", reduce(operator.or_, self.input_levels) ^ 1)
 
 class CmpDFlipFlop(Component):
-	_Inputs = [ "D", "CLK" ]
-	_Outputs = [ "Q", "!Q" ]
 	_Name = "D-FF"
 	_NodeName = "D-FF"
 	_Prefix = "IC"
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
+		self.add_pins(input_pin_names = [ "D", "CLK" ], output_pin_names = [ "Q", "!Q" ])
 		self._last_clk = None
 		self._state = 0
 		self._defer = True
@@ -252,14 +287,13 @@ class CmpDFlipFlop(Component):
 		self._defer = True
 
 class CmpJKFlipFlop(Component):
-	_Inputs = [ "J", "K", "CLK" ]
-	_Outputs = [ "Q", "!Q" ]
 	_Name = "JK-FF"
 	_NodeName = "JK-FF"
 	_Prefix = "IC"
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
+		self.add_pins(input_pin_names = [ "J", "K", "CLK" ], output_pin_names = [ "Q", "!Q" ])
 		self._last_clk = None
 		self._state = 0
 		self._defer = True
