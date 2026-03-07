@@ -156,7 +156,7 @@ def main():
 	mc.register("dtd-render", "Render a digital timing diagram to SVG", genparser, action = ActionDTDRender)
 
 	def genparser(parser):
-		parser.add_argument("-s", "--storage-element-label", metavar = "label", action = "append", default = [ ], required = True, help = "Name the storage elements to be set, clocked and verified. Can be specified multiple times, once for each storage element.")
+		parser.add_argument("-s", "--storage-element-labels", metavar = "labels", required = True, help = "Name the storage elements to be set, clocked and read out. Labels must be separated by commas.")
 		parser.add_argument("-c", "--clock-signal", metavar = "label", default = "CLK", help = "Name of the clock signal to be repeatedly clocked. Defaults to %(default)s.")
 		parser.add_argument("-f", "--tbl-format", choices = [ "text", "pretty", "tex", "compact", "logisim" ], default = "text", help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-n", "--circuit-name", metavar = "name", default = "main", help = "Name of the circuit to be simulated. Defaults to %(default)s.")

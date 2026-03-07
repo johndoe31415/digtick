@@ -696,7 +696,7 @@ After the `sim-state` command has generated a state truth table,
 state graph:
 
 ```
-$ digtick sim-state -s FF1 -s FF2 examples/simple-ff.circ >/tmp/states.txt
+$ digtick sim-state -s FF1,FF2 examples/simple-ff.circ >/tmp/states.txt
 $ digtick analyze-state /tmp/states.txt
 FF1, FF2 → FF1', FF2'
 0 → 1 → 2 → 0  full cycle length 3
@@ -711,7 +711,7 @@ It is not straightforward to see how this circuit behaves and even when
 analyzing it textually, this is only somewhat useful:
 
 ```
-$ digtick sim-state -s FF1 -s FF2 -s FF3 -s FF4 -s FF5 examples/complex-ff.circ >/tmp/states.txt
+$ digtick sim-state -s FF1,FF2,FF3,FF4,FF5 examples/complex-ff.circ >/tmp/states.txt
 $ digtick analyze-state /tmp/states.txt
 State transitions: FF1, FF2, FF3, FF4, FF5 → FF1', FF2', FF3', FF4', FF5'
    Cycle ID=2 length 6: 2 → 10 → 23 → 5 → 12 → 16 → 2
