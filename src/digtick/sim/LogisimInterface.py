@@ -19,6 +19,7 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
+import sys
 import enum
 import collections
 import dataclasses
@@ -193,19 +194,19 @@ class LogisimLoader():
 		else:
 			pin_names = [ f"A{i}" for i in range(1, len(pin_offsets) + 1) ]
 
-		print(f"Pin locations for {component.get('.label', 'unnamed')} {input_count}-input {component['name']} at {component['loc']} face direction {face_direction.name}")
-		print(f"    Pin offsets initial: {pin_offsets}")
+		print(f"Pin locations for {component.get('.label', 'unnamed')} {input_count}-input {component['name']} at {component['loc']} face direction {face_direction.name}", file = sys.stderr)
+		print(f"    Pin offsets initial: {pin_offsets}", file = sys.stderr)
 		translated_component["inverted_inputs"] = set()
 		for (index, pin) in enumerate(pin_offsets):
 			if component.get(f".negate{index}", "false") == "true":
 				translated_component["inverted_inputs"].add(pin_names[index])
 				pin_offsets[index] = pin + Vec2D(-10, 0)
-		print(f"         With inversion: {pin_offsets}")
+		print(f"         With inversion: {pin_offsets}", file = sys.stderr)
 
 
 		for (pin_name, offset) in zip(pin_names, pin_offsets):
 			translated_component["pins"][pin_name] = component["loc"] + offset.rotate_offset(face_direction)
-			print(f"                  Final: {pin_name} {offset.rotate_offset(face_direction)} -> {translated_component['pins'][pin_name]}")
+			print(f"                  Final: {pin_name} {offset.rotate_offset(face_direction)} -> {translated_component['pins'][pin_name]}", file = sys.stderr)
 
 	def _resolve_component(self, component: dict):
 		translated_component = {
@@ -317,7 +318,7 @@ class LogisimLoader():
 
 	def dump_nets(self):
 		for (pos, net_id) in sorted(self._net_id_by_pos.items(), key = lambda pnetid: (pnetid[1], pnetid[0])):
-			print(pos, net_id)
+			print(pos, net_id, file = sys.stderr)
 
 	def _parse_components(self):
 		self._circuit = Circuit()
