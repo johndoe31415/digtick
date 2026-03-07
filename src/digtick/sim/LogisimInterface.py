@@ -142,10 +142,10 @@ class LogisimLoader():
 		# 8														-40/-30/-20/-10/+10/...
 
 		size = component.get(".size", 50)
-		input_count = component.get("inputs", 2)
+		input_count = component.get(".inputs", 2)
 		match (size, input_count):
 			case (30, _):
-				pin_offsets = list(self._commmon_pin_offsets(x_value = -size + xoffset, input_count = input_count))
+				pin_offsets = list(_common_pin_offsets(x_value = -size + xoffset, input_count = input_count))
 
 			case (50, 2):
 				pin_offsets = [ Vec2D(-size + xoffset, y_offset) for y_offset in [ -20, 20 ] ]
@@ -154,7 +154,7 @@ class LogisimLoader():
 				pin_offsets = [ Vec2D(-size + xoffset, y_offset) for y_offset in [ -20, 0, 20 ] ]
 
 			case (50, _):
-				pin_offsets = list(self._commmon_pin_offsets(x_value = -size + xoffset, input_count = input_count))
+				pin_offsets = list(_common_pin_offsets(x_value = -size + xoffset, input_count = input_count))
 
 			case (70, 2):
 				pin_offsets = [ Vec2D(-size + xoffset, y_offset) for y_offset in [ -20, 20 ] ]
@@ -166,7 +166,7 @@ class LogisimLoader():
 				pin_offsets = [ Vec2D(-size + xoffset, y_offset) for y_offset in [ -30, -10, 10, 30 ] ]
 
 			case (70, _):
-				pin_offsets = list(self._commmon_pin_offsets(x_value = -size + xoffset, input_count = input_count))
+				pin_offsets = list(_common_pin_offsets(x_value = -size + xoffset, input_count = input_count))
 
 			case (_, _):
 				raise UnknownComponentException(f"Logisim component {component} has unhandled size/input count: {size}, {input_count}")
@@ -188,7 +188,7 @@ class LogisimLoader():
 		if face_direction in [ FaceDirection.North ]:
 			pin_offsets.reverse()
 
-		print(f"Pin locations for {component['name']} at {component['loc']} face direction {face_direction.name}")
+		print(f"Pin locations for {component.get('.label', 'unnamed')} {input_count}-input {component['name']} at {component['loc']} face direction {face_direction.name}")
 		print(f"    Pin offsets initial: {pin_offsets}")
 		translated_component["inverted"] = set()
 		for (index, pin) in enumerate(pin_offsets):
@@ -346,7 +346,6 @@ class LogisimLoader():
 				# Lonely wire
 				continue
 			self._circuit.connect(*connected_component_pins)
-
 
 	def parse(self):
 		self._parse_libraries()
