@@ -19,6 +19,7 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
+import os
 import unittest
 import pkgutil
 import contextlib
@@ -27,6 +28,8 @@ from digtick.sim.LogisimInterface import Vec2D
 from digtick.ExpressionParser import parse_expression
 from digtick.Exceptions import CircuitAstableException, DuplicateLabelException, WrongCircuitPowerStateException, UnknownComponentException, NoSuchCircuitException
 from digtick.ValueTable import ValueTable
+
+_run_slow_tests = (os.getenv("UNITTEST_RUN_ALL") == "1")
 
 class CircuitSimulationTests(unittest.TestCase):
 	def test_input_output(self):
@@ -386,12 +389,11 @@ class CircuitSimulationTests(unittest.TestCase):
 		self.assertEqual(v.x, 133)
 		self.assertEqual(v.y, 446)
 
-	def _test_loadfile_conforms_to(self, filename: str, reference_output: ValueTable):
+	def _test_loadfile_conforms_to(self, filename: str, reference_output: ValueTable, circuit_name: str = "main"):
 		circ = pkgutil.get_data("digtick.tests.data", filename)
-		circuit = LogisimLoader.load_from_xmldata(circ).parse()
+		circuit = LogisimLoader.load_from_xmldata(circ, circuit_name = circuit_name).parse()
 		circuit.power_on()
 		computed_output = circuit.build_table()
-		computed_output.print()
 		self.assertEqual(computed_output, reference_output)
 
 	def test_circuit_invgate(self):
@@ -403,3 +405,8 @@ class CircuitSimulationTests(unittest.TestCase):
 	def test_circuit_invgates_multiinput(self):
 		vt = ValueTable.parse_string(pkgutil.get_data("digtick.tests.data", "invgates_multiinput.txt").decode("ascii"), set_undefined_values_to = "forbidden")
 		self._test_loadfile_conforms_to("invgates_multiinput.circ", vt)
+
+	@unittest.skipUnless(_run_slow_tests, "slow tests disabled (set environment variable UNITTEST_RUN_ALL=1)")
+	def test_circuit_5_bit_adder(self):
+		vt = ValueTable.parse_string(pkgutil.get_data("digtick.tests.data", "5_bit_adder.txt").decode("ascii"), set_undefined_values_to = "forbidden")
+		self._test_loadfile_conforms_to("5_bit_adder.circ", vt, circuit_name = "main_gates")
