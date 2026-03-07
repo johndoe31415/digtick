@@ -86,7 +86,3 @@ class RandomExpressionGenerator():
 				case "nor":
 					expr = expr % self._gen_term()
 		return expr
-
-if __name__ == "__main__":
-	reg = RandomExpressionGenerator(4)
-	print(reg.generate(10))

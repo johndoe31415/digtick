@@ -51,7 +51,7 @@ def main():
 	mc.register("parse", "Parse and reformat Boolean expression(s)", genparser, action = ActionParse)
 
 	def genparser(parser):
-		parser.add_argument("-o", "--output-variable-name", metavar = "name", default = "Y", help = "Name of the output variable. Defaults to %(default)s.")
+		parser.add_argument("-o", "--output-variable-name", metavar = "name", default = "Y", help = "Name of the output variable to use. Defaults to %(default)s.")
 		parser.add_argument("-f", "--tbl-format", choices = [ "text", "pretty", "tex", "compact", "logisim" ], default = "text", help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
 		parser.add_argument("expression", help = "Input expression to create truth table from")
@@ -73,7 +73,7 @@ def main():
 	mc.register("diff-table", "Read two truth table files and print the diff", genparser, action = ActionDiffTable)
 
 	def genparser(parser):
-		parser.add_argument("-o", "--output-variable-name", metavar = "name", default = "Y", help = "Name of the output variable to use. Defaults to %(default)s.")
+		parser.add_argument("-o", "--output-variable-name", metavar = "name", help = "Name of the output variable. Defaults to the only variable if there is only one, alternatively it needs to be specified.")
 		parser.add_argument("-r", "--row-heavy", action = "store_true", help = "For odd number of literals, choose row-heavy representation (vertical) instead of the default column-heavy representation (horizontal)")
 		parser.add_argument("-x", "--x-offset", metavar = "offset", type = int, default = 0, help = "Order of literals in the X direction start with this offset. Defaults to %(default)d.")
 		parser.add_argument("-y", "--y-offset", metavar = "offset", type = int, default = 0, help = "Order of literals in the Y direction start with this offset. Defaults to %(default)d.")

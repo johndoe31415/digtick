@@ -43,7 +43,13 @@ class KVDiagram():
 
 	def __init__(self, value_table: "ValueTable", output_variable_name: str | None = None, variable_order: list[str] | None = None, x_offset: int = 0, y_offset: int = 0, x_invert: bool = False, y_invert: bool = False, row_heavy: bool = True, render_indices: bool = False):
 		self._value_table = value_table
-		self._output_variable_name = output_variable_name
+		if output_variable_name is None:
+			if self._value_table.output_variable_count == 1:
+				self._output_variable_name = self._value_table.output_variable_names[0]
+			else:
+				raise ValueError(f"Multiple outputs are present in the data table, need to explicitly specify which of the output variables the KV diagram should show. Options: {', '.join(sorted(self._value_table.output_variable_names))}")
+		else:
+			self._output_variable_name = output_variable_name
 		self._variable_order = variable_order
 		self._x_offset = x_offset
 		self._y_offset = y_offset
@@ -51,11 +57,6 @@ class KVDiagram():
 		self._y_invert = y_invert
 		self._row_heavy = row_heavy
 		self._render_indices = render_indices
-		if output_variable_name is None:
-			if self._value_table.output_variable_count == 1:
-				output_variable_name = self._value_table.output_variable_names[0]
-			else:
-				raise ValueError(f"Multiple outputs are present in the data table, need to explicitly specify which of the output variables the KV diagram should show. Options: {', '.join(sorted(self._value_table.output_variable_names))}")
 		self._rkvd = self._compute()
 		self._svg_cell_width = 20
 

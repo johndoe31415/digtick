@@ -48,8 +48,10 @@ echo ':A,B,C:Z:5404' | $digtick diff /tmp/table2 || must_fail; assert_failed
 echo ':A,D,C:Y:5404' | $digtick diff /tmp/table2 || must_fail; assert_failed
 
 $digtick kv /tmp/table1
+$digtick kv -o P /tmp/table1 || must_fail; assert_failed
 $digtick kv -r /tmp/table1
 $digtick kv -x 1 -y 2 -X -Y -d BCA /tmp/table1
+$digtick kv -x 1 -y 2 -X -Y -d C,B,A /tmp/table1
 cat /tmp/table1 | head -n -1 | $digtick kv -x 1 -y 2 -X -Y -d BCA || must_fail; assert_failed
 cat /tmp/table1 | head -n -1 | $digtick kv -x 1 -y 2 -X -Y -d BCA --unused-value-is '*'
 $digtick kv -x 1 -y 2 -X -Y -d BCAA /tmp/table1 || must_fail; assert_failed
@@ -66,6 +68,7 @@ $digtick eq 'A B C' 'A B !C' || must_fail; assert_failed
 $digtick eq 'A(B C)' 'B(A C)'
 
 $digtick random-expr 4 10
+$digtick random-expr --allow-nand-nor-xor 4 10
 $digtick random-table 4
 $digtick random-table -1 100 -0 0 4
 $digtick random-table -1 100 -0 0 -o Z 4
@@ -97,4 +100,4 @@ $digtick analyze-state -vv /tmp/state_table.txt
 $digtick analyze-state -f dot /tmp/state_table.txt
 echo ":FF1,FF2,FF3,FF4,FF5:FF1',FF2',FF3',FF4',FF5':5555000055550000,5555000000005555,4455440044554400,55005500550055,4051514040515140" | $digtick analyze-state
 echo ":FF1,FF2,FF3,FF4,FF5:FF1',FF2',FF3',FF4',FF5':5555000055550000,5555000000005555,4455440044554400,55005500550055,4051514040515140" | $digtick analyze-state -f dot
-
+$digtick analyze-state /tmp/table1 || must_fail; assert_failed

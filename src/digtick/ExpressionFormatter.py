@@ -178,6 +178,6 @@ def format_expression(expression: ParseTreeElement, expression_format: str = "te
 		case "dot":
 			formatter = GraphvizFormatter()
 
-		case _:
+		case _: # pragma unreachable
 			raise NotImplementedError(expression_format)
 	return formatter.format_expression(expression)
