@@ -34,6 +34,7 @@ from .ActionRandomTable import ActionRandomTable
 from .ActionTransform import ActionTransform
 from .ActionDTDCreate import ActionDTDCreate
 from .ActionDTDRender import ActionDTDRender
+from .ActionSimCombinatorial import ActionSimCombinatorial
 from .ActionSimSequential import ActionSimSequential
 from .ActionStateTransitions import ActionStateTransitions
 from .MultiCommand import MultiCommand
@@ -154,6 +155,13 @@ def main():
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increases verbosity. Can be specified multiple times to increase.")
 		parser.add_argument("filename", nargs = "?", help = "Filename containing the timing diagram data. Reads from stdin when omitted.")
 	mc.register("dtd-render", "Render a digital timing diagram to SVG", genparser, action = ActionDTDRender)
+
+	def genparser(parser):
+		parser.add_argument("-f", "--tbl-format", choices = [ "text", "pretty", "tex", "compact", "logisim" ], default = "text", help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-n", "--circuit-name", metavar = "name", default = "main", help = "Name of the circuit to be simulated. Defaults to %(default)s.")
+		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increases verbosity. Can be specified multiple times to increase.")
+		parser.add_argument("circ_filename", help = "Circuit filename which contains the circuit to be simulated.")
+	mc.register("sim-combinatorial", "Simulate a combinatorial Logisim Evolution circuit and print the results as a truth table", genparser, action = ActionSimCombinatorial)
 
 	def genparser(parser):
 		parser.add_argument("-s", "--storage-element-labels", metavar = "labels", required = True, help = "Name the storage elements to be set, clocked and read out. Labels must be separated by commas.")
