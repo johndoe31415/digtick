@@ -19,6 +19,7 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
+import re
 import sys
 import contextlib
 
@@ -28,3 +29,10 @@ def open_file(filename: str):
 	else:
 		return open(filename)
 
+_SIGNAL_RE = re.compile(r"(?P<prefix>.*?)(?P<suffix>\d+)")
+def sort_signal_key(signal: str):
+	rematch = _SIGNAL_RE.fullmatch(signal)
+	if rematch is not None:
+		return (rematch["prefix"], int(rematch["suffix"]))
+	else:
+		return (signal, 0)

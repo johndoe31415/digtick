@@ -19,12 +19,11 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
-from .ParserTests import ParserTests
-from .ExpressionFormatterTests import ExpressionFormatterTests
-from .QMCTests import QMCTests
-from .ExpressionTreeTests import ExpressionTreeTests
-from .CircuitSimulationTests import CircuitSimulationTests
-from .DTDTests import DTDTests
-from .ValueTableTests import ValueTableTests
-from .ExpressionTransformerTests import ExpressionTransformerTests
-from .ToolsTests import ToolsTests
+import unittest
+from digtick.Tools import sort_signal_key
+
+class ToolsTests(unittest.TestCase):
+	def test_sort(self):
+		sigs = [ "A2", "A3", "A1", "A0", "A10", "A20", "A4", "A11" ]
+		sigs.sort(key = sort_signal_key)
+		self.assertEqual(sigs, [ "A0", "A1", "A2", "A3", "A4", "A10", "A11", "A20" ])
