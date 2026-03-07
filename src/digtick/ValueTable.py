@@ -34,6 +34,20 @@ class CompactStorage():
 		DontCare = 2
 		Undefined = 3
 
+		@classmethod
+		def from_str(self, text: str, permissive: bool = False) -> "Entry | None":
+			value = {
+				"0":	self.Low,
+				"1":	self.High,
+				"*":	self.DontCare,
+				"x":	self.DontCare,
+				"-":	self.DontCare,
+				"N/A":	self.Undefined,
+			}.get(text)
+			if (value is None) and (not permissive):
+				raise ValueError(f"Invalid truth table element: {text}")
+			return value
+
 		@property
 		def as_str(self):
 			return {
@@ -235,12 +249,29 @@ class ValueTable():
 	@classmethod
 	def parse_from_file(cls, f: "_io.TextIOWrapper", set_undefined_values_to: str):
 		assert(set_undefined_values_to in [ "0", "1", "*", "N/A", "forbidden" ])
-		return cls._parse_from_file(f = f, set_undefined_values_to = {
-			"0":			CompactStorage.Entry.Low,
-			"1":			CompactStorage.Entry.High,
-			"*":			CompactStorage.Entry.DontCare,
-			"N/A":			CompactStorage.Entry.Undefined,
-		}.get(set_undefined_values_to))
+		return cls._parse_from_file(f = f, set_undefined_values_to = CompactStorage.Entry.from_str(set_undefined_values_to, permissive = True))
+
+	@classmethod
+	def parse_logisim_file(cls, f: "_io.TextIOWrapper", set_undefined_values_to: str):
+		output_storage = None
+		for (lineno, line) in enumerate(f, 1):
+			line = line.strip("\r\n\t ")
+			if line.startswith("#") or line.startswith("~") or (line == ""):
+				continue
+
+			(input_vars, output_vars) = line.split("|")
+			input_vars = cls._TABLE_SEP.split(input_vars.strip())
+			output_vars = cls._TABLE_SEP.split(output_vars.strip())
+			if output_storage is None:
+				# Header line
+				input_variable_names = input_vars
+				output_variable_names = output_vars
+				output_storage = [ CompactStorage(len(input_variable_names)) for _ in range(len(output_variable_names)) ]
+			else:
+				input_index = sum(int(value) << bitpos for (bitpos, value) in enumerate(reversed(input_vars)))
+				for (outvar_index, value) in enumerate(output_vars):
+					output_storage[outvar_index][input_index] = CompactStorage.Entry.from_str(value)
+		return ValueTable(input_variable_names = input_variable_names, output_variable_names = output_variable_names, output_values = output_storage)
 
 	@classmethod
 	def parse_string(cls, text: str, set_undefined_values_to: str):

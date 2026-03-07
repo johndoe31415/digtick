@@ -26,5 +26,8 @@ from .Tools import open_file
 class ActionPrintTable(BaseAction):
 	def run(self):
 		with open_file(self._args.filename) as f:
-			vt = ValueTable.parse_from_file(f, set_undefined_values_to = self._args.unused_value_is)
+			if self._args.input_format_logisim:
+				vt = ValueTable.parse_logisim_file(f, set_undefined_values_to = self._args.unused_value_is)
+			else:
+				vt = ValueTable.parse_from_file(f, set_undefined_values_to = self._args.unused_value_is)
 		vt.print(ValueTable.PrintFormat(self._args.tbl_format))
