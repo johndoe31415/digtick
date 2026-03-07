@@ -387,7 +387,7 @@ class CircuitSimulationTests(unittest.TestCase):
 		self.assertEqual(v.y, 446)
 
 	def test_circuit_invgates(self):
-		circ = pkgutil.get_data("digtick.tests.data", "invgates.circ")
+		circ = pkgutil.get_data("digtick.tests.data", "invgate.circ")
 		circuit = LogisimLoader.load_from_xmldata(circ).parse()
 		circuit.dump()
 		circuit.power_on()

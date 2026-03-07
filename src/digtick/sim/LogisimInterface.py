@@ -129,7 +129,9 @@ class LogisimLoader():
 			for i in range(1, (input_count // 2) + 1):
 				yield Vec2D(x_value, -10 * i)
 
-		# This is incredibly cursed. For a gate facing East (having the output right), the Y-offsets are
+		# This is incredibly cursed, especially wide components. For a gate
+		# facing East (having the output right), the Y-offsets are:
+		#
 		# Inputs	Narrow				Medium					Wide
 		# 2			-10/+10				-20/+20					-20/+20
 		# 3			-10/0/+10			-20/0/+20				-30/0/+30
@@ -138,15 +140,12 @@ class LogisimLoader():
 		# 6								-30/-20/-10/+10/...		-30/-20/-10/10/20/30
 		# 7														-30/-20/-10/0/10/20/30
 		# 8														-40/-30/-20/-10/+10/...
-		#
-		# Pin 1 is on top, counting happens from zero (i.e., "negate0" means Pin 1).
-		# For each negated input, the X-distance of the pin decreases by 10 units.
 
 		size = component.get(".size", 50)
 		input_count = component.get("inputs", 2)
 		match (size, input_count):
 			case (30, _):
-				pin_offsets = self._commmon_pin_offsets(x_value = -size + xoffset, input_count = input_count)
+				pin_offsets = list(self._commmon_pin_offsets(x_value = -size + xoffset, input_count = input_count))
 
 			case (50, 2):
 				pin_offsets = [ Vec2D(-size + xoffset, y_offset) for y_offset in [ -20, 20 ] ]
@@ -155,7 +154,7 @@ class LogisimLoader():
 				pin_offsets = [ Vec2D(-size + xoffset, y_offset) for y_offset in [ -20, 0, 20 ] ]
 
 			case (50, _):
-				pin_offsets = self._commmon_pin_offsets(x_value = -size + xoffset, input_count = input_count)
+				pin_offsets = list(self._commmon_pin_offsets(x_value = -size + xoffset, input_count = input_count))
 
 			case (70, 2):
 				pin_offsets = [ Vec2D(-size + xoffset, y_offset) for y_offset in [ -20, 20 ] ]
@@ -167,16 +166,36 @@ class LogisimLoader():
 				pin_offsets = [ Vec2D(-size + xoffset, y_offset) for y_offset in [ -30, -10, 10, 30 ] ]
 
 			case (70, _):
-				pin_offsets = self._commmon_pin_offsets(x_value = -size + xoffset, input_count = input_count)
+				pin_offsets = list(self._commmon_pin_offsets(x_value = -size + xoffset, input_count = input_count))
 
 			case (_, _):
 				raise UnknownComponentException(f"Logisim component {component} has unhandled size/input count: {size}, {input_count}")
 
+		# Rotation in Logisim is not *actually* rotation. Instead, what Logisim
+		# uses is a method known under the scientific term "batshit insane pin
+		# assignment algorithm" where through rotation also the pin numbering
+		# changes:
+		#
+		# Face direction		Pin order
+		# East (right)			Top -> bottom
+		# South (down)			Left -> right (!)
+		# West (left)			Top -> bottom (!)
+		# North (up)			Left -> right
+		#
+		# Counting happens from zero (i.e., "negate0" means Pin 1). For each
+		# negated input, the X-distance of the pin decreases by 10 units.
+		face_direction = component.get(".facing", FaceDirection.East)
+		if face_direction in [ FaceDirection.North ]:
+			pin_offsets.reverse()
+
+		print(f"Pin locations for {component['name']} at {component['loc']} face direction {face_direction.name}")
+		print(f"    Pin offsets initial: {pin_offsets}")
 		translated_component["inverted"] = set()
 		for (index, pin) in enumerate(pin_offsets):
-			if component.get(f"negate{index}", "false") == "true":
+			if component.get(f".negate{index}", "false") == "true":
 				translated_component["inverted"].add(index)
 				pin_offsets[index] = pin + Vec2D(-10, 0)
+		print(f"         With inversion: {pin_offsets}")
 
 		if len(pin_offsets) == 2:
 			pin_names = [ "A", "B" ]
@@ -184,7 +203,8 @@ class LogisimLoader():
 			pin_names = [ f"A{i}" for i in range(1, len(pin_offsets) + 1) ]
 
 		for (pin_name, offset) in zip(pin_names, pin_offsets):
-			translated_component["pins"][pin_name] = component["loc"] + offset.rotate_offset(component.get(".facing", FaceDirection.East))
+			translated_component["pins"][pin_name] = component["loc"] + offset.rotate_offset(face_direction)
+			print(f"                  Final: {pin_name} {offset.rotate_offset(face_direction)} -> {translated_component['pins'][pin_name]}")
 
 	def _resolve_component(self, component: dict):
 		translated_component = {
@@ -258,34 +278,37 @@ class LogisimLoader():
 
 		return translated_component
 
+	def _add_net(self, src: Vec2D, dst: Vec2D):
+		if (src in self._net_id_by_pos) and (dst not in self._net_id_by_pos):
+			# Continue existing net
+			net_id = self._net_id_by_pos[src]
+		elif (dst in self._net_id_by_pos) and (src not in self._net_id_by_pos):
+			# Continue existing net
+			net_id = self._net_id_by_pos[dst]
+		elif (dst not in self._net_id_by_pos) and (src not in self._net_id_by_pos):
+			# Create new net
+			net_id = self._max_net_id
+			self._max_net_id += 1
+		else:
+			# Join two self._net_id_by_pos
+			net_id = self._net_id_by_pos[src]
+			old_net_id = self._net_id_by_pos[dst]
+			for old_pos in self._pos_by_net_id[old_net_id]:
+				self._net_id_by_pos[old_pos] = net_id
+				self._pos_by_net_id[net_id].add(old_pos)
+			del self._pos_by_net_id[old_net_id]
+
+		self._net_id_by_pos[src] = net_id
+		self._net_id_by_pos[dst] = net_id
+		self._pos_by_net_id[net_id].add(src)
+		self._pos_by_net_id[net_id].add(dst)
+
 	def _parse_nets(self):
 		self._net_id_by_pos = { }
-		pos_by_net_id = collections.defaultdict(set)
-		max_net_id = 0
+		self._pos_by_net_id = collections.defaultdict(set)
+		self._max_net_id = 0
 		for (src, dst) in self._iter_wires():
-			if (src in self._net_id_by_pos) and (dst not in self._net_id_by_pos):
-				# Continue existing net
-				net_id = self._net_id_by_pos[src]
-			elif (dst in self._net_id_by_pos) and (src not in self._net_id_by_pos):
-				# Continue existing net
-				net_id = self._net_id_by_pos[dst]
-			elif (dst not in self._net_id_by_pos) and (src not in self._net_id_by_pos):
-				# Create new net
-				net_id = max_net_id
-				max_net_id += 1
-			else:
-				# Join two self._net_id_by_pos
-				net_id = self._net_id_by_pos[src]
-				old_net_id = self._net_id_by_pos[dst]
-				for old_pos in pos_by_net_id[old_net_id]:
-					self._net_id_by_pos[old_pos] = net_id
-					pos_by_net_id[net_id].add(old_pos)
-				del pos_by_net_id[old_net_id]
-
-			self._net_id_by_pos[src] = net_id
-			self._net_id_by_pos[dst] = net_id
-			pos_by_net_id[net_id].add(src)
-			pos_by_net_id[net_id].add(dst)
+			self._add_net(src, dst)
 
 	def dump_nets(self):
 		for (pos, net_id) in sorted(self._net_id_by_pos.items(), key = lambda pnetid: (pnetid[1], pnetid[0])):
@@ -303,6 +326,11 @@ class LogisimLoader():
 			self._circuit.add(component)
 			resolved_component["instance"] = component
 			self._components.append(resolved_component)
+
+			# Each pin spans its own net so that direcly overlapping pins get
+			# connected together
+			for (pin_name, pin_location) in resolved_component["pins"].items():
+				self._add_net(pin_location, pin_location)
 
 	def _wire_components(self):
 		connected_nets = collections.defaultdict(list)

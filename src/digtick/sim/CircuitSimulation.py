@@ -209,7 +209,11 @@ class Circuit():
 			if isinstance(component, CmpSource):
 				print(f"Source: {component} level {component.level}")
 			else:
-				print(f"Component: {component}")
+				unconnected_input_pins = [ pin_name for pin_name in component._Inputs if component[pin_name] is None ]
+				if len(unconnected_input_pins) == 0:
+					print(f"Component: {component}")
+				else:
+					print(f"Component: {component} UNCONNECTED INPUTS {', '.join(sorted(unconnected_input_pins))}")
 
 		for net in sorted(self._nets):
 			net.dump()
