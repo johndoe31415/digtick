@@ -23,7 +23,7 @@ from digtick.sim.LogisimInterface import LogisimLoader
 from .MultiCommand import BaseAction
 from .ValueTable import ValueTable
 
-class ActionSimState(BaseAction):
+class ActionSimSequential(BaseAction):
 	def run(self):
 		circuit = LogisimLoader.load_from_file(self._args.circ_filename, circuit_name = self._args.circuit_name).parse()
 		circuit.power_on()

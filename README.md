@@ -19,7 +19,7 @@ circuit files and is also able to simulate them native (i.e., without relying
 on Logisim at all). The reason for implementing this natively within digtick is
 that it allows for headless interaction with circuits, e.g., to create state
 diagrams from circuits in an automatic fashion (see documentation of
-"sim-state" and "analyze-state" to make this clearer).
+"sim-sequential" and "analyze-state" to make this clearer).
 
 
 ## Boolean expression syntax
@@ -652,8 +652,8 @@ Which renders as:
 ![Made-up communication diagram](https://raw.githubusercontent.com/johndoe31415/digtick/main/docs/other_diagram.png)
 
 
-## "sim-state": Simulate a stateful Logisim Evolution circuit
-The `sim-state` command allows you to examine a stateful circuit regards the
+## "sim-sequential": Simulate a stateful Logisim Evolution circuit
+The `sim-sequential` command allows you to examine a stateful circuit regards the
 behavior after a clock edge. It iterates through all possible state
 combinations as inputs, simulates a clock cycle and reads the state values back
 out. The output is a truth table with n input values and n output values. For
@@ -672,7 +672,7 @@ completely cyclic graph. In Logisim Evolution, this is a manual task and fairly
 labor intensive. This is why you can simply use digtick for that purpose:
 
 ```
-$ digtick sim-state -s FF1 -s FF2 -f pretty examples/simple-ff.circ
+$ digtick sim-sequential -s FF1 -s FF2 -f pretty examples/simple-ff.circ
 ┌─────┬─────┬──────┬──────┐
 │ FF1 │ FF2 │ FF1' │ FF2' │
 ├─────┼─────┼──────┼──────┤
@@ -691,12 +691,12 @@ especially when circuits are more complicated.  For this reason, the
 
 
 ## "analyze-state": Analyze cycles in a state table
-After the `sim-state` command has generated a state truth table,
+After the `sim-sequential` command has generated a state truth table,
 `analyze-state` then takes that table as input and displays the topology of the
 state graph:
 
 ```
-$ digtick sim-state -s FF1,FF2 examples/simple-ff.circ >/tmp/states.txt
+$ digtick sim-sequential -s FF1,FF2 examples/simple-ff.circ >/tmp/states.txt
 $ digtick analyze-state /tmp/states.txt
 FF1, FF2 → FF1', FF2'
 0 → 1 → 2 → 0  full cycle length 3
@@ -711,7 +711,7 @@ It is not straightforward to see how this circuit behaves and even when
 analyzing it textually, this is only somewhat useful:
 
 ```
-$ digtick sim-state -s FF1,FF2,FF3,FF4,FF5 examples/complex-ff.circ >/tmp/states.txt
+$ digtick sim-sequential -s FF1,FF2,FF3,FF4,FF5 examples/complex-ff.circ >/tmp/states.txt
 $ digtick analyze-state /tmp/states.txt
 State transitions: FF1, FF2, FF3, FF4, FF5 → FF1', FF2', FF3', FF4', FF5'
    Cycle ID=2 length 6: 2 → 10 → 23 → 5 → 12 → 16 → 2

@@ -34,7 +34,7 @@ from .ActionRandomTable import ActionRandomTable
 from .ActionTransform import ActionTransform
 from .ActionDTDCreate import ActionDTDCreate
 from .ActionDTDRender import ActionDTDRender
-from .ActionSimState import ActionSimState
+from .ActionSimSequential import ActionSimSequential
 from .ActionStateTransitions import ActionStateTransitions
 from .MultiCommand import MultiCommand
 
@@ -162,7 +162,7 @@ def main():
 		parser.add_argument("-n", "--circuit-name", metavar = "name", default = "main", help = "Name of the circuit to be simulated. Defaults to %(default)s.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increases verbosity. Can be specified multiple times to increase.")
 		parser.add_argument("circ_filename", help = "Circuit filename which contains the circuit to be simulated.")
-	mc.register("sim-state", "Simulate a stateful Logisim Evolution circuit and print the results as a truth table", genparser, action = ActionSimState)
+	mc.register("sim-sequential", "Simulate a sequential Logisim Evolution circuit and print the results as a truth table", genparser, action = ActionSimSequential)
 
 	def genparser(parser):
 		parser.add_argument("-f", "--output-format", choices = [ "text", "dot" ], default = "text", help = "Print the analysis in the desired format. Can be one of %(choices)s, defaults to %(default)s.")

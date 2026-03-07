@@ -95,7 +95,7 @@ $digtick dtd-render -o /tmp/dtd.svg /tmp/dtd
 $digtick dtd-render -o /tmp/dtd.svg /tmp/dtd || must_fail; assert_failed
 $digtick dtd-render -o /tmp/dtd.svg -f /tmp/dtd
 
-$digtick sim-state -s FF1,FF2,FF3,FF4 src/digtick/tests/data/stateful.circ >/tmp/state_table.txt
+$digtick sim-sequential -s FF1,FF2,FF3,FF4 src/digtick/tests/data/stateful.circ >/tmp/state_table.txt
 $digtick analyze-state -vv /tmp/state_table.txt
 $digtick analyze-state -f dot /tmp/state_table.txt
 echo ":FF1,FF2,FF3,FF4,FF5:FF1',FF2',FF3',FF4',FF5':5555000055550000,5555000000005555,4455440044554400,55005500550055,4051514040515140" | $digtick analyze-state
