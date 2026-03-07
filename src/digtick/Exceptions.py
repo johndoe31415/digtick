@@ -29,6 +29,7 @@ class CircuitAstableException(SimulationException): pass
 class DuplicateLabelException(SimulationException): pass
 class NoSuchCircuitException(SimulationException): pass
 class UnknownComponentException(SimulationException): pass
+class InputPinUnconnectedException(SimulationException): pass
 
 class DTDException(DigTickException): pass
 class UnknownCharacterException(DTDException): pass

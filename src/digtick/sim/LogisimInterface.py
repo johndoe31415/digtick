@@ -257,6 +257,7 @@ class LogisimLoader():
 				translated_component["type"] = "XOR"
 				translated_component["input_count"] = component.get(".inputs", 2)
 				translated_component["pins"]["Y"] = component["loc"]
+				translated_component["model"] = component.get(".xor", "=1")
 				self._find_gate_pin_locations(component, translated_component, xoffset = -10)
 
 			case ("#Memory.D Flip-Flop", None):

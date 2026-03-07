@@ -20,8 +20,9 @@
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 import operator
+import collections
 from functools import reduce
-from digtick.Exceptions import NoSuchPinException
+from digtick.Exceptions import NoSuchPinException, InputPinUnconnectedException
 from .UID import UID
 
 class Component():
@@ -61,6 +62,8 @@ class Component():
 			kwargs["input_count"] = component_dict["input_count"]
 		if "inverted_inputs" in component_dict:
 			kwargs["inverted_inputs"] = component_dict["inverted_inputs"]
+		if "model" in component_dict:
+			kwargs["model"] = component_dict["model"]
 		return cls.new(name = component_dict["type"], **kwargs)
 
 	@property
@@ -93,6 +96,12 @@ class Component():
 	@property
 	def type_name(self):
 		return self._Name
+
+	def input_level(self, input_pin_name: str) -> int:
+		net = self[input_pin_name]
+		if net is None:
+			raise InputPinUnconnectedException(f"Component {self} tried to read pin {input_pin_name} which is not connected to any net.")
+		return net.level
 
 	def add_pins(self, input_pin_names: list[str] | None = None, output_pin_names: list[str] | None = None):
 		if input_pin_names is not None:
@@ -187,7 +196,7 @@ class CmpSink(Component):
 
 	@property
 	def level(self):
-		return self["IN"].level
+		return self.input_level("IN")
 
 class CmpNOT(Component):
 	_Name = "NOT"
@@ -199,7 +208,7 @@ class CmpNOT(Component):
 		self.add_pins(input_pin_names = [ "A" ], output_pin_names = [ "Y" ])
 
 	def tick(self):
-		self.drive("Y", self["A"].level ^ 1)
+		self.drive("Y", self.input_level("A") ^ 1)
 
 class CmpGate(Component):
 	_Prefix = "IC"
@@ -215,7 +224,7 @@ class CmpGate(Component):
 
 	@property
 	def input_levels(self):
-		return [ (self[pin_name].level ^ 1) if (pin_name in self._inverted_inputs) else self[pin_name].level for pin_name in self._inputs ]
+		return [ (self.input_level(pin_name) ^ 1) if (pin_name in self._inverted_inputs) else self.input_level(pin_name) for pin_name in self._inputs ]
 
 class CmpAND(CmpGate):
 	_Name = "AND"
@@ -235,8 +244,18 @@ class CmpXOR(CmpGate):
 	_Name = "XOR"
 	_NodeName = "^"
 
+	def __init__(self, label: str | None = None, input_count: int = 2, inverted_inputs: set | None = None, model: str = "odd"):
+		super().__init__(label = label, input_count = input_count, inverted_inputs = inverted_inputs)
+		assert(model in [ "odd", "=1" ])
+		self._model = model
+
 	def tick(self):
-		self.drive("Y", reduce(operator.xor, self.input_levels))
+		if self._model == "odd":
+			# Return one if an odd number of inputs is one
+			self.drive("Y", reduce(operator.xor, self.input_levels))
+		else:
+			# Return one only if *exactly* one input is one
+			self.drive("Y", int(collections.Counter(self.input_levels)[1] == 1))
 
 class CmpNAND(CmpGate):
 	_Name = "NAND"
@@ -278,10 +297,10 @@ class CmpDFlipFlop(Component):
 		self._state = value
 
 	def tick(self):
-		if (self._last_clk == 0) and (self["CLK"].level == 1):
+		if (self._last_clk == 0) and (self.input_level("CLK") == 1):
 			# Positive edge detected!
-			self._state = self["D"].level
-		self._last_clk = self["CLK"].level
+			self._state = self.input_level("D")
+		self._last_clk = self.input_level("CLK")
 		self.drive("Q", self._state, defer = self._defer)
 		self.drive("!Q", self._state ^ 1, defer = self._defer)
 		self._defer = True
@@ -312,9 +331,9 @@ class CmpJKFlipFlop(Component):
 		self._state = value
 
 	def tick(self):
-		if (self._last_clk == 0) and (self["CLK"].level == 1):
+		if (self._last_clk == 0) and (self.input_level("CLK") == 1):
 			# Positive edge detected!
-			jk = (self["J"].level, self["K"].level)
+			jk = (self.input_level("J"), self.input_level("K"))
 			if jk == (1, 0):
 				# Set
 				self._state = 1
@@ -324,7 +343,7 @@ class CmpJKFlipFlop(Component):
 			elif jk == (1, 1):
 				# Toggle
 				self._state = self._state ^ 1
-		self._last_clk = self["CLK"].level
+		self._last_clk = self.input_level("CLK")
 		self.drive("Q", self._state, defer = self._defer)
 		self.drive("!Q", self._state ^ 1, defer = self._defer)
 		self._defer = True
