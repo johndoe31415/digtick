@@ -19,6 +19,7 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
+import io
 import os
 import unittest
 import pkgutil
@@ -366,7 +367,7 @@ class CircuitSimulationTests(unittest.TestCase):
 		circ = pkgutil.get_data("digtick.tests.data", "notgatesnake.circ")
 		logisim_loader = LogisimLoader.load_from_xmldata(circ)
 		logisim_loader.parse()
-		with contextlib.redirect_stdout(None):
+		with contextlib.redirect_stderr(io.StringIO()):
 			logisim_loader.dump_nets()
 
 	def test_circuit_unknown_component(self):
@@ -410,3 +411,11 @@ class CircuitSimulationTests(unittest.TestCase):
 	def test_circuit_5_bit_adder(self):
 		vt = ValueTable.parse_string(pkgutil.get_data("digtick.tests.data", "5_bit_adder.txt").decode("ascii"), set_undefined_values_to = "forbidden")
 		self._test_loadfile_conforms_to("5_bit_adder.circ", vt, circuit_name = "main_gates")
+
+	def test_circuit_xorgates(self):
+		vt = ValueTable.parse_string(pkgutil.get_data("digtick.tests.data", "xorgates.txt").decode("ascii"), set_undefined_values_to = "forbidden")
+		self._test_loadfile_conforms_to("xorgates.circ", vt)
+
+	def test_circuit_nandgates(self):
+		vt = ValueTable.parse_string(pkgutil.get_data("digtick.tests.data", "nandgates.txt").decode("ascii"), set_undefined_values_to = "forbidden")
+		self._test_loadfile_conforms_to("nandgates.circ", vt)

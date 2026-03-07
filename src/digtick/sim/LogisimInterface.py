@@ -73,9 +73,10 @@ class Vec2D():
 		return f"<{self.x}, {self.y}>"
 
 class LogisimLoader():
-	def __init__(self, doc: xml.etree.ElementTree.Element, circuit_name: str = "main"):
+	def __init__(self, doc: xml.etree.ElementTree.Element, circuit_name: str = "main", verbose_component_pin_debug: bool = False):
 		self._doc = doc
 		self._circuit_name = circuit_name
+		self._verbose_component_pin_debug = verbose_component_pin_debug
 		self._root = self._doc.getroot()
 		self._xml_circuit = self._root.find(f"./circuit[@name='{self._circuit_name}']")
 		if self._xml_circuit is None:
@@ -92,6 +93,10 @@ class LogisimLoader():
 	def load_from_xmldata(cls, xmldata: bytes, circuit_name: str = "main"):
 		doc = xml.etree.ElementTree.ElementTree(xml.etree.ElementTree.fromstring(xmldata))
 		return cls(doc = doc, circuit_name = circuit_name)
+
+	def _pin_debugmsg(self, msg: str):
+		if self._verbose_component_pin_debug:
+			print(msg, file = sys.stderr)
 
 	def _parse_libraries(self):
 		for node in self._root.findall("./lib"):
@@ -186,7 +191,7 @@ class LogisimLoader():
 		# Counting happens from zero (i.e., "negate0" means Pin 1). For each
 		# negated input, the X-distance of the pin decreases by 10 units.
 		face_direction = component.get(".facing", FaceDirection.East)
-		if face_direction in [ FaceDirection.North ]:
+		if face_direction in [ FaceDirection.North, FaceDirection.West ]:
 			pin_offsets.reverse()
 
 		if len(pin_offsets) == 2:
@@ -194,19 +199,18 @@ class LogisimLoader():
 		else:
 			pin_names = [ f"A{i}" for i in range(1, len(pin_offsets) + 1) ]
 
-		print(f"Pin locations for {component.get('.label', 'unnamed')} {input_count}-input {component['name']} at {component['loc']} face direction {face_direction.name}", file = sys.stderr)
-		print(f"    Pin offsets initial: {pin_offsets}", file = sys.stderr)
+		self._pin_debugmsg(f"Pin locations for {component.get('.label', 'unnamed')} {input_count}-input {component['name']} at {component['loc']} face direction {face_direction.name}")
+		self._pin_debugmsg(f"    Pin offsets initial: {pin_offsets}")
 		translated_component["inverted_inputs"] = set()
 		for (index, pin) in enumerate(pin_offsets):
 			if component.get(f".negate{index}", "false") == "true":
 				translated_component["inverted_inputs"].add(pin_names[index])
 				pin_offsets[index] = pin + Vec2D(-10, 0)
-		print(f"         With inversion: {pin_offsets}", file = sys.stderr)
-
+		self._pin_debugmsg(f"         With inversion: {pin_offsets}")
 
 		for (pin_name, offset) in zip(pin_names, pin_offsets):
 			translated_component["pins"][pin_name] = component["loc"] + offset.rotate_offset(face_direction)
-			print(f"                  Final: {pin_name} {offset.rotate_offset(face_direction)} -> {translated_component['pins'][pin_name]}", file = sys.stderr)
+			self._pin_debugmsg(f"                  Final: {pin_name} {offset.rotate_offset(face_direction)} -> {translated_component['pins'][pin_name]}")
 
 	def _resolve_component(self, component: dict):
 		translated_component = {
@@ -318,6 +322,7 @@ class LogisimLoader():
 			self._add_net(src, dst)
 
 	def dump_nets(self):
+		print("Dumping nets of Logisim circuit:", file = sys.stderr)
 		for (pos, net_id) in sorted(self._net_id_by_pos.items(), key = lambda pnetid: (pnetid[1], pnetid[0])):
 			print(pos, net_id, file = sys.stderr)
 
