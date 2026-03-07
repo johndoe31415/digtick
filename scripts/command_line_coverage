@@ -39,6 +39,7 @@ $digtick make-table 'A B C' '!B !C' >/tmp/table1
 for format in text pretty tex compact logisim; do
 	cat /tmp/table1 | $digtick print-table -f $format
 done
+$digtick print-table -L examples/logisim_full_adder.txt
 
 $digtick make-table 'A B + !B C' >/tmp/table2
 $digtick make-table 'A B + !B C + A !B !C' >/tmp/table3
