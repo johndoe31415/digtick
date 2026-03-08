@@ -652,12 +652,36 @@ Which renders as:
 ![Made-up communication diagram](https://raw.githubusercontent.com/johndoe31415/digtick/main/docs/other_diagram.png)
 
 
+## "sim-combinatorial": Simulate a stateless Logisim Evolution circuit
+With `sim-combinatorial` you can simulate simple combinatorial circuits that
+are given as Logisim Evolution files.  The file is read, all sources are
+treated as inputs and all sinks are treated as outputs. The result is a truth
+table:
+
+```
+$ digtick sim-combinatorial -f pretty examples/full-adder.circ
+┌───┬───┬─────┬──────┬───┐
+│ A │ B │ Cin │ Cout │ S │
+├───┼───┼─────┼──────┼───┤
+│ 0 │ 0 │ 0   │ 0    │ 0 │
+│ 0 │ 0 │ 1   │ 0    │ 1 │
+│ 0 │ 1 │ 0   │ 0    │ 1 │
+│ 0 │ 1 │ 1   │ 1    │ 0 │
+│ 1 │ 0 │ 0   │ 0    │ 1 │
+│ 1 │ 0 │ 1   │ 1    │ 0 │
+│ 1 │ 1 │ 0   │ 1    │ 0 │
+│ 1 │ 1 │ 1   │ 1    │ 1 │
+└───┴───┴─────┴──────┴───┘
+```
+
+
 ## "sim-sequential": Simulate a stateful Logisim Evolution circuit
-The `sim-sequential` command allows you to examine a stateful circuit regards the
-behavior after a clock edge. It iterates through all possible state
-combinations as inputs, simulates a clock cycle and reads the state values back
-out. The output is a truth table with n input values and n output values. For
-example, consider this circuit:
+The `sim-sequential` command allows you to examine a stateful sequential
+circuit regarding its behavior after a clock edge. It iterates through all
+possible state combinations as inputs, simulates a clock cycle and reads the
+state values back out. The output is a truth table with n input values and n
+output values, resembling the state of the storage elements before and after
+the clock edge. For example, consider this circuit:
 
 ![Simple circuit](https://raw.githubusercontent.com/johndoe31415/digtick/main/docs/simple-ff.png)
 
@@ -672,7 +696,7 @@ completely cyclic graph. In Logisim Evolution, this is a manual task and fairly
 labor intensive. This is why you can simply use digtick for that purpose:
 
 ```
-$ digtick sim-sequential -s FF1 -s FF2 -f pretty examples/simple-ff.circ
+$ digtick sim-sequential -s FF1,FF2 -f pretty examples/simple-ff.circ
 ┌─────┬─────┬──────┬──────┐
 │ FF1 │ FF2 │ FF1' │ FF2' │
 ├─────┼─────┼──────┼──────┤
