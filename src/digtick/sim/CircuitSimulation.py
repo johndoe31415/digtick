@@ -26,6 +26,7 @@ from digtick.Exceptions import UndefinedInputUsedException, WrongCircuitPowerSta
 from digtick.ValueTable import ValueTable, CompactStorage
 from .Components import Component, CmpSource, CmpSink
 from .UID import UID
+from digtick import Tools
 
 class Level(enum.IntEnum):
 	Low = 0
@@ -249,8 +250,8 @@ class Circuit():
 		if output_variable_dict is None:
 			output_variable_dict = { sink.label: sink for sink in self._components if isinstance(sink, CmpSink) and (sink.label is not None) }
 
-		input_variable_names = sorted(input_variable_dict)
-		output_variable_names = sorted(output_variable_dict)
+		input_variable_names = sorted(input_variable_dict, key = Tools.sort_signal_key)
+		output_variable_names = sorted(output_variable_dict, key = Tools.sort_signal_key)
 		output = [ CompactStorage(len(input_variable_names)) for _ in output_variable_names ]
 		for (index, input_values) in enumerate(itertools.product([ 0, 1 ], repeat = len(input_variable_names))):
 			for (input_variable_no, input_variable_name) in enumerate(input_variable_names):
