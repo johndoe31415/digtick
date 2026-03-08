@@ -24,9 +24,9 @@ import itertools
 import collections
 from digtick.Exceptions import UndefinedInputUsedException, WrongCircuitPowerStateException, CircuitAstableException, DuplicateLabelException
 from digtick.ValueTable import ValueTable, CompactStorage
+from digtick import Tools
 from .Components import Component, CmpSource, CmpSink
 from .UID import UID
-from digtick import Tools
 
 class Level(enum.IntEnum):
 	Low = 0
