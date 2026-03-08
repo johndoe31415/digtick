@@ -25,7 +25,7 @@ from .Tools import open_file
 from .Exceptions import OutputValueMissingException
 from .GraphAnalysis import DAGAnalyzer
 
-class ActionStateTransitions(BaseAction):
+class ActionAnalyzeSequential(BaseAction):
 	def run(self):
 		with open_file(self._args.filename) as f:
 			self._vt = ValueTable.parse_from_file(f, set_undefined_values_to = "forbidden")

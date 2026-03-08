@@ -19,7 +19,7 @@ circuit files and is also able to simulate them native (i.e., without relying
 on Logisim at all). The reason for implementing this natively within digtick is
 that it allows for headless interaction with circuits, e.g., to create state
 diagrams from circuits in an automatic fashion (see documentation of
-"sim-sequential" and "analyze-state" to make this clearer).
+"sim-sequential" and "analyze-sequential" to make this clearer).
 
 
 ## Boolean expression syntax
@@ -711,23 +711,29 @@ This allows you to create a table in which you can look up for each state what
 the successor state is. While this representation may be useful for certain
 things (like correcting an exam), it is not as easy to see where fixpoints are,
 especially when circuits are more complicated.  For this reason, the
-"analyze-state" tool is available.
+"analyze-sequential" tool is available.
 
 
-## "analyze-state": Analyze cycles in a state table
+## "analyze-sequential": Analyze state transitions in sequential circuits
 After the `sim-sequential` command has generated a state truth table,
-`analyze-state` then takes that table as input and displays the topology of the
-state graph:
+`analyze-sequential` then can take that table as input and displays the
+topology of the state graph, i.e., the transitions between states:
 
 ```
 $ digtick sim-sequential -s FF1,FF2 examples/simple-ff.circ >/tmp/states.txt
-$ digtick analyze-state /tmp/states.txt
-FF1, FF2 → FF1', FF2'
-0 → 1 → 2 → 0  full cycle length 3
-3 → 3  full cycle length 1
+$ digtick analyze-sequential /tmp/states.txt
+State transitions: FF1, FF2 → FF1', FF2'
+   Cycle ID=0 length 3: 0 → 1 → 2 → 0
+   Cycle ID=3 length 1: 3 → 3
+State graph has 2 cycles and 0 tails. Shortest cycle length: 1
 ```
 
-While this is a fairly easy example, let's look at a more complex circuit:
+State graphs must always be cyclic (they are finite, after all) but for exam
+questions, short cycles make for bad exam questions (a student might
+miscalculate, end up in a cycle and then get "stuck").
+
+While this circuit was a fairly easy example, let's examine at a more complex
+circuit, where transitions are not as straightforward anymore:
 
 ![Complex circuit](https://raw.githubusercontent.com/johndoe31415/digtick/main/docs/complex-ff.png)
 
@@ -736,7 +742,7 @@ analyzing it textually, this is only somewhat useful:
 
 ```
 $ digtick sim-sequential -s FF1,FF2,FF3,FF4,FF5 examples/complex-ff.circ >/tmp/states.txt
-$ digtick analyze-state /tmp/states.txt
+$ digtick analyze-sequential /tmp/states.txt
 State transitions: FF1, FF2, FF3, FF4, FF5 → FF1', FF2', FF3', FF4', FF5'
    Cycle ID=2 length 6: 2 → 10 → 23 → 5 → 12 → 16 → 2
    Cycle ID=24 length 4: 24 → 31 → 29 → 28 → 24
@@ -758,7 +764,7 @@ State graph has 2 cycles and 12 tails. Shortest cycle length: 4
 Much more clearly is the graphical representation:
 
 ```
-$ digtick analyze-state -f dot /tmp/states.txt | dot -Tpng -ostates.png
+$ digtick analyze-sequential -f dot /tmp/states.txt | dot -Tpng -ostates.png
 ```
 
 Which creates the following diagram:
