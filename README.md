@@ -728,8 +728,8 @@ State transitions: FF1, FF2 → FF1', FF2'
 State graph has 2 cycles and 0 tails. Shortest cycle length: 1
 ```
 
-State graphs must always be cyclic (they are finite, after all) but for exam
-questions, short cycles make for bad exam questions (a student might
+State graphs must always be cyclic (they are finite, after all) but circuits
+with short cycles are unsuitable as exam questions (a student might
 miscalculate, end up in a cycle and then get "stuck").
 
 While this circuit was a fairly easy example, let's examine at a more complex
