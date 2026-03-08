@@ -234,6 +234,50 @@ class CircuitSimulationTests(unittest.TestCase):
 		self.assertEqual(q.level, 0)
 		self.assertEqual(notq.level, 1)
 
+	def test_jk_flipflop(self):
+		circ = Circuit()
+
+		j = circ.new("Source")
+		k = circ.new("Source")
+		clk = circ.new("Source")
+		ff = circ.new("JK-FF")
+		q = circ.new("Sink")
+
+		circ.connect(j, "OUT", ff, "J")
+		circ.connect(k, "OUT", ff, "K")
+		circ.connect(clk, "OUT", ff, "CLK")
+		circ.connect(ff, "Q", q, "IN")
+		circ.power_on()
+
+		self.assertEqual(clk.level, 0)
+		self.assertEqual(q.level, 0)
+
+		for i in range(5):
+			circ.tick()
+			self.assertEqual(q.level, 0)
+
+		j.level = 1
+		circ.tick()
+		for i in range(5):
+			circ.clock(clk)
+			self.assertEqual(q.level, 1)
+
+		k.level = 1
+		circ.tick()
+		prev = q.level
+		for i in range(6):
+			circ.clock(clk)
+			self.assertEqual(q.level, prev ^ 1)
+			prev = q.level
+
+		self.assertEqual(q.level, 1)
+		j.level = 0
+		circ.tick()
+		self.assertEqual(q.level, 1)
+		for i in range(5):
+			circ.clock(clk)
+			self.assertEqual(q.level, 0)
+
 	def test_rs_nand_flipflop(self):
 		circ = Circuit()
 		s = circ.add(CmpSource(level = 1))
