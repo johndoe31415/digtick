@@ -85,6 +85,7 @@
     </comp>
     <comp lib="1" loc="(800,830)" name="AND Gate">
       <a name="facing" val="north"/>
+      <a name="label" val="G"/>
       <a name="negate1" val="true"/>
     </comp>
   </circuit>

@@ -19,23 +19,20 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
-class DigTickException(Exception): pass
+from digtick.sim.LogisimInterface import LogisimLoader
+from digtick.sim.Mutator import ComponentMutator
+from .MultiCommand import BaseAction
 
-class SimulationException(DigTickException): pass
-class UndefinedInputUsedException(SimulationException): pass
-class NoSuchPinException(SimulationException): pass
-class WrongCircuitPowerStateException(SimulationException): pass
-class CircuitAstableException(SimulationException): pass
-class DuplicateLabelException(SimulationException): pass
-class NoSuchCircuitException(SimulationException): pass
-class UnknownComponentException(SimulationException): pass
-class InputPinUnconnectedException(SimulationException): pass
-class UnsupportedMutationOperation(SimulationException): pass
+class ActionMutateCircuit(BaseAction):
+	def run(self):
+		lsl = LogisimLoader.load_from_file(self._args.circ_filename, circuit_name = self._args.circuit_name)
+		lsl.parse()
 
-class DTDException(DigTickException): pass
-class UnknownCharacterException(DTDException): pass
-class UnsupportedTransitionException(DTDException): pass
-class InvalidDTDSpecException(DTDException): pass
+		mutators = [ ]
+		for mutator in self._args.mutator:
+			(label, mutation_selector) = mutator.split(":", maxsplit = 1)
+			mutator = ComponentMutator(component = lsl.get_component(label = label), mutation_selector = mutation_selector)
+			mutators.append(mutator)
 
-class OutputValueMissingException(DigTickException): pass
-class InvalidValueTableException(DigTickException): pass
+		for applied_mutators in lsl.apply_mutators(mutators):
+			print(mutators)

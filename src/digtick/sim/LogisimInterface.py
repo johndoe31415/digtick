@@ -21,6 +21,7 @@
 
 import sys
 import enum
+import itertools
 import collections
 import dataclasses
 import xml.etree.ElementTree
@@ -112,6 +113,7 @@ class LogisimLoader():
 			component = {
 				"name": full_name,
 				"loc": loc,
+				"node": node,
 			}
 			for attribute in node.findall("./a"):
 				(key, value) = (attribute.get("name"), attribute.get("val"))
@@ -336,6 +338,7 @@ class LogisimLoader():
 	def _parse_components(self):
 		self._circuit = Circuit()
 		self._components = [ ]
+		self._named_components = { }
 		for component_dict in self._iter_components():
 			resolved_component = self._resolve_component(component_dict)
 			if resolved_component is None:
@@ -345,11 +348,17 @@ class LogisimLoader():
 			self._circuit.add(component)
 			resolved_component["instance"] = component
 			self._components.append(resolved_component)
+			if component.label is not None:
+				self._named_components[component.label] = {
+					"component_dict": component_dict,
+					"resolved_component": resolved_component,
+				}
 
 			# Each pin spans its own net so that direcly overlapping pins get
 			# connected together
 			for (pin_name, pin_location) in resolved_component["pins"].items():
 				self._add_net(pin_location, pin_location)
+		print(self._named_components)
 
 	def _wire_components(self):
 		connected_nets = collections.defaultdict(list)
@@ -372,3 +381,10 @@ class LogisimLoader():
 		self._parse_components()
 		self._wire_components()
 		return self._circuit
+
+	def get_component(self, label: str) -> dict:
+		return self._named_components[label]
+
+	def apply_mutators(self, mutator_list: list["ComponentMutator"]):
+		for mutation in itertools.product(*mutator_list):
+			yield (mutation)
