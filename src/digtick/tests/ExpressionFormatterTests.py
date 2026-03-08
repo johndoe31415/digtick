@@ -113,3 +113,12 @@ class ExpressionFormatterTests(unittest.TestCase):
 			as_string = format_expression(expr)
 			parsed = parse_expression(as_string)
 			self.assertEqual(expr, parsed)
+
+	def test_tex_output(self):
+		(A, B, C, D) = (Variable("A"), Variable("B"), Variable("C"), Variable("D"))
+		self.assertEqual(format_expression(A & B, "tex-tech"), "\\mathrm{A B}")
+		self.assertEqual(format_expression(A & B, "tex-tech", use_mathrm = False), "A B")
+		self.assertEqual(format_expression(A & ~B, "tex-tech", use_mathrm = False), "A \\overline{B}")
+		self.assertEqual(format_expression(A & ~B & C, "tex-tech", use_mathrm = False), "A \\overline{B} C")
+		self.assertEqual(format_expression(A & ~B & ~C, "tex-tech", use_mathrm = False), "A \\overline{B}\\,\\overline{C}")
+		self.assertEqual(format_expression(A & ~B & ~C & ~D, "tex-tech", use_mathrm = False), "A \\overline{B}\\,\\overline{C}\\,\\overline{D}")

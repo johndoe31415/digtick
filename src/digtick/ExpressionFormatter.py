@@ -22,9 +22,10 @@
 from .ExpressionParser import ParseTreeElement, Operator, Variable, Constant, UnaryOperator, BinaryOperator, Parenthesis
 
 class ExpressionFormatterTex():
-	def __init__(self, neg_overline: bool = True, implicit_and: bool = True):
+	def __init__(self, neg_overline: bool = True, implicit_and: bool = True, use_mathrm: bool = True):
 		self._neg_overline = neg_overline
 		self._implicit_and = implicit_and
+		self._use_mathrm = use_mathrm
 		self._ops = {
 			Operator.Or: "\\vee",
 			Operator.And: "\\wedge",
@@ -34,32 +35,49 @@ class ExpressionFormatterTex():
 			Operator.Nor: "\\overset{\\sim}{\\vee}",
 		}
 		if implicit_and:
-			self._ops[Operator.And] = "\\ "
+			self._ops[Operator.And] = " "
 
 	def _op(self, op):
 		return self._ops[op]
 
-	def _format_expression(self, expr: ParseTreeElement, prev: ParseTreeElement | None = None):
+	def _parenthesize(self, expr: ParseTreeElement, needs_parenthesis: bool):
+		if needs_parenthesis:
+			return (f"({self._format_expression(expr)[0]})", False)
+		else:
+			return self._format_expression(expr)
+
+	def _format_expression(self, expr: ParseTreeElement):
 		if isinstance(expr, Variable):
-			return f"\\textnormal{{{expr.varname}}}"
+			return (expr.varname, False)
 		elif isinstance(expr, BinaryOperator):
-			if (prev is None) or ((prev is not None) and ((prev.op == expr.op) or ((prev.op, expr.op) == (Operator.Or, Operator.And)))):
-				return f"{self._format_expression(expr.lhs, expr)} {self._op(expr.op)} {self._format_expression(expr.rhs, expr)}"
+			lhs_needs_parenthesis = expr.lhs.precedence > expr.precedence
+			rhs_needs_parenthesis = (expr.rhs.precedence > expr.precedence) or ((expr.rhs.precedence == expr.precedence) and (not expr.op.associative or (expr.op != expr.rhs.op)))
+
+			(formatted_lhs, lhs_inverted) = self._parenthesize(expr.lhs, lhs_needs_parenthesis)
+			(formatted_rhs, rhs_inverted) = self._parenthesize(expr.rhs, rhs_needs_parenthesis)
+
+			if lhs_inverted and rhs_inverted:
+				# Need to separate those two because otherwise the overlines get combined
+				op_str = "\\,"
 			else:
-				return f"({self._format_expression(expr.lhs, expr)} {self._op(expr.op)} {self._format_expression(expr.rhs, expr)})"
+				op_str = self._op(expr.op)
+			return (f"{formatted_lhs}{op_str}{formatted_rhs}", rhs_inverted)
 		elif isinstance(expr, UnaryOperator):
 			if self._neg_overline:
-				return f"\\overline{{{self._format_expression(expr.rhs, expr)}}}"
+				return (f"\\overline{{{self._format_expression(expr.rhs)[0]}}}", True)
 			else:
-				return f"{self._op(expr.op)} {self._format_expression(expr.rhs, expr)}"
+				return (f"{self._op(expr.op)}{self._format_expression(expr.rhs)[0]}", False)
 		elif isinstance(expr, Constant):
-			return str(expr)
+			return (str(expr), False)
 		elif isinstance(expr, Parenthesis):
-			return f"({self._format_expression(expr.inner)})"
+			return (f"({self._format_expression(expr.inner)[0]})", False)
 		raise NotImplementedError(expr)
 
 	def format_expression(self, expr: ParseTreeElement):
-		return self._format_expression(expr).replace("  ", " ")
+		if self._use_mathrm:
+			return f"\\mathrm{{{self._format_expression(expr)[0]}}}"
+		else:
+			return self._format_expression(expr)[0]
 
 class ExpressionFormatterText():
 	def __init__(self, pretty_print: bool = False, implicit_and: bool = True):
@@ -157,23 +175,23 @@ class GraphvizFormatter():
 		lines += [ "}" ]
 		return "\n".join(lines)
 
-def format_expression(expression: ParseTreeElement, expression_format: str = "text", implicit_and: bool = True):
+def format_expression(expression: ParseTreeElement, expression_format: str = "text", **kwargs):
 	assert(isinstance(expression, ParseTreeElement))
 	match expression_format:
 		case "internal":
 			return str(expression)
 
 		case "text":
-			formatter = ExpressionFormatterText(pretty_print = False, implicit_and = implicit_and)
+			formatter = ExpressionFormatterText(pretty_print = False, **kwargs)
 
 		case "pretty-text":
-			formatter = ExpressionFormatterText(pretty_print = True, implicit_and = implicit_and)
+			formatter = ExpressionFormatterText(pretty_print = True, **kwargs)
 
 		case "tex-tech":
-			formatter = ExpressionFormatterTex(neg_overline = True, implicit_and = implicit_and)
+			formatter = ExpressionFormatterTex(neg_overline = True, **kwargs)
 
 		case "tex-math":
-			formatter = ExpressionFormatterTex(neg_overline = False, implicit_and = implicit_and)
+			formatter = ExpressionFormatterTex(neg_overline = False, **kwargs)
 
 		case "dot":
 			formatter = GraphvizFormatter()
