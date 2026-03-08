@@ -122,3 +122,7 @@ class ExpressionFormatterTests(unittest.TestCase):
 		self.assertEqual(format_expression(A & ~B & C, "tex-tech", use_mathrm = False), "A \\overline{B} C")
 		self.assertEqual(format_expression(A & ~B & ~C, "tex-tech", use_mathrm = False), "A \\overline{B}\\,\\overline{C}")
 		self.assertEqual(format_expression(A & ~B & ~C & ~D, "tex-tech", use_mathrm = False), "A \\overline{B}\\,\\overline{C}\\,\\overline{D}")
+		self.assertEqual(format_expression(A & ~B & ~C & ~D, "tex-tech", use_mathrm = False), "A \\overline{B}\\,\\overline{C}\\,\\overline{D}")
+		self.assertEqual(format_expression(A & ~B & C & ~D, "tex-tech", use_mathrm = False), "A \\overline{B} C \\overline{D}")
+
+		self.assertEqual(format_expression(A & (~B | C), "tex-tech", use_mathrm = False), "A (\\overline{B} \\vee C)")

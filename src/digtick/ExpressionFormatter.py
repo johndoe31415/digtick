@@ -27,10 +27,10 @@ class ExpressionFormatterTex():
 		self._implicit_and = implicit_and
 		self._use_mathrm = use_mathrm
 		self._ops = {
-			Operator.Or: "\\vee",
-			Operator.And: "\\wedge",
-			Operator.Xor: "\\oplus",
-			Operator.Not: "\\neg",
+			Operator.Or: " \\vee ",
+			Operator.And: " \\wedge ",
+			Operator.Xor: " \\oplus ",
+			Operator.Not: "\\neg ",
 			Operator.Nand: "\\overset{\\sim}{\\wedge}",
 			Operator.Nor: "\\overset{\\sim}{\\vee}",
 		}
