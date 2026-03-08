@@ -27,7 +27,7 @@ import contextlib
 from digtick.sim import Circuit, CmpSource, CmpNOT, CmpSink, CmpAND, CmpOR, CmpXOR, CmpNAND, CmpDFlipFlop, LogisimLoader
 from digtick.sim.LogisimInterface import Vec2D
 from digtick.ExpressionParser import parse_expression
-from digtick.Exceptions import CircuitAstableException, DuplicateLabelException, WrongCircuitPowerStateException, UnknownComponentException, NoSuchCircuitException, NoSuchPinException
+from digtick.Exceptions import CircuitAstableException, DuplicateLabelException, WrongCircuitPowerStateException, UnknownComponentException, NoSuchCircuitException, NoSuchPinException, InputPinUnconnectedException
 from digtick.ValueTable import ValueTable
 
 _run_slow_tests = (os.getenv("UNITTEST_RUN_ALL") == "1")
@@ -445,3 +445,14 @@ class CircuitSimulationTests(unittest.TestCase):
 		self.assertEqual(len(found), 1)
 		self.assertIs(found[0], inverter1)
 		self.assertEqual(circ.build_table().compact_representation, ":A:Y1,Y10:1,1")
+
+	def test_component_open_lead(self):
+		circ = Circuit()
+		source = circ.new("Source", level = 0, label = "A")
+		andgate = circ.new("AND")
+		sink = circ.new("Sink", label = "Y")
+
+		circ.connect(source, "OUT", andgate, "A")
+		circ.connect(andgate, "Y", sink, "IN")
+		with self.assertRaises(InputPinUnconnectedException):
+			circ.power_on()
