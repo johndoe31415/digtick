@@ -243,13 +243,23 @@ class CmpXOR(CmpGate):
 		assert(model in [ "odd", "=1" ])
 		self._model = model
 
-	def tick(self):
+	def _compute_xor_output(self):
 		if self._model == "odd":
 			# Return one if an odd number of inputs is one
-			self.drive("Y", reduce(operator.xor, self.input_levels))
+			return reduce(operator.xor, self.input_levels)
 		else:
 			# Return one only if *exactly* one input is one
-			self.drive("Y", int(collections.Counter(self.input_levels)[1] == 1))
+			return int(collections.Counter(self.input_levels)[1] == 1)
+
+	def tick(self):
+		self.drive("Y", self._compute_xor_output())
+
+class CmpXNOR(CmpXOR):
+	_Name = "XNOR"
+	_NodeName = "~^"
+
+	def tick(self):
+		self.drive("Y", self._compute_xor_output() ^ 1)
 
 class CmpNAND(CmpGate):
 	_Name = "NAND"

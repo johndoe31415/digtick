@@ -445,7 +445,7 @@ class CircuitSimulationTests(unittest.TestCase):
 		self._test_loadfile_conforms_to("invgate.circ", ValueTable.from_compact_representation(":A,B:Y:10"))
 
 	def test_circuit_invgates(self):
-		self._test_loadfile_conforms_to("invgates.circ", ValueTable.from_compact_representation(":A,B,E,F:U1,U2,U3,U4,U5,U6,U7,U8,U9,U10,U11,U12,L1,L2,L3,L4,L5,L6,L7,L8:55000000,5500,550000,55,555555,55550055,55005555,55555500,55,550000,5500,55000000,54545454,51515151,45454545,15151515,14141414,41414141,41414141,14141414"))
+		self._test_loadfile_conforms_to("invgates.circ", ValueTable.from_compact_representation(":A,B,E,F:U1,U2,U3,U4,U5,U6,U7,U8,U9,U10,U11,U12,L1,L2,L3,L4,L5,L6,L7,L8,L9,L10,L11,L12:55000000,5500,550000,55,555555,55550055,55005555,55555500,55,550000,5500,55000000,54545454,51515151,45454545,15151515,14141414,41414141,41414141,14141414,41414141,14141414,14141414,41414141"))
 
 	def test_circuit_invgates_multiinput(self):
 		vt = ValueTable.parse_string(pkgutil.get_data("digtick.tests.data", "invgates_multiinput.txt").decode("ascii"), set_undefined_values_to = "forbidden")
