@@ -130,13 +130,7 @@ class Component():
 			else:
 				self[pin_name].drive(level)
 
-	def reset(self):
-		pass
-
 	def tick(self):
-		pass
-
-	def finish_tick(self):
 		pass
 
 	def __eq__(self, other: "Component"):

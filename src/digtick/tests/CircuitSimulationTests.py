@@ -27,7 +27,7 @@ import contextlib
 from digtick.sim import Circuit, CmpSource, CmpNOT, CmpSink, CmpAND, CmpOR, CmpXOR, CmpNAND, CmpDFlipFlop, LogisimLoader
 from digtick.sim.LogisimInterface import Vec2D
 from digtick.ExpressionParser import parse_expression
-from digtick.Exceptions import CircuitAstableException, DuplicateLabelException, WrongCircuitPowerStateException, UnknownComponentException, NoSuchCircuitException
+from digtick.Exceptions import CircuitAstableException, DuplicateLabelException, WrongCircuitPowerStateException, UnknownComponentException, NoSuchCircuitException, NoSuchPinException
 from digtick.ValueTable import ValueTable
 
 _run_slow_tests = (os.getenv("UNITTEST_RUN_ALL") == "1")
@@ -419,3 +419,29 @@ class CircuitSimulationTests(unittest.TestCase):
 	def test_circuit_nandgates(self):
 		vt = ValueTable.parse_string(pkgutil.get_data("digtick.tests.data", "nandgates.txt").decode("ascii"), set_undefined_values_to = "forbidden")
 		self._test_loadfile_conforms_to("nandgates.circ", vt)
+
+	def test_circuit_components(self):
+		circ = Circuit()
+		source = circ.new("Source", level = 0, label = "A")
+		inverter1 = circ.new("NOT")
+		inverter2 = circ.new("NOT", label = "Nice-Inverter")
+		sink1 = circ.new("Sink", label = "Y10")
+		sink2 = circ.new("Sink", label = "Y1")
+		circ.connect(source, "OUT", inverter1, "A")
+		circ.connect(source, "OUT", inverter2, "A")
+		circ.connect(inverter1, "Y", sink1, "IN")
+		circ.connect(inverter2, "Y", sink2, "IN")
+		with self.assertRaises(NoSuchPinException):
+			circ.connect(inverter1, "Z", sink1, "IN")
+		circ.power_on()
+		self.assertIn("Nice-Inverter", str(inverter2))
+		self.assertIn("Nice-Inverter", repr(inverter2))
+		self.assertNotIn(str(inverter2.cid), str(inverter2))
+		self.assertIn(str(inverter2.cid), repr(inverter2))
+		self.assertNotEqual(inverter1, inverter2)
+		self.assertNotEqual(inverter1, inverter2)
+
+		found = [ component for component in circ.components if (component == inverter1) ]
+		self.assertEqual(len(found), 1)
+		self.assertIs(found[0], inverter1)
+		self.assertEqual(circ.build_table().compact_representation, ":A:Y1,Y10:1,1")

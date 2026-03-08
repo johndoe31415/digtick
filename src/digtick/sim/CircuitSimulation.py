@@ -124,6 +124,10 @@ class Circuit():
 		self._powered_on = False
 		self._changed_inputs = set()
 
+	@property
+	def components(self):
+		return iter(self._components)
+
 	def new(self, component_name: str, *args, **kwargs):
 		component = Component.new(component_name, *args, **kwargs)
 		return self.add(component)
