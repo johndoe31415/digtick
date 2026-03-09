@@ -19,20 +19,31 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
+import os
 from digtick.sim.LogisimInterface import LogisimLoader
 from digtick.sim.Mutator import ComponentMutator
 from .MultiCommand import BaseAction
 
 class ActionMutateCircuit(BaseAction):
 	def run(self):
+		os.makedirs(self._args.output_directory, exist_ok = True)
+
 		lsl = LogisimLoader.load_from_file(self._args.circ_filename, circuit_name = self._args.circuit_name)
 		lsl.parse()
 
 		mutators = [ ]
 		for mutator in self._args.mutator:
-			(label, mutation_selector) = mutator.split(":", maxsplit = 1)
-			mutator = ComponentMutator(component = lsl.get_component(label = label), mutation_selector = mutation_selector)
+			if ":" in mutator:
+				(label, mutation_selector) = mutator.split(":", maxsplit = 1)
+			else:
+				(label, mutation_selector) = (mutator, None)
+			mutator = ComponentMutator(lsl = lsl, component_label = label, mutation_selector = mutation_selector)
 			mutators.append(mutator)
 
-		for applied_mutators in lsl.apply_mutators(mutators):
-			print(mutators)
+		(prefix, ext) = os.path.splitext(os.path.basename(self._args.circ_filename))
+		for (variant_number, applied_mutators) in enumerate(lsl.apply_mutators(mutators), 1):
+			filename = f"{self._args.output_directory}/{prefix}-{variant_number:03d}.circ"
+			lsl.write_to_file(filename)
+			print(filename)
+			print(variant_number)
+			print(applied_mutators)

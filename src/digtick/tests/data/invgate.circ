@@ -67,26 +67,28 @@
     <a name="circuit" val="main"/>
     <a name="circuitnamedboxfixedsize" val="true"/>
     <a name="simulationFrequency" val="2.0"/>
-    <comp lib="0" loc="(780,880)" name="Pin">
+    <comp lib="0" loc="(140,220)" name="Pin">
       <a name="appearance" val="NewPins"/>
       <a name="facing" val="north"/>
       <a name="label" val="A"/>
     </comp>
-    <comp lib="0" loc="(800,830)" name="Pin">
+    <comp lib="0" loc="(160,150)" name="Pin">
       <a name="appearance" val="NewPins"/>
       <a name="facing" val="south"/>
       <a name="label" val="Y"/>
       <a name="type" val="output"/>
     </comp>
-    <comp lib="0" loc="(820,890)" name="Pin">
+    <comp lib="0" loc="(180,220)" name="Pin">
       <a name="appearance" val="NewPins"/>
       <a name="facing" val="north"/>
       <a name="label" val="B"/>
     </comp>
-    <comp lib="1" loc="(800,830)" name="AND Gate">
+    <comp lib="1" loc="(160,150)" name="AND Gate">
       <a name="facing" val="north"/>
       <a name="label" val="G"/>
       <a name="negate1" val="true"/>
     </comp>
+    <wire from="(140,200)" to="(140,220)"/>
+    <wire from="(180,210)" to="(180,220)"/>
   </circuit>
 </project>

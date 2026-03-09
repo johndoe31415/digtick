@@ -52,6 +52,10 @@ class Vec2D():
 	def __neg__(self):
 		return Vec2D(-self.x, -self.y)
 
+	@property
+	def logisim_str(self) -> str:
+		return f"({self.x},{self.y})"
+
 	def rotate_offset(self, fd: FaceDirection):
 		match fd:
 			case FaceDirection.East:
@@ -85,6 +89,9 @@ class LogisimLoader():
 		self._libraries = { }
 		self._circuit = None
 
+	def write_to_file(self, filename: str):
+		self._doc.write(filename, encoding = "utf-8", xml_declaration = True)
+
 	@classmethod
 	def load_from_file(cls, filename: str, circuit_name: str = "main"):
 		doc = xml.etree.ElementTree.parse(filename)
@@ -103,30 +110,33 @@ class LogisimLoader():
 		for node in self._root.findall("./lib"):
 			self._libraries[node.get("name")] = node.get("desc")
 
+	def _component_node_to_dict(self, node: xml.etree.ElementTree.Element):
+		lib = node.get("lib")
+		name = node.get("name")
+		full_name = f"{self._libraries[lib]}.{name}"
+		loc = Vec2D.parse(node.get("loc"))
+
+		component = {
+			"name": full_name,
+			"loc": loc,
+			"node": node,
+		}
+		for attribute in node.findall("./a"):
+			(key, value) = (attribute.get("name"), attribute.get("val"))
+			if key in [ "inputs", "size" ]:
+				value = int(value)
+			elif key in [ "facing" ]:
+				value = FaceDirection(value)
+			component[f".{key}"] = value
+		return component
+
 	def _iter_components(self):
 		for node in self._xml_circuit.findall("./comp"):
-			lib = node.get("lib")
-			name = node.get("name")
-			full_name = f"{self._libraries[lib]}.{name}"
-			loc = Vec2D.parse(node.get("loc"))
-
-			component = {
-				"name": full_name,
-				"loc": loc,
-				"node": node,
-			}
-			for attribute in node.findall("./a"):
-				(key, value) = (attribute.get("name"), attribute.get("val"))
-				if key in [ "inputs", "size" ]:
-					value = int(value)
-				elif key in [ "facing" ]:
-					value = FaceDirection(value)
-				component[f".{key}"] = value
-			yield component
+			yield self._component_node_to_dict(node)
 
 	def _iter_wires(self):
 		for node in self._xml_circuit.findall("./wire"):
-			yield (Vec2D.parse(node.get("from")), Vec2D.parse(node.get("to")))
+			yield (node, (Vec2D.parse(node.get("from")), Vec2D.parse(node.get("to"))))
 
 	def _find_gate_pin_locations(self, component: dict, translated_component: dict, xoffset: int = 0):
 		def _common_pin_offsets(x_value: int, input_count: int):
@@ -327,7 +337,7 @@ class LogisimLoader():
 		self._net_id_by_pos = { }
 		self._pos_by_net_id = collections.defaultdict(set)
 		self._max_net_id = 0
-		for (src, dst) in self._iter_wires():
+		for (_, (src, dst)) in self._iter_wires():
 			self._add_net(src, dst)
 
 	def dump_nets(self):
@@ -385,6 +395,50 @@ class LogisimLoader():
 	def get_component(self, label: str) -> dict:
 		return self._named_components[label]
 
-	def apply_mutators(self, mutator_list: list["ComponentMutator"]):
-		for mutation in itertools.product(*mutator_list):
-			yield (mutation)
+	def _rewire_nets(self, replacement_dict: dict):
+		for	(wire_node, (src, dst)) in self._iter_wires():
+			if src in replacement_dict:
+				wire_node.set("from", replacement_dict[src].logisim_str)
+			if dst in replacement_dict:
+				wire_node.set("to", replacement_dict[dst].logisim_str)
+
+	def _apply_mutator(self, mutator: "ComponentMutator", mutation: dict):
+		component = self.get_component(mutator.component_label)
+		node = component["component_dict"]["node"]
+		node.set("name", f"{mutation['alternative']} Gate")
+
+		# Remove all negated pin attributes
+		for attribute_node in node.findall("./a"):
+			(key, value) = (attribute_node.get("name"), attribute_node.get("val"))
+			if key.startswith("negate"):
+				node.remove(attribute_node)
+
+		# Then re-add them
+		for negated_pin_id in mutation["invert"]:
+			a = xml.etree.ElementTree.SubElement(node, "a")
+			a.set("name", f"negate{negated_pin_id}")
+			a.set("val", "true")
+
+		# Now parse the node again
+		new_component_dict = self._component_node_to_dict(node)
+		new_resolved_component = self._resolve_component(new_component_dict)
+
+		# Then rewrite nets
+		pin_map = { }
+		old_pin_locations = component["resolved_component"]["pins"]
+		new_pin_locations = new_resolved_component["pins"]
+		for pin_name in old_pin_locations:
+			pin_map[old_pin_locations[pin_name]] = new_pin_locations[pin_name]
+		self._rewire_nets(pin_map)
+
+		# Finally, replace the new component with the internally parsed data
+		component["component_dict"] = new_component_dict
+		component["resolved_component"] = new_resolved_component
+
+
+	def apply_mutators(self, mutators: list["ComponentMutator"]):
+		for mutations in itertools.product(*mutators):
+			for (mutator, mutation) in zip(mutators, mutations):
+				self._apply_mutator(mutator, mutation)
+
+			yield (mutations)

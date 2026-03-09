@@ -182,7 +182,7 @@ def main():
 	def genparser(parser):
 		parser.add_argument("-d", "--output-directory", metavar = "path", default = "mutated-circuit", help = "Output directory that mutated circuits should be placed in. Defaults to %(default)s.")
 		parser.add_argument("-n", "--circuit-name", metavar = "name", default = "main", help = "Name of the circuit to be mutated. Defaults to %(default)s.")
-		parser.add_argument("-m", "--mutator", metavar = "label:mutator", action = "append", default = [ ], required = True, help = "Mutator(s) to apply. Must be specified at least once, but can be specified multiple times to mutate different components of a circuit. For mutator syntax, see the documentation.")
+		parser.add_argument("-m", "--mutator", metavar = "label[:mutator]", action = "append", default = [ ], required = True, help = "Mutator(s) to apply. Must be specified at least once, but can be specified multiple times to mutate different components of a circuit. For mutator syntax, see the documentation.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increases verbosity. Can be specified multiple times to increase.")
 		parser.add_argument("circ_filename", help = "Circuit filename which is taken as the input template.")
 	mc.register("mutate-circuit", "Mutate a Logisim circuit and output mutated circuit files", genparser, action = ActionMutateCircuit)

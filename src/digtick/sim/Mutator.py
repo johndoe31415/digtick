@@ -24,16 +24,29 @@ from digtick.Exceptions import UnsupportedMutationOperation
 from .Components import CmpGate
 
 class ComponentMutator():
-	def __init__(self, component: dict, mutation_selector: str):
-		if component["component_dict"]["name"] not in [ "#Gates.AND Gate", "#Gates.OR Gate", "#Gates.NAND Gate", "#Gates.NOR Gate", "#Gates.XOR Gate", "#Gates.XNOR Gate" ]:
-			raise UnsupportedMutationOperation(f"Component {component} is not a gate and cannot be mutated.")
-		self._component = component
+	def __init__(self, lsl: "LogisimLoader", component_label: str, mutation_selector: str):
+		self._lsl = lsl
+		self._component_label = component_label
+		self._mutation_selector = mutation_selector
+		if self.component_dict["name"] not in [ "#Gates.AND Gate", "#Gates.OR Gate", "#Gates.NAND Gate", "#Gates.NOR Gate", "#Gates.XOR Gate", "#Gates.XNOR Gate" ]:
+			raise UnsupportedMutationOperation(f"Component {component_label} is not a gate and cannot be mutated: type {self.component_dict['name']}")
 
 		# TODO parse component mutator
-		self._mutation_selector = mutation_selector
 #		self._alternative_components = [ "AND", "OR", "NAND", "NOR", "XOR", "XNOR" ]
 		self._alternative_components = [ "XOR" ]
-		self._inversion_combinations = list(range(2 ** self._component["resolved_component"]["input_count"]))
+		self._inversion_combinations = list(range(2 ** self.resolved_component["input_count"]))
+
+	@property
+	def component_label(self):
+		return self._component_label
+
+	@property
+	def component_dict(self):
+		return self._lsl.get_component(self._component_label)["component_dict"]
+
+	@property
+	def resolved_component(self):
+		return self._lsl.get_component(self._component_label)["resolved_component"]
 
 	@staticmethod
 	def _int2bitlist(intval):
