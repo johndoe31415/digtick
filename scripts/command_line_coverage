@@ -110,10 +110,10 @@ $digtick analyze-sequential /tmp/table1 || must_fail; assert_failed
 $digtick mutate -m G src/digtick/tests/data/invgate.circ
 $digtick mutate -m G:c=AND src/digtick/tests/data/invgate.circ
 $digtick mutate -m G:c=AND,c=OR src/digtick/tests/data/invgate.circ
-$digtick mutate -m G:inv=foo src/digtick/tests/data/invgate.circ
-$digtick mutate -m G:comb=foo src/digtick/tests/data/invgate.circ
-$digtick mutate -m G:randcomb=foo src/digtick/tests/data/invgate.circ
-$digtick mutate -m G:foo=bar src/digtick/tests/data/invgate.circ
+$digtick mutate -m G:inv=foo src/digtick/tests/data/invgate.circ || must_fail; assert_failed
+$digtick mutate -m G:comb=foo src/digtick/tests/data/invgate.circ || must_fail; assert_failed
+$digtick mutate -m G:randcomb=foo src/digtick/tests/data/invgate.circ || must_fail; assert_failed
+$digtick mutate -m G:foo=bar src/digtick/tests/data/invgate.circ || must_fail; assert_failed
 $digtick mutate -m G:inv=1 src/digtick/tests/data/invgate.circ
 $digtick mutate -m G:inv=1,randcomb=3 src/digtick/tests/data/invgate.circ
 $digtick mutate -m G:inv=1,comb=1,comb=2 src/digtick/tests/data/invgate.circ
