@@ -368,7 +368,6 @@ class LogisimLoader():
 			# connected together
 			for (pin_name, pin_location) in resolved_component["pins"].items():
 				self._add_net(pin_location, pin_location)
-		print(self._named_components)
 
 	def _wire_components(self):
 		connected_nets = collections.defaultdict(list)
@@ -414,10 +413,11 @@ class LogisimLoader():
 				node.remove(attribute_node)
 
 		# Then re-add them
-		for negated_pin_id in mutation["invert"]:
-			a = xml.etree.ElementTree.SubElement(node, "a")
-			a.set("name", f"negate{negated_pin_id}")
-			a.set("val", "true")
+		for pin_id in range(mutator.resolved_component["input_count"]):
+			if mutation.get(f"negate{pin_id}", False):
+				a = xml.etree.ElementTree.SubElement(node, "a")
+				a.set("name", f"negate{pin_id}")
+				a.set("val", "true")
 
 		# Now parse the node again
 		new_component_dict = self._component_node_to_dict(node)
@@ -428,17 +428,17 @@ class LogisimLoader():
 		old_pin_locations = component["resolved_component"]["pins"]
 		new_pin_locations = new_resolved_component["pins"]
 		for pin_name in old_pin_locations:
-			pin_map[old_pin_locations[pin_name]] = new_pin_locations[pin_name]
+			(old_location, new_location) = (old_pin_locations[pin_name], new_pin_locations[pin_name])
+			if old_location != new_location:
+				pin_map[old_location] = new_location
 		self._rewire_nets(pin_map)
 
 		# Finally, replace the new component with the internally parsed data
 		component["component_dict"] = new_component_dict
 		component["resolved_component"] = new_resolved_component
 
-
 	def apply_mutators(self, mutators: list["ComponentMutator"]):
 		for mutations in itertools.product(*mutators):
 			for (mutator, mutation) in zip(mutators, mutations):
 				self._apply_mutator(mutator, mutation)
-
 			yield (mutations)

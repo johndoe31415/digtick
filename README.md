@@ -775,5 +775,64 @@ From this, it is easy to see that the circuit is fixpoint-free and the
 worst-case cycle length is four (the subgraph in the upper right corner).
 
 
+## "mutate": Change Logisim circuits
+The `mutate` command allows you to create a Logisim circuit, then change gates
+in that circuit. It allows you, for example, to create a simple combinatorial
+exercise question and randomly have gates swapped until a circuit comes out
+that you like. Caveat: Logisim nets are based solely on their position -- it is
+therefore imperative that where gates are swapped by longer counterparts, there
+still needs to be at least one tiny piece of wire remaining. I.e., to be
+completely safe use XNOR with all inverted inputs in your template everywhere
+(it is the longest component) and do not place a source/component directly over
+the XNOR pins, but at least have a piece of wire connect to it. Otherwise you
+will encounter weird results (e.g., unconnected pins).
+
+`mutate` works by specifying the template circuit along with a list of gate
+labels to mutate along with a mutation specifier (i.e., what that gate should
+be replaced by). If the mutation specifier is missing, all possible
+combinations will be built (for a two-input gate, that is 24 combinations: AND,
+OR, NAND, NOR, XOR, XNOR with no inverted inputs, inverted A, inverted B and
+inverted A and B inputs makes 6 x 4 = 24. If two components are specified, that
+number quickly grows (576 combinations for two components, 13824 for three,
+etc.).
+
+A mutation specifier is a comma-separated list which may contain the following items:
+
+  - `c=GATE`: Allow this type of gate for replacement. If no `c=` directive is
+    included in the mutation specifier, by default all six variants are
+    included.
+  - `inv=PINNO`: Allow inversion of this pin number, count starting at 1. If
+    `inv=0` is given this creates a mutation specifier in which no inputs are
+    inverted at all.
+  - `comb=INDEX`: Select a specific combination out of the enumeration. For
+    example, if nothing else is specified for a standard gate, this needs to be
+    a number inbetween 0..23.
+  - `randcomb=COUNT`: Select `COUNT` random indices out of the pool of
+    combinations.
+
+For example, the following mutation specifiers are all valid (the text always
+assumes a two-input gate, but the syntax also works for gates with arbitrary
+number of inputs):
+
+  - `c=AND,c=OR`: Replace only by AND or OR gates, all four input pin
+    inversions possible.
+  - `c=AND,index=0`: Replace by AND gate with no pins inverted.
+  - `c=AND,index=3`: Replace by AND gate with both pins inverted.
+  - `randcomb=1`: Replace by a completely random gate with randomly inverted
+    pins.
+  - `c=XOR,c=NOR,inv=1`: Replace by XOR and NOR with pin 1 either inverted or
+    not (four combinations total).
+
+For example, this command:
+
+```
+$ digtick mutate -m G1:randcomb=1 -m G2:randcomb=1 -m G3:c=AND examples/mutate_me.circ
+```
+
+Will generate 8 outputs files in the `mutated-circuit` directory. `G1` and `G2`
+are chosen fully random and all possible input pin variations of `AND` gates
+are attempted for `G3`. Since `G3` is a three-input gate, this makes for 8
+possibilities.
+
 ## License
 GNU GPL-3.

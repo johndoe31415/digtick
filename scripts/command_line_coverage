@@ -106,3 +106,14 @@ $digtick analyze-sequential -f dot /tmp/state_table.txt
 echo ":FF1,FF2,FF3,FF4,FF5:FF1',FF2',FF3',FF4',FF5':5555000055550000,5555000000005555,4455440044554400,55005500550055,4051514040515140" | $digtick analyze-sequential
 echo ":FF1,FF2,FF3,FF4,FF5:FF1',FF2',FF3',FF4',FF5':5555000055550000,5555000000005555,4455440044554400,55005500550055,4051514040515140" | $digtick analyze-sequential -f dot
 $digtick analyze-sequential /tmp/table1 || must_fail; assert_failed
+
+$digtick mutate -m G src/digtick/tests/data/invgate.circ
+$digtick mutate -m G:c=AND src/digtick/tests/data/invgate.circ
+$digtick mutate -m G:c=AND,c=OR src/digtick/tests/data/invgate.circ
+$digtick mutate -m G:inv=foo src/digtick/tests/data/invgate.circ
+$digtick mutate -m G:comb=foo src/digtick/tests/data/invgate.circ
+$digtick mutate -m G:randcomb=foo src/digtick/tests/data/invgate.circ
+$digtick mutate -m G:foo=bar src/digtick/tests/data/invgate.circ
+$digtick mutate -m G:inv=1 src/digtick/tests/data/invgate.circ
+$digtick mutate -m G:inv=1,randcomb=3 src/digtick/tests/data/invgate.circ
+$digtick mutate -m G:inv=1,comb=1,comb=2 src/digtick/tests/data/invgate.circ

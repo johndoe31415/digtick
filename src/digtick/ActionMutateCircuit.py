@@ -44,6 +44,3 @@ class ActionMutateCircuit(BaseAction):
 		for (variant_number, applied_mutators) in enumerate(lsl.apply_mutators(mutators), 1):
 			filename = f"{self._args.output_directory}/{prefix}-{variant_number:03d}.circ"
 			lsl.write_to_file(filename)
-			print(filename)
-			print(variant_number)
-			print(applied_mutators)
