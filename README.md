@@ -834,5 +834,15 @@ are chosen fully random and all possible input pin variations of `AND` gates
 are attempted for `G3`. Since `G3` is a three-input gate, this makes for 8
 possibilities.
 
+Since the `randcomb=1` selector is particularly useful, there is a handy shortcut:
+
+```
+$ digtick mutate -r G1,G2,G3,G4,G5,G6 examples/mutate_me.circ
+```
+
+This creates only a single output file in which all of G1...G6 are fully
+randomized (both in what components they are replaced by and which input pins
+of theirs are inverted)
+
 ## License
 GNU GPL-3.

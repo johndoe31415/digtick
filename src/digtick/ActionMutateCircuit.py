@@ -40,6 +40,15 @@ class ActionMutateCircuit(BaseAction):
 			mutator = ComponentMutator(lsl = lsl, component_label = label, mutation_selector = mutation_selector)
 			mutators.append(mutator)
 
+		# Shortcut notation
+		if self._args.randomize_component is not None:
+			for label in self._args.randomize_component.split(","):
+				mutator = ComponentMutator(lsl = lsl, component_label = label, mutation_selector = "randcomb=1")
+				mutators.append(mutator)
+
+		if len(mutators) == 0:
+			raise ValueError("At least one mutator needs to be specified.")
+
 		(prefix, ext) = os.path.splitext(os.path.basename(self._args.circ_filename))
 		for (variant_number, applied_mutators) in enumerate(lsl.apply_mutators(mutators), 1):
 			filename = f"{self._args.output_directory}/{prefix}-{variant_number:03d}.circ"
