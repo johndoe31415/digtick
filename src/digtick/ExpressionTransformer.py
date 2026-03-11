@@ -224,6 +224,15 @@ class SimplificationTransformer(ExpressionTransformer):
 			case BinaryOperator(lhs, Operator.Or, rhs) if (lhs.variables == rhs.variables) and (lhs == ~rhs):
 				return Constant(1)
 
+			# Parenthesis removal
+			case BinaryOperator(lhs, op1, Parenthesis(BinaryOperator(_, op2, _) as rhs)) if (op1.precedence <= op2.precedence):
+				return BinaryOperator(lhs, op1, rhs)
+
+			# Parenthesis removal
+			case BinaryOperator(Parenthesis(BinaryOperator(_, op1, _) as lhs), op2, rhs) if (op1.precedence <= op2.precedence):
+				return BinaryOperator(lhs, op2, rhs)
+
+
 		return BinaryOperator(self._transform(expr.lhs), expr.op, self._transform(expr.rhs))
 
 	def transform(self, expression: ParseTreeElement):

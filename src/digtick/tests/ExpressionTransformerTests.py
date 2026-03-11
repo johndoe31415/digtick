@@ -31,10 +31,21 @@ class ExpressionTransformerTests(unittest.TestCase):
 	def _simplify(self, expr_str: str):
 		return self._simplify_transformer.transform(parse_expression(expr_str))
 
+	def _assert_simplification(self, complex_expr_str: str, expected_simplified_str: str):
+		simplified = self._simplify(complex_expr_str)
+		simplified_str = format_expression(simplified)
+		if simplified_str != expected_simplified_str:
+			with open("/tmp/failed_expression_simplification.txt", "w") as f:
+				print(format_expression(simplified, "dot"), file = f)
+		self.assertEqual(simplified_str, expected_simplified_str)
+
 	def test_simplify_remove_parenthesis(self):
-		self.assertEqual(format_expression(self._simplify("(((A + B)))")), "A + B")
-		self.assertEqual(format_expression(self._simplify("(((A + B)))((X))")), "(A + B) X")
-		#self.assertEqual(format_expression(self._simplify("(((A + B)))((X Y))")), "(A + B) X Y")		# TODO unhanled!
+		self._assert_simplification("(((A + B)))", "A + B")
+		self._assert_simplification("(((A + B)))((X))", "(A + B) X")
+		self._assert_simplification("(((A + B)))((X + Y))", "(A + B) (X + Y)")
+		self._assert_simplification("(((A + B)))((X Y))", "(A + B) X Y")
+		self._assert_simplification("(((A B)))((X + Y))", "A B (X + Y)")
+		self._assert_simplification("(((A B))) + ((X + Y))", "A B + X + Y")
 
 	def test_simplify_and_constant_parenthesis(self):
 		self.assertEqual(format_expression(self._simplify("X 1")), "X")
