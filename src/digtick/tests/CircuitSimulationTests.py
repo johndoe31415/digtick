@@ -500,3 +500,11 @@ class CircuitSimulationTests(unittest.TestCase):
 		circ.connect(andgate, "Y", sink, "IN")
 		with self.assertRaises(InputPinUnconnectedException):
 			circ.power_on()
+
+	def test_circuit_unknown_size(self):
+		with self.assertRaises(UnknownComponentException):
+			self._test_loadfile_conforms_to("unknown_gate_size.circ", None)
+
+	def test_circuit_wide_gates(self):
+		vt = ValueTable.from_compact_representation(":A:Y:5")
+		self._test_loadfile_conforms_to("widebois.circ", vt)
