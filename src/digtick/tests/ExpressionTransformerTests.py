@@ -84,3 +84,8 @@ class ExpressionTransformerTests(unittest.TestCase):
 	def test_complement(self):
 		self._assert_simplification("F !F", "0")
 		self._assert_simplification("!F F", "0")
+		self._assert_simplification("(A B + C D) -(A B + C D)", "0")
+
+		self._assert_simplification("!F + F", "1")
+		self._assert_simplification("F + !F", "1")
+		self._assert_simplification("(A B + C D) + -(A B + C D)", "1")
