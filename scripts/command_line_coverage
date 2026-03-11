@@ -119,3 +119,4 @@ $digtick mutate -m G:comb=999 src/digtick/tests/data/invgate.circ || must_fail; 
 $digtick mutate -m G:inv=1 src/digtick/tests/data/invgate.circ
 $digtick mutate -m G:inv=1,randcomb=3 src/digtick/tests/data/invgate.circ
 $digtick mutate -m G:inv=1,comb=1,comb=2 --prefix foobar src/digtick/tests/data/invgate.circ
+$digtick mutate -r G1,G2,G3,G4,G5,G6 examples/mutate_me.circ
