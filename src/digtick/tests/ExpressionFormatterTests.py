@@ -126,3 +126,17 @@ class ExpressionFormatterTests(unittest.TestCase):
 		self.assertEqual(format_expression(A & ~B & C & ~D, "tex-tech", use_mathrm = False), "A \\overline{B} C \\overline{D}")
 
 		self.assertEqual(format_expression(A & (~B | C), "tex-tech", use_mathrm = False), "A (\\overline{B} \\vee C)")
+
+		self.assertEqual(format_expression(parse_expression("A !B !C + B C"), "tex-tech", use_mathrm = False), "A \\overline{B}\\,\\overline{C} \\vee B C")
+		self.assertEqual(format_expression(parse_expression("A (B + C)"), "tex-tech", use_mathrm = False), "A (B \\vee C)")
+		self.assertEqual(format_expression(parse_expression("A C (B + D) + E + F"), "tex-tech", use_mathrm = False), "A C (B \\vee D) \\vee E \\vee F")
+		self.assertEqual(format_expression(parse_expression("A C !(B + !(D + !E)) + E + !F"), "tex-tech", use_mathrm = False), "A C \\overline{(B \\vee \\overline{(D \\vee \\overline{E})})} \\vee E \\vee \\overline{F}")
+		self.assertEqual(format_expression(parse_expression("A B !C D !E F !G !H !I !J"), "tex-tech", use_mathrm = False), "A B \\overline{C} D \\overline{E} F \\overline{G}\\,\\overline{H}\\,\\overline{I}\\,\\overline{J}")
+		self.assertEqual(format_expression(parse_expression("A @ B % C"), "tex-tech", use_mathrm = False), "A\\overset{\\sim}{\\wedge}B\\overset{\\sim}{\\vee}C")
+
+		self.assertEqual(format_expression(parse_expression("A !B !C + B C"), "tex-math", use_mathrm = False), "A \\neg B \\neg C \\vee B C")
+		self.assertEqual(format_expression(parse_expression("A (B + C)"), "tex-math", use_mathrm = False), "A (B \\vee C)")
+		self.assertEqual(format_expression(parse_expression("A C (B + D) + E + F"), "tex-math", use_mathrm = False), "A C (B \\vee D) \\vee E \\vee F")
+		self.assertEqual(format_expression(parse_expression("A C !(B + !(D + !E)) + E + !F"), "tex-math", use_mathrm = False), "A C \\neg (B \\vee \\neg (D \\vee \\neg E)) \\vee E \\vee \\neg F")
+		self.assertEqual(format_expression(parse_expression("A B !C D !E F !G !H !I !J"), "tex-math", use_mathrm = False), "A B \\neg C D \\neg E F \\neg G \\neg H \\neg I \\neg J")
+		self.assertEqual(format_expression(parse_expression("A @ B % C"), "tex-math", use_mathrm = False), "A\\overset{\\sim}{\\wedge}B\\overset{\\sim}{\\vee}C")
