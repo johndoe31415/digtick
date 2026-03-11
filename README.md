@@ -843,9 +843,13 @@ Since the `randcomb=1` selector is particularly useful, there is a handy shortcu
 $ digtick mutate -r G1,G2,G3,G4,G5,G6 examples/mutate_me.circ
 ```
 
-This creates only a single output file in which all of G1...G6 are fully
+This creates only a single output file in which all of `G1`...`G6` are fully
 randomized (both in what components they are replaced by and which input pins
-of theirs are inverted)
+of theirs are inverted). This is the result when run four times in a row,
+stacked on top of each other for easier comparison:
+
+![Same circuit mutated four times](https://raw.githubusercontent.com/johndoe31415/digtick/main/docs/mutations.png)
+
 
 ## License
 GNU GPL-3.
