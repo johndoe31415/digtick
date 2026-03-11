@@ -44,8 +44,7 @@ jobs:
           jbin/tpp --coverage-scripts --report-xml --set-test-environment
           scripts/run_all_readme_commands
 
-      - name: Upload coverage to Coveralls
-        uses: coverallsapp/github-action@v2
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
         with:
-          format: cobertura
-          file: coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
