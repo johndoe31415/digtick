@@ -19,13 +19,13 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
-from .ParserTests import ParserTests
-from .ExpressionFormatterTests import ExpressionFormatterTests
-from .QMCTests import QMCTests
-from .ExpressionTreeTests import ExpressionTreeTests
-from .CircuitSimulationTests import CircuitSimulationTests
-from .DTDTests import DTDTests
-from .ValueTableTests import ValueTableTests
-from .ExpressionTransformerTests import ExpressionTransformerTests
-from .ToolsTests import ToolsTests
-from .KVDiagramTests import KVDiagramTests
+import unittest
+from digtick.Exceptions import AmbiguousInputException
+from digtick.KVDiagram import KVDiagram
+from digtick.ValueTable import ValueTable
+
+class KVDiagramTests(unittest.TestCase):
+	def test_ambiguous(self):
+		vt = ValueTable.from_compact_representation(":A,B:Y1,Y0:10,50")
+		with self.assertRaises(AmbiguousInputException):
+			kv = KVDiagram(vt)

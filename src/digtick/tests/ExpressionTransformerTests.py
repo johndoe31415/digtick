@@ -89,3 +89,9 @@ class ExpressionTransformerTests(unittest.TestCase):
 		self._assert_simplification("!F + F", "1")
 		self._assert_simplification("F + !F", "1")
 		self._assert_simplification("(A B + C D) + -(A B + C D)", "1")
+
+	def test_noop_transform(self):
+		expr = parse_expression("(((A + B)))((X + Y))(C A + B) (X + Y)")
+		noop_transform = ExpressionTransformer()
+		transformed = noop_transform.transform(expr)
+		self.assertTrue(transformed.identical_to(expr))

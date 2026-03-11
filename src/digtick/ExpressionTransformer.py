@@ -229,8 +229,4 @@ class SimplificationTransformer(ExpressionTransformer):
 				break
 			else:
 				expression = transformed
-
-		# Remove outer layers of parenthesis
-		while isinstance(transformed, Parenthesis):
-			transformed = transformed.inner
 		return transformed
