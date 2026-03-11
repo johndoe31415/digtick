@@ -19,6 +19,7 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
+import json
 from .MultiCommand import BaseAction
 from .ValueTable import ValueTable
 from .Tools import open_file
@@ -37,10 +38,17 @@ class ActionAnalyzeSequential(BaseAction):
 
 		# Cannot simply iterate as outputs may be out-of-order
 		graph_edges = [ ]
-		for input_value in range(1 << len(self._vt.input_variable_names)):
+		hdist_sum = 0
+		hdist_min = None
+		state_count = 2 ** len(self._vt.input_variable_names)
+		for input_value in range(state_count):
 			output_values = [ self._vt.at_index(input_value, varname) for varname in self._output_vars ]
 			output_value = sum(bitvalue << bitno for (bitno, bitvalue) in enumerate(reversed(output_values)))
 			graph_edges.append((input_value, output_value))
+			hdist = (input_value ^ output_value).bit_count()
+			if (hdist_min is None) or (hdist < hdist_min):
+				hdist_min = hdist
+			hdist_sum += hdist
 
 		analyzer = DAGAnalyzer(graph_edges)
 		if self._args.verbose >= 2:
@@ -54,7 +62,22 @@ class ActionAnalyzeSequential(BaseAction):
 				path = analyzer.walk(tail.leaf_node, step_count = tail.length + 1)
 				print(f"   Tail length {tail.length}: {' → '.join(str(node) for node in path[:-1])} → [ {path[-1]} of cycle ID={tail.end_cycle.primary_node} length {tail.end_cycle.length} ]")
 			print(f"State graph has {len(analyzer.cycles)} cycles and {len(analyzer.tails)} tails. Shortest cycle length: {analyzer.shortest_cycle_length}")
+			print(f"Average Hamming distance between states: {hdist_sum / state_count:.1f} bits, minimum Hamming ditance: {hdist_min} bit")
 		elif self._args.output_format == "dot":
 			analyzer.print_graphviz(format_bits = len(self._vt.input_variable_names))
+		elif self._args.output_format == "json":
+			json_data = {
+				"source": self._args.filename,
+				"input_vars": self._vt.input_variable_names,
+				"output_vars": self._output_vars,
+				"cycles": [ cycle._asdict() for cycle in analyzer.cycles ],
+				"tail_count": len(analyzer.tails),
+				"shortest_cycle_length": analyzer.shortest_cycle_length,
+				"hamming_distance": {
+					"avg": hdist_sum / state_count,
+					"min": hdist_min,
+				},
+			}
+			print(json.dumps(json_data))
 		else: # pragma unreachable
 			raise NotImplementedError(self._args.output_format)

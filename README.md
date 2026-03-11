@@ -777,6 +777,11 @@ Which creates the following diagram:
 From this, it is easy to see that the circuit is fixpoint-free and the
 worst-case cycle length is four (the subgraph in the upper right corner).
 
+Note that there is also a JSON output option. This is intended so that you can
+create a circuit template, run it through random mutations, simulate and
+evaluate it and automatically generate a file that is suitable for you as an
+exam or training question.
+
 
 ## "mutate": Change Logisim circuits
 The `mutate` command allows you to create a Logisim circuit, then change gates
