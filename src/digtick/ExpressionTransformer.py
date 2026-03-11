@@ -142,17 +142,10 @@ class SimplificationTransformer(ExpressionTransformer):
 	_Name = "simplify"
 
 	def _transform_parenthesis(self, expr: "Expression"):
-		match (expr.inner):
-			case Parenthesis(inner):
-				return Parenthesis(self._transform(inner))
-
-			case Constant(value):
-				return Constant(value)
-
-			case Variable(varname):
-				return Variable(varname)
-
-		return Parenthesis(self._transform(expr.inner))
+		# Parenthesis are never a needed element since the AST already
+		# represents the order of operations perfectly. For simplifications,
+		# they can be completely discarded.
+		return self._transform(expr.inner)
 
 	def _transform_unary(self, expr: "Expression"):
 		match (expr.op, expr.rhs):
@@ -223,15 +216,6 @@ class SimplificationTransformer(ExpressionTransformer):
 			# Complement
 			case BinaryOperator(lhs, Operator.Or, rhs) if (lhs.variables == rhs.variables) and (lhs == ~rhs):
 				return Constant(1)
-
-			# Parenthesis removal
-			case BinaryOperator(lhs, op1, Parenthesis(BinaryOperator(_, op2, _) as rhs)) if (op1.precedence <= op2.precedence):
-				return BinaryOperator(lhs, op1, rhs)
-
-			# Parenthesis removal
-			case BinaryOperator(Parenthesis(BinaryOperator(_, op1, _) as lhs), op2, rhs) if (op1.precedence <= op2.precedence):
-				return BinaryOperator(lhs, op2, rhs)
-
 
 		return BinaryOperator(self._transform(expr.lhs), expr.op, self._transform(expr.rhs))
 
