@@ -109,6 +109,7 @@ echo ":FF1,FF2,FF3,FF4,FF5:FF1',FF2',FF3',FF4',FF5':5555000055550000,55550000000
 echo ":FF1,FF2,FF3,FF4,FF5:FF1',FF2',FF3',FF4',FF5':5555000055550000,5555000000005555,4455440044554400,55005500550055,4051514040515140" | $digtick analyze-sequential -f dot
 $digtick analyze-sequential /tmp/table1 || must_fail; assert_failed
 
+$digtick mutate src/digtick/tests/data/invgate.circ || must_fail; assert_failed
 $digtick mutate -m G src/digtick/tests/data/invgate.circ
 $digtick mutate -m G:c=AND src/digtick/tests/data/invgate.circ
 $digtick mutate -m G:c=AND,c=OR src/digtick/tests/data/invgate.circ
