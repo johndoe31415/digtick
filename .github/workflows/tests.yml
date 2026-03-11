@@ -46,6 +46,9 @@ jobs:
       - name: Run testcases and determine coverage
         run: jbin/tpp --coverage-scripts --report-xml --set-test-environment
 
+      - name: Show debug output
+        run: ls -la
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
