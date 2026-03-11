@@ -1,0 +1,35 @@
+#!/bin/bash
+#
+#
+
+cat <<EOF
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\begin{document}
+EOF
+
+while read formula; do
+	TEXT=$(digtick parse -f text "${formula}")
+	TEX_TECH=$(digtick parse -f tex-tech "${formula}")
+	TEX_MATH=$(digtick parse -f tex-math "${formula}")
+	
+	echo "\\begin{verbatim} $formula \\end{verbatim}"
+	echo "\\begin{verbatim} $TEXT \\end{verbatim}"
+	echo  "\[ ${TEX_TECH} \]"
+	echo  "\[ ${TEX_MATH} \]"
+done <<EOF
+A B
+A !B !C + B C
+A (B + C)
+(A + B) C
+A C (B + D) + E + F
+A C !(B + D) + E + !F
+A C !(B + !(D + !E)) + E + !F
+A B !C D !E F !G !H !I !J
+A @ B % C
+EOF
+
+cat <<EOF
+\end{document}
+EOF
