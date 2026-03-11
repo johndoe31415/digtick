@@ -625,10 +625,10 @@ renders it as an SVG. As an example, consider the example shown before in
 `dtd-create`. Let us reproduce it from its pseudo-random seed and render it:
 
 ```
-$ digtick dtd-create -s 8910607998 | digtick dtd-render -o docs/timing_diagram.svg
+$ digtick dtd-create -s 8910607998 | digtick dtd-render -o /tmp/timing_diagram.svg
 ```
 
-Will create the file `docs/timing_diagram.svg` which you can see here (note
+Will create the file `/tmp/timing_diagram.svg` which you can see here (note
 that here, a PNG-conversion is shown which is why it looks fuzzy/washed out --
 the original is crystal clear):
 
