@@ -18,8 +18,9 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Install Python code quality tools
+      - name: Install build and runtime dependencies
         run: |
+          sudo apt-get install graphviz
           pip3 install coverage pylint
           git clone --depth 1 https://github.com/johndoe31415/jbin
 
@@ -39,10 +40,11 @@ jobs:
       - name: Lint code, fail if there are linter errors
         run: jbin/tpp --lint-code
 
+      - name: Verify that all README.md commands work
+        run: scripts/run_all_readme_commands
+
       - name: Run testcases and determine coverage
-        run: |
-          jbin/tpp --coverage-scripts --report-xml --set-test-environment
-          scripts/run_all_readme_commands
+        run: jbin/tpp --coverage-scripts --report-xml --set-test-environment
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
