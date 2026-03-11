@@ -180,6 +180,7 @@ def main():
 	mc.register("analyze-sequential", "Print state transition values and show cycles", genparser, action = ActionAnalyzeSequential)
 
 	def genparser(parser):
+		parser.add_argument("-p", "--prefix", metavar = "name", help = "Specify the filename prefix that is used. By default the basename of the circuit filename is used for this.")
 		parser.add_argument("-d", "--output-directory", metavar = "path", default = "mutated-circuit", help = "Output directory that mutated circuits should be placed in. Defaults to %(default)s.")
 		parser.add_argument("-n", "--circuit-name", metavar = "name", default = "main", help = "Name of the circuit to be mutated. Defaults to %(default)s.")
 		parser.add_argument("-r", "--randomize-component", metavar = "label[,label...]", help = "Shortcut that specifies that a component should be fully randomized and only a single choice apply. Multiple components can be comma-separated. This is equivalent to specifying '--mutator label:randcomb=1' for each component.")

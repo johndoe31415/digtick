@@ -117,4 +117,4 @@ $digtick mutate -m G:foo=bar src/digtick/tests/data/invgate.circ || must_fail; a
 $digtick mutate -m G:comb=999 src/digtick/tests/data/invgate.circ || must_fail; assert_failed
 $digtick mutate -m G:inv=1 src/digtick/tests/data/invgate.circ
 $digtick mutate -m G:inv=1,randcomb=3 src/digtick/tests/data/invgate.circ
-$digtick mutate -m G:inv=1,comb=1,comb=2 src/digtick/tests/data/invgate.circ
+$digtick mutate -m G:inv=1,comb=1,comb=2 --prefix foobar src/digtick/tests/data/invgate.circ

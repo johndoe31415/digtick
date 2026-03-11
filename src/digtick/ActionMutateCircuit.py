@@ -49,7 +49,10 @@ class ActionMutateCircuit(BaseAction):
 		if len(mutators) == 0:
 			raise ValueError("At least one mutator needs to be specified.")
 
-		(prefix, ext) = os.path.splitext(os.path.basename(self._args.circ_filename))
+		if self._args.prefix is None:
+			(prefix, ext) = os.path.splitext(os.path.basename(self._args.circ_filename))
+		else:
+			prefix = self._args.prefix
 		for (variant_number, applied_mutators) in enumerate(lsl.apply_mutators(mutators), 1):
 			filename = f"{self._args.output_directory}/{prefix}-{variant_number:03d}.circ"
 			lsl.write_to_file(filename)
