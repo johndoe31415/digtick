@@ -419,4 +419,4 @@ class ValueTable():
 			return BinaryOperator.join(Operator.And, terms)
 
 	def __eq__(self, other: "ValueTable"):
-		return all(self_values == other._named_outputs[varname] for (varname, self_values) in zip(self.output_variable_names, self._output_values))
+		return (set(self.input_variable_names) == set(other.input_variable_names)) and (set(self.output_variable_names) == set(other.output_variable_names)) and (self.get_storage(varname) == other.get_storage(varname) for varname in self.output_variable_names)
