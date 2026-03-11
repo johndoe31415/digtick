@@ -33,6 +33,6 @@ _SIGNAL_RE = re.compile(r"(?P<prefix>.*?)(?P<suffix>\d+)")
 def sort_signal_key(signal: str):
 	rematch = _SIGNAL_RE.fullmatch(signal)
 	if rematch is not None:
-		return (rematch["prefix"], int(rematch["suffix"]))
+		return (rematch["prefix"], int(rematch["suffix"]), len(signal))
 	else:
-		return (signal, 0)
+		return (signal, 0, len(signal))

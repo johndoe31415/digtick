@@ -337,6 +337,74 @@ class CircuitSimulationTests(unittest.TestCase):
 		circ.tick()
 		self.assertEqual(q.level, 1 ^ notq.level)
 
+	def test_two_dffs_same_clock_sample_simultaneously(self):
+		circ = Circuit()
+
+		d1 = circ.add(CmpSource(level = 0))
+		d2 = circ.add(CmpSource(level = 1))
+		clk = circ.add(CmpSource(level = 0))
+
+		ff1 = circ.add(CmpDFlipFlop())
+		ff2 = circ.add(CmpDFlipFlop())
+
+		q1 = circ.add(CmpSink())
+		q2 = circ.add(CmpSink())
+
+		circ.connect(d1, "OUT", ff1, "D")
+		circ.connect(d2, "OUT", ff2, "D")
+		circ.connect(clk, "OUT", ff1, "CLK")
+		circ.connect(clk, "OUT", ff2, "CLK")
+		circ.connect(ff1, "Q", q1, "IN")
+		circ.connect(ff2, "Q", q2, "IN")
+
+		circ.power_on()
+		self.assertEqual((q1.level, q2.level), (0, 0))
+
+		d1.level = 1
+		d2.level = 0
+		circ.tick()
+		# Data changed only, state remains same
+		self.assertEqual((q1.level, q2.level), (0, 0))
+
+		clk.level = 1
+		circ.tick()
+		# Clock edge, D taken in
+		self.assertEqual((q1.level, q2.level), (1, 0))
+
+		# Complete clock cycle
+		clk.level = 0
+		circ.tick()
+
+		# Another clock edge
+		d1.level = 0
+		d2.level = 1
+		circ.clock(clk)
+		self.assertEqual((q1.level, q2.level), (0, 1))
+
+	def test_dff_chain_does_not_ripple_through_on_single_clock(self):
+		circ = Circuit()
+
+		d = circ.add(CmpSource(level = 1))
+		clk = circ.add(CmpSource(level = 0))
+		ff1 = circ.add(CmpDFlipFlop())
+		ff2 = circ.add(CmpDFlipFlop())
+		q1 = circ.add(CmpSink())
+		q2 = circ.add(CmpSink())
+
+		circ.connect(d, "OUT", ff1, "D")
+		circ.connect(ff1, "Q", ff2, "D")
+		circ.connect(clk, "OUT", ff1, "CLK")
+		circ.connect(clk, "OUT", ff2, "CLK")
+		circ.connect(ff1, "Q", q1, "IN")
+		circ.connect(ff2, "Q", q2, "IN")
+
+		circ.power_on()
+		self.assertEqual((q1.level, q2.level), (0, 0))
+		circ.clock(clk)
+		self.assertEqual((q1.level, q2.level), (1, 0))
+		circ.clock(clk)
+		self.assertEqual((q1.level, q2.level), (1, 1))
+
 	def test_named_instances(self):
 		circ = Circuit()
 		a = circ.new("Source", label = "A")

@@ -27,3 +27,13 @@ class ToolsTests(unittest.TestCase):
 		sigs = [ "A2", "A3", "A1", "A0", "A10", "A20", "A4", "A11" ]
 		sigs.sort(key = sort_signal_key)
 		self.assertEqual(sigs, [ "A0", "A1", "A2", "A3", "A4", "A10", "A11", "A20" ])
+
+	def test_sort_mixed_prefixes_and_plain_names(self):
+		sigs = [ "B2", "A10", "A2", "A", "B1", "A1" ]
+		sigs.sort(key = sort_signal_key)
+		self.assertEqual(sigs, [ "A", "A1", "A2", "A10", "B1", "B2" ])
+
+	def test_sort_leading_zeroes_shorter_wins(self):
+		sigs = [ "A02", "A2", "A001", "A1" ]
+		sigs.sort(key = sort_signal_key)
+		self.assertEqual(sigs, [ "A1", "A001", "A2", "A02" ])

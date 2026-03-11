@@ -172,7 +172,10 @@ class ValueTable():
 		return varname in self._named_outputs
 
 	def add_output_variable(self, varname: str, storage: CompactStorage):
-		assert(storage.variable_count == self.input_variable_count)
+		if varname in self._output_variable_names:
+			raise InvalidValueTableException(f"Output named \"{varname}\" already present in value table, cannot add another with same name.")
+		if storage.variable_count != self.input_variable_count:
+			raise InvalidValueTableException(f"Value table has {self.input_variable_count} input variables, but tried to add storage with {storage.variable_count} variables.")
 		self._output_variable_names.append(varname)
 		self._named_outputs[varname] = storage
 		self._output_values.append(storage)

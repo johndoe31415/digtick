@@ -177,3 +177,38 @@ class ValueTableTests(unittest.TestCase):
 		f.seek(0)
 		with self.assertRaises(InvalidValueTableException):
 			vt = ValueTable.parse_from_file(f, set_undefined_values_to = "0")
+
+	def test_multi_output_parse_and_compact_roundtrip(self):
+		text = self._prepstr("""
+			A B >Y >Z
+			0 0 0 1
+			0 1 1 0
+			1 0 1 1
+			1 1 0 0
+		""")
+		vt = ValueTable.parse_string(text, set_undefined_values_to = "0")
+		reparsed = ValueTable.from_compact_representation(vt.compact_representation)
+		self.assertEqual(vt, reparsed)
+
+	def test_output_order_is_preserved(self):
+		text = self._prepstr("""
+			A >Z >Y
+			0 1 0
+			1 0 1
+		""")
+		vt = ValueTable.parse_string(text, set_undefined_values_to = "0")
+		self.assertEqual(vt.output_variable_count, 2)
+		self.assertTrue(vt.has_output_named("Y"))
+		self.assertTrue(vt.has_output_named("Z"))
+		self.assertEqual(vt.compact_representation, ":A:Z,Y:1,4")
+
+	def test_add_output_variable_rejects_duplicate_name(self):
+		vt = ValueTable.parse_string("A >Y\n0 0\n1 1\n", set_undefined_values_to = "0")
+		with self.assertRaises(InvalidValueTableException):
+			vt.add_output_variable("Y", vt.get_storage("Y"))
+
+	def test_add_output_different_var_count(self):
+		vt = ValueTable.parse_string("A >Y\n0 0\n1 1\n", set_undefined_values_to = "0")
+		cr = CompactStorage(2, initial_value = CompactStorage.Entry.High)
+		with self.assertRaises(InvalidValueTableException):
+			vt.add_output_variable("Z", cr)

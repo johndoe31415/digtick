@@ -67,7 +67,6 @@ class ParserTests(unittest.TestCase):
 	def test_wrap_failure(self):
 		with self.assertRaises(TypeError):
 			expr = parse_expression("A") | 1.2345
-			print(expr)
 
 	def test_join_empty(self):
 		with self.assertRaises(ValueError):
@@ -79,3 +78,49 @@ class ParserTests(unittest.TestCase):
 
 	def test_parse_empty_allow(self):
 		self.assertEqual(parse_expression("", default_empty = "0"), parse_expression("0"))
+
+	def test_variable_names_with_underscore_and_digits(self):
+		expr = parse_expression("foo_1 + bar2 baz_3")
+		self.assertEqual(expr.evaluate({
+			"foo_1": 0,
+			"bar2": 1,
+			"baz_3": 1,
+			}), 1)
+
+		self.assertEqual(expr.evaluate({
+			"foo_1": 0,
+			"bar2": 1,
+			"baz_3": 0,
+			}), 0)
+
+	def test_constants_inside_expression_evaluate_correctly(self):
+		self.assertEqual(parse_expression("A 1").evaluate({ "A": 1 }), 1)
+		self.assertEqual(parse_expression("A 1").evaluate({ "A": 0 }), 0)
+		self.assertEqual(parse_expression("A + 0").evaluate({ "A": 0 }), 0)
+		self.assertEqual(parse_expression("A + 0").evaluate({ "A": 1 }), 1)
+		self.assertEqual(parse_expression("A ^ 1").evaluate({ "A": 0 }), 1)
+		self.assertEqual(parse_expression("A ^ 1").evaluate({ "A": 1 }), 0)
+
+	def test_parentheses_are_preserved_structurally(self):
+		plain = parse_expression("A + B + C")
+		wrapped = parse_expression("A + (B + C)")
+
+		# Equal yes (only compares eval), identical no (compares AST structure)
+		self.assertEqual(plain, wrapped)
+		self.assertFalse(plain.identical_to(wrapped))
+
+		# Spot check explicitly
+		for input_vals in [ {"A": 0, "B": 0, "C": 0},
+						{"A": 0, "B": 1, "C": 0},
+						{"A": 1, "B": 0, "C": 0},
+						{"A": 1, "B": 1, "C": 1}, ]:
+			self.assertEqual(plain.evaluate(input_vals), wrapped.evaluate(input_vals))
+
+	def test_parse_malformed_expression_raises(self):
+		for expr_str in [ "A +",
+					"@ A B",
+					"A (B + C",
+					"A ++ B", ]:
+			with self.subTest(text = expr_str):
+				with self.assertRaises(Exception):
+					parse_expression(expr_str)
