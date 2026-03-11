@@ -34,9 +34,9 @@ class ExpressionTransformerTests(unittest.TestCase):
 	def _assert_simplification(self, complex_expr_str: str, expected_simplified_str: str):
 		simplified = self._simplify(complex_expr_str)
 		simplified_str = format_expression(simplified)
-		if simplified_str != expected_simplified_str:
-			with open("/tmp/failed_expression_simplification.txt", "w") as f:
-				print(format_expression(simplified, "dot"), file = f)
+#		if simplified_str != expected_simplified_str:
+#			with open("/tmp/failed_expression_simplification.txt", "w") as f:
+#				print(format_expression(simplified, "dot"), file = f)
 		self.assertEqual(simplified_str, expected_simplified_str)
 
 	def test_simplify_remove_parenthesis(self):
