@@ -1,6 +1,6 @@
 # digtick
 [![Test status](https://github.com/johndoe31415/digtick/actions/workflows/tests.yml/badge.svg)](https://github.com/johndoe31415/digtick/actions/workflows/tests.yml)
-[![Coverage status](https://coveralls.io/repos/github/johndoe31415/digtick/badge.svg?branch=main)](https://coveralls.io/github/johndoe31415/digtick?branch=main)
+[![Code coverage](https://codecov.io/github/johndoe31415/digtick/graph/badge.svg?token=6K32VGSNF8)](https://codecov.io/github/johndoe31415/digtick)
 
 digtick (the mnemonic for "dig tk", i.e., digital toolkit) is a
 command-line-tool tool for creating and solving digital logic design tasks.
