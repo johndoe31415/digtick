@@ -80,3 +80,7 @@ class ExpressionTransformerTests(unittest.TestCase):
 	def test_simplify_order_literals(self):
 		self._assert_simplification("A10 A9 A11 A0 A1", "A11 A10 A9 A1 A0")
 		self._assert_simplification("A10 !A9 A11 !A0 A1", "A11 A10 !A9 A1 !A0")
+
+	def test_complement(self):
+		self._assert_simplification("F !F", "0")
+		self._assert_simplification("!F F", "0")

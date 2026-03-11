@@ -190,18 +190,6 @@ class SimplificationTransformer(ExpressionTransformer):
 			case BinaryOperator(lhs, Operator.And, rhs) if lhs.identical_to(rhs):
 				return lhs
 
-			# Sort minterm literals alphabetically
-			case BinaryOperator(_, Operator.And, _) if expr.is_minterm():
-				terms = sorted(expr.collect_literals(), key = self._literal_sort_key)
-				replacement = BinaryOperator.join(Operator.And, terms)
-				return replacement
-
-			# Sort maxterm literals alphabetically
-			case BinaryOperator(_, Operator.Or, _) if expr.is_maxterm():
-				terms = sorted(expr.collect_literals(), key = self._literal_sort_key)
-				replacement = BinaryOperator.join(Operator.Or, terms)
-				return replacement
-
 			# Cascaded NAND inverter
 			case BinaryOperator(BinaryOperator(other, Operator.Nand, Constant(1)), Operator.Nand, Constant(1)):
 				return other
@@ -217,6 +205,19 @@ class SimplificationTransformer(ExpressionTransformer):
 			# Complement
 			case BinaryOperator(lhs, Operator.Or, rhs) if (lhs.variables == rhs.variables) and (lhs == ~rhs):
 				return Constant(1)
+
+			# Sort minterm literals alphabetically
+			case BinaryOperator(_, Operator.And, _) if expr.is_minterm():
+				terms = sorted(expr.collect_literals(), key = self._literal_sort_key)
+				replacement = BinaryOperator.join(Operator.And, terms)
+				return replacement
+
+			# Sort maxterm literals alphabetically
+			case BinaryOperator(_, Operator.Or, _) if expr.is_maxterm():
+				terms = sorted(expr.collect_literals(), key = self._literal_sort_key)
+				replacement = BinaryOperator.join(Operator.Or, terms)
+				return replacement
+
 
 		return BinaryOperator(self._transform(expr.lhs), expr.op, self._transform(expr.rhs))
 
