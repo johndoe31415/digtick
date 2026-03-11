@@ -124,7 +124,8 @@ class ValueTable():
 	class PrintFormat(enum.Enum):
 		Text = "text"
 		Pretty = "pretty"
-		TeX = "tex"
+		TeXHorizontal = "tex-horizontal"
+		TeXVertical = "tex-vertical"
 		Compact = "compact"
 		LogiSim = "logisim"
 
@@ -353,8 +354,8 @@ class ValueTable():
 
 		table.print(*(self.input_variable_names + self.output_variable_names))
 
-	def _print_tex(self):
-		colcnt = len(self._output_values) + 1
+	def _print_tex_horizontal(self):
+		colcnt = (2 ** len(self.input_variable_names)) + 1
 		print(f"\\begin{{tabular}}{{{'c' * colcnt}}}")
 		for (varidx, varname) in enumerate(self.input_variable_names):
 			bit = self.input_variable_count - 1 - varidx
@@ -366,6 +367,18 @@ class ValueTable():
 
 		for (output_varname, storage) in zip(self.output_variable_names, self._output_values):
 			line = [ output_varname ] + [ value.as_str for value in storage ]
+			print(f"	{' & '.join(line)}\\\\%")
+		print("\\end{tabular}")
+
+	def _print_tex_vertical(self):
+		print(f"\\begin{{tabular}}{{{'c' * len(self.input_variable_names)}|{'c' * len(self.output_variable_names)}}}")
+
+		line = self.input_variable_names + self.output_variable_names
+		print(f"	{' & '.join(line)}\\\\%")
+		print("	\\hline")
+		for (lhs, rhs) in self.iter_inputlist:
+			line = [ str(value) for value in lhs ]
+			line += [ value.as_str for value in rhs ]
 			print(f"	{' & '.join(line)}\\\\%")
 		print("\\end{tabular}")
 
@@ -387,7 +400,7 @@ class ValueTable():
 			print(" ".join(row))
 
 	def print(self, print_format: PrintFormat = PrintFormat.Text):
-		method = getattr(self, f"_print_{print_format.value}")
+		method = getattr(self, f"_print_{print_format.value.replace('-', '_')}")
 		return method()
 
 	def _cdnf(self, varname: str, search_value: CompactStorage.Entry):
