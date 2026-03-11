@@ -456,18 +456,33 @@ B (C D + A !D)
 There were validation errors, some of the equations are not equivalent to each other.
 ```
 
-Once you corrected the mistake, you can then, for example, render as TeX -- I'm
-sure you'll agree that this output is a write-only format not intended for
-human consumption:
+You can also render all these expressions to TeX syntax; this is especially
+annoying to write manually because TeX by default merges adjacent `\overline{}`
+statements; i.e., when you have the expression `A B` and write `\overline{A}
+\overline{B}`, TeX will create only a single overline which makes a completely
+different expression: `~(AB)`. Since I've been bitten by this too often, now I
+only generate TeX. I'm sure you'll agree that this output is a write-only
+format not intended for human consumption:
 
 ```
-\textnormal{A} \ \textnormal{B} \ \textnormal{C} \vee \textnormal{B} \ \textnormal{C} \ (\textnormal{A} \vee \textnormal{D}) \vee \textnormal{B} \ \textnormal{A} \ \overline{\textnormal{D}} \vee \textnormal{F} \ (\textnormal{E} \vee \overline{\textnormal{F}})
-\textnormal{A} \ \textnormal{B} \ \textnormal{C} \vee \textnormal{B} \ \textnormal{C} \ \textnormal{A} \vee \textnormal{B} \ \textnormal{C} \ \textnormal{D} \vee \textnormal{B} \ \textnormal{A} \ \overline{\textnormal{D}} \vee \textnormal{F} \ (\textnormal{E} \vee \overline{\textnormal{F}})
-\textnormal{A} \ \textnormal{B} \ \textnormal{C} \vee \textnormal{B} \ \textnormal{C} \ \textnormal{A} \vee \textnormal{B} \ \textnormal{C} \ \textnormal{D} \vee \textnormal{B} \ \textnormal{A} \ \overline{\textnormal{D}} \vee \textnormal{F} \ \textnormal{E} \vee \textnormal{F} \ \overline{\textnormal{F}}
-\textnormal{A} \ \textnormal{B} \ \textnormal{C} \vee \textnormal{B} \ \textnormal{C} \ \textnormal{A} \vee \textnormal{B} \ \textnormal{C} \ \textnormal{D} \vee \textnormal{B} \ \textnormal{A} \ \overline{\textnormal{D}} \vee \textnormal{F} \ \textnormal{E}
-\textnormal{B} \ \textnormal{C} \ \textnormal{A} \vee \textnormal{B} \ \textnormal{C} \ \textnormal{D} \vee \textnormal{B} \ \textnormal{A} \ \overline{\textnormal{D}} \vee \textnormal{F} \ \textnormal{E}
-\textnormal{B} \ (\textnormal{C} \ \textnormal{A} \vee \textnormal{C} \ \textnormal{D} \vee \textnormal{A} \ \overline{\textnormal{D}}) \vee \textnormal{F} \ \textnormal{E}
-\textnormal{B} \ (\textnormal{C} \ \textnormal{D} \vee \textnormal{A} \ \overline{\textnormal{D}}) \vee \textnormal{F} \ \textnormal{E}
+$ digtick parse -f tex-tech 'A C !(B + !(D + !E)) + E + A !B !C D !E !F G'
+\mathrm{A C \overline{(B \vee \overline{(D \vee \overline{E})})} \vee E \vee A \overline{B}\,\overline{C} D \overline{E}\,\overline{F} G}
+```
+
+Note that digtick inserts half spaces `\,` where two overlines would be merged,
+but not where they are not needed. Obviously, a whole file can also be
+converted to TeX (and also not only is overline syntax usable but also the
+mathematical notation of Boolean expressions):
+
+```
+$ digtick parse -f tex-math --read-as-filename examples/equations.txt
+\mathrm{A B C \vee B C (A \vee D) \vee B A \neg D \vee F (E \vee \neg F)}
+\mathrm{A B C \vee B C A \vee B C D \vee B A \neg D \vee F (E \vee \neg F)}
+\mathrm{A B C \vee B C A \vee B C D \vee B A \neg D \vee F E \vee F \neg F}
+\mathrm{A B C \vee B C A \vee B C D \vee B A \neg D}
+\mathrm{B C A \vee B C D \vee B A \neg D}
+\mathrm{B (C A \vee C D \vee A \neg D)}
+\mathrm{B (C D \vee A \neg D)}
 ```
 
 
