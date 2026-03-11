@@ -30,9 +30,9 @@ def open_file(filename: str):
 		return open(filename)
 
 _SIGNAL_RE = re.compile(r"(?P<prefix>.*?)(?P<suffix>\d+)")
-def sort_signal_key(signal: str):
+def sort_signal_key(signal: str, suffix_order_reversed: bool = False):
 	rematch = _SIGNAL_RE.fullmatch(signal)
 	if rematch is not None:
-		return (rematch["prefix"], int(rematch["suffix"]), len(signal))
+		return (rematch["prefix"], -int(rematch["suffix"]) * (-1 if suffix_order_reversed else 1), len(signal))
 	else:
 		return (signal, 0, len(signal))

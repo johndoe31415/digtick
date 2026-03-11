@@ -556,7 +556,7 @@ class CircuitSimulationTests(unittest.TestCase):
 		found = [ component for component in circ.components if (component == inverter1) ]
 		self.assertEqual(len(found), 1)
 		self.assertIs(found[0], inverter1)
-		self.assertEqual(circ.build_table().compact_representation, ":A:Y1,Y10:1,1")
+		self.assertEqual(circ.build_table().compact_representation, ":A:Y10,Y1:1,1")
 
 	def test_component_open_lead(self):
 		circ = Circuit()

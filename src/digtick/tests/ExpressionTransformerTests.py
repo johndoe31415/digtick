@@ -48,27 +48,35 @@ class ExpressionTransformerTests(unittest.TestCase):
 		self._assert_simplification("(((A B))) + ((X + Y))", "A B + X + Y")
 
 	def test_simplify_and_constant_parenthesis(self):
-		self.assertEqual(format_expression(self._simplify("X 1")), "X")
-		self.assertEqual(format_expression(self._simplify("X 0")), "0")
-		self.assertEqual(format_expression(self._simplify("(X + Y) 1")), "X + Y")
-		self.assertEqual(format_expression(self._simplify("(X + Y) 0")), "0")
-		self.assertEqual(format_expression(self._simplify("(X + Y) 0 + (A + B) 1")), "A + B")
+		self._assert_simplification("X 1", "X")
+		self._assert_simplification("X 0", "0")
+		self._assert_simplification("(X + Y) 1", "X + Y")
+		self._assert_simplification("(X + Y) 0", "0")
+		self._assert_simplification("(X + Y) 0 + (A + B) 1", "A + B")
 
-		self.assertEqual(format_expression(self._simplify("1 X")), "X")
-		self.assertEqual(format_expression(self._simplify("0 X")), "0")
-		self.assertEqual(format_expression(self._simplify("1 (X + Y)")), "X + Y")
-		self.assertEqual(format_expression(self._simplify("0 (X + Y)")), "0")
-		self.assertEqual(format_expression(self._simplify("0 (X + Y) + 1 (A + B)")), "A + B")
+		self._assert_simplification("1 X", "X")
+		self._assert_simplification("0 X", "0")
+		self._assert_simplification("1 (X + Y)", "X + Y")
+		self._assert_simplification("0 (X + Y)", "0")
+		self._assert_simplification("0 (X + Y) + 1 (A + B)", "A + B")
 
 	def test_simplify_or_constant_parenthesis(self):
-		self.assertEqual(format_expression(self._simplify("X + 1")), "1")
-		self.assertEqual(format_expression(self._simplify("X + 0")), "X")
-		self.assertEqual(format_expression(self._simplify("(X + Y) + 1")), "1")
-		self.assertEqual(format_expression(self._simplify("(X + Y) + 0")), "X + Y")
-		self.assertEqual(format_expression(self._simplify("((X + Y) + 0) + ((A + B) + 1)")), "1")
+		self._assert_simplification("X + 1", "1")
+		self._assert_simplification("X + 0", "X")
+		self._assert_simplification("(X + Y) + 1", "1")
+		self._assert_simplification("(X + Y) + 0", "X + Y")
+		self._assert_simplification("((X + Y) + 0) + ((A + B) + 1)", "1")
 
-		self.assertEqual(format_expression(self._simplify("1 + X")), "1")
-		self.assertEqual(format_expression(self._simplify("0 + X")), "X")
-		self.assertEqual(format_expression(self._simplify("1 + (X + Y)")), "1")
-		self.assertEqual(format_expression(self._simplify("0 + (X + Y)")), "X + Y")
-		self.assertEqual(format_expression(self._simplify("(0 + (X + Y)) + (1 + (A + B))")), "1")
+		self._assert_simplification("1 + X", "1")
+		self._assert_simplification("0 + X", "X")
+		self._assert_simplification("1 + (X + Y)", "1")
+		self._assert_simplification("0 + (X + Y)", "X + Y")
+		self._assert_simplification("(0 + (X + Y)) + (1 + (A + B))", "1")
+
+	def test_simplify_neg_constant(self):
+		self._assert_simplification("-0", "1")
+		self._assert_simplification("-1", "0")
+
+	def test_simplify_order_literals(self):
+		self._assert_simplification("A10 A9 A11 A0 A1", "A11 A10 A9 A1 A0")
+		self._assert_simplification("A10 !A9 A11 !A0 A1", "A11 A10 !A9 A1 !A0")

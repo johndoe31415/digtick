@@ -20,6 +20,7 @@
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 from .ExpressionParser import ParseTreeElement, Operator, BinaryOperator, UnaryOperator, Constant, Variable, Parenthesis
+from .Tools import sort_signal_key
 
 class ExpressionTransformer():
 	_KNOWN_TRANSFORMERS = { }
@@ -157,9 +158,9 @@ class SimplificationTransformer(ExpressionTransformer):
 	@staticmethod
 	def _literal_sort_key(literal: ParseTreeElement):
 		if isinstance(literal, Variable):
-			return literal.varname
+			return sort_signal_key(literal.varname)
 		elif isinstance(literal, UnaryOperator):
-			return literal.rhs.varname
+			return sort_signal_key(literal.rhs.varname)
 		else:
 			raise NotImplementedError(f"Can only compare literals, not: {literal}")
 
