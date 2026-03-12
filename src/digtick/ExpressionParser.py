@@ -21,6 +21,7 @@
 
 import enum
 import functools
+import itertools
 from typing import Iterator
 from . import tpg
 
@@ -159,6 +160,19 @@ class ParseTreeElement():
 			eval2 = subordinate_expr.evaluate(value_dict)
 			yield (value_dict, eval1, eval2)
 
+	def satisfyable(self) -> bool:
+		for input_bits in itertools.product([ 0, 1 ], repeat = len(self.variables)):
+			input_dict = { varname: input_bit for (varname, input_bit) in zip(self.variables, input_bits) }
+			if self.evaluate(input_dict):
+				return True
+		return False
+
+	def is_tautology(self) -> bool:
+		return not ((~self).satisfyable())
+
+	def complements(self, other: "ParseTreeElement") -> bool:
+		return not (self & other).satisfyable()
+
 	def __eq__(self, other: "ParseTreeElement"):
 		for (value_dict, eval1, eval2) in self.compare_to_expression(other):
 			if eval1 != eval2:
@@ -212,6 +226,9 @@ class ParseTreeElement():
 	def __iter__(self):
 		yield from self._traverse()
 
+	def __hash__(self):
+		return hash(repr(self))
+
 class Variable(ParseTreeElement):
 	__match_args__ = ("varname", )
 
@@ -252,6 +269,9 @@ class Constant(ParseTreeElement):
 
 	def evaluate(self, var_dict: dict):
 		return self.value
+
+	def satisfyable(self) -> bool:
+		return self._value == 1
 
 	def identical_to(self, other: ParseTreeElement) -> bool:
 		return isinstance(other, Constant) and (self.value == other.value)
@@ -378,7 +398,7 @@ class ExpressionParser(tpg.Parser):
 		token xor_op    '[\^]';
 		token nand_op   '@';
 		token nor_op    '%';
-		token neg_op	'[!-]';
+		token neg_op	'[-!~]';
 		token const 	'[01]';
 		token variable  '[a-zA-Z_][a-zA-Z0-9_]*'		$ Variable
 

@@ -199,29 +199,29 @@ class SimplificationTransformer(ExpressionTransformer):
 				return other
 
 			# Complement
-			case BinaryOperator(lhs, Operator.And, rhs) if (lhs.variables == rhs.variables) and (lhs == ~rhs):
+			case BinaryOperator(lhs, Operator.And, rhs) if lhs.complements(rhs):
 				return Constant(0)
 
 			# Complement
-			case BinaryOperator(lhs, Operator.Or, rhs) if (lhs.variables == rhs.variables) and (lhs == ~rhs):
+			case BinaryOperator(_, Operator.Or, _) if expr.is_tautology():
 				return Constant(1)
 
 			# Sort minterm literals alphabetically
 			case BinaryOperator(_, Operator.And, _) if expr.is_minterm():
-				terms = sorted(expr.collect_literals(), key = self._literal_sort_key)
+				terms = sorted(set(expr.collect_literals()), key = self._literal_sort_key)
 				replacement = BinaryOperator.join(Operator.And, terms)
 				return replacement
 
 			# Sort maxterm literals alphabetically
 			case BinaryOperator(_, Operator.Or, _) if expr.is_maxterm():
-				terms = sorted(expr.collect_literals(), key = self._literal_sort_key)
+				terms = sorted(set(expr.collect_literals()), key = self._literal_sort_key)
 				replacement = BinaryOperator.join(Operator.Or, terms)
 				return replacement
-
 
 		return BinaryOperator(self._transform(expr.lhs), expr.op, self._transform(expr.rhs))
 
 	def transform(self, expression: ParseTreeElement):
+
 		while True:
 			transformed = self._transform(expression)
 			if transformed.identical_to(expression):

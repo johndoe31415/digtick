@@ -71,3 +71,10 @@ class ExpressionTreeTests(unittest.TestCase):
 
 	def test_rnand_operator(self):
 		self.assertTrue(("A" @ Variable("B")).identical_to(parse_expression("A @ B")))
+
+	def test_complement(self):
+		self.assertFalse(parse_expression("A B").complements(parse_expression("C D")))
+		self.assertTrue(parse_expression("C").complements(parse_expression("A ~C")))
+		self.assertTrue(parse_expression("1").complements(parse_expression("0")))
+		self.assertFalse(parse_expression("1").complements(parse_expression("1")))
+		self.assertTrue(parse_expression("A B 0").complements(parse_expression("C D + 1")))

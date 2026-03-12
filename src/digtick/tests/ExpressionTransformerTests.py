@@ -20,7 +20,7 @@
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 import unittest
-from digtick.ExpressionParser import parse_expression
+from digtick.ExpressionParser import parse_expression, Variable
 from digtick.ExpressionFormatter import format_expression
 from digtick.ExpressionTransformer import ExpressionTransformer
 
@@ -29,14 +29,18 @@ class ExpressionTransformerTests(unittest.TestCase):
 		self._simplify_transformer = ExpressionTransformer.new("simplify")
 
 	def _simplify(self, expr_str: str):
-		return self._simplify_transformer.transform(parse_expression(expr_str))
+		if isinstance(expr_str, str):
+			expr = parse_expression(expr_str)
+		else:
+			expr = expr_str
+		return self._simplify_transformer.transform(expr)
 
 	def _assert_simplification(self, complex_expr_str: str, expected_simplified_str: str):
 		simplified = self._simplify(complex_expr_str)
 		simplified_str = format_expression(simplified)
-#		if simplified_str != expected_simplified_str:
-#			with open("/tmp/failed_expression_simplification.txt", "w") as f:
-#				print(format_expression(simplified, "dot"), file = f)
+		if simplified_str != expected_simplified_str:
+			with open("/tmp/failed_expression_simplification.txt", "w") as f:
+				print(format_expression(simplified, "dot"), file = f)
 		self.assertEqual(simplified_str, expected_simplified_str)
 
 	def test_simplify_remove_parenthesis(self):
@@ -82,13 +86,28 @@ class ExpressionTransformerTests(unittest.TestCase):
 		self._assert_simplification("A10 !A9 A11 !A0 A1", "A11 A10 !A9 A1 !A0")
 
 	def test_complement(self):
+		(A, C) = (Variable("A"), Variable("C"))
+		self.assertTrue(((A | ~C) | C).is_tautology())
+		self._assert_simplification((A | ~C) | C, "1")
+
 		self._assert_simplification("F !F", "0")
 		self._assert_simplification("!F F", "0")
 		self._assert_simplification("(A B + C D) -(A B + C D)", "0")
+		self._assert_simplification("F G !C D A C G E", "0")
 
 		self._assert_simplification("!F + F", "1")
 		self._assert_simplification("F + !F", "1")
 		self._assert_simplification("(A B + C D) + -(A B + C D)", "1")
+		self._assert_simplification("F + G + !C + D + A + C + G + E", "1")
+
+	def test_idempotence(self):
+		self._assert_simplification("C D C", "C D")
+		self._assert_simplification("A C D C", "A C D")
+		self._assert_simplification("A B C D C", "A B C D")
+
+		self._assert_simplification("C + D + C", "C + D")
+		self._assert_simplification("A + C + D + C", "A + C + D")
+		self._assert_simplification("A + B + C + D + C", "A + B + C + D")
 
 	def test_noop_transform(self):
 		expr = parse_expression("(((A + B)))((X + Y))(C A + B) (X + Y)")
