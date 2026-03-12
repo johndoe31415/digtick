@@ -19,6 +19,7 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
+import abc
 import enum
 import functools
 import itertools
@@ -188,6 +189,10 @@ class ParseTreeElement():
 			return self._Elements["Variable"](expr)
 		else:
 			raise TypeError(f"Unable to wrap type to appear in an expression: {type(expr)}")
+
+	@abc.abstractmethod
+	def evaluate(self, var_dict: dict) -> int:
+		pass
 
 	def __invert__(self):
 		return self._Elements["UnaryOperator"](Operator.Not, self)
