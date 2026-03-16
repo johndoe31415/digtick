@@ -268,6 +268,15 @@ Which will produce the following `ast.png` file:
 
 ![Parse tree of expression](https://raw.githubusercontent.com/johndoe31415/digtick/main/docs/expression_ast.png)
 
+digtick is also able to produce Typst-compatible output, but note that it needs
+the following macros to be defined in your document:
+
+```typst
+#let bnand = box(width: 1em, height: 0.6em)[#place(center, dy: -0.1em)[#sym.and] #place(center, dy: -0.1em)[#text(size: 0.85em)[#sym.tilde]]]
+#let bnor = box(width: 1em, height: 0.6em)[#place(center, dy: -0.1em)[#sym.or] #place(center, dy: -0.1em)[#text(size: 0.85em)[#sym.tilde]]]
+#let bnot(body) = $overline(#v(1em)#h(0em) body)$
+```
+
 
 ## "make-table": generate a truth table from an expression
 `make-table` evaluates a Boolean expression over all input combinations and

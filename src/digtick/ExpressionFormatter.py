@@ -56,7 +56,7 @@ class ExpressionFormatterTex():
 			(formatted_lhs, lhs_inverted) = self._parenthesize(expr.lhs, lhs_needs_parenthesis)
 			(formatted_rhs, rhs_inverted) = self._parenthesize(expr.rhs, rhs_needs_parenthesis)
 
-			if lhs_inverted and rhs_inverted and (expr.op == Operator.And):
+			if lhs_inverted and rhs_inverted and (expr.op == Operator.And) and self._implicit_and:
 				# Need to separate those two because otherwise the overlines get combined
 				op_str = "\\,"
 			else:
@@ -90,8 +90,8 @@ class ExpressionFormatterTypst():
 			Operator.And: " and ",
 			Operator.Xor: " xor ",
 			Operator.Not: "not ",
-			Operator.Nand: " #box(width: 1em, height: 0.6em)[#place(center, dy: -0.1em)[#sym.and] #place(center, dy: -0.1em)[#text(size: 0.85em)[#sym.tilde]]] ",
-			Operator.Nor: " #box(width: 1em, height: 0.6em)[#place(center, dy: -0.1em)[#sym.or] #place(center, dy: -0.1em)[#text(size: 0.85em)[#sym.tilde]]] ",
+			Operator.Nand: " bnand ",
+			Operator.Nor: " bnor ",
 		}
 		if implicit_and:
 			self._ops[Operator.And] = " "
@@ -118,15 +118,15 @@ class ExpressionFormatterTypst():
 			(formatted_lhs, lhs_inverted) = self._parenthesize(expr.lhs, lhs_needs_parenthesis)
 			(formatted_rhs, rhs_inverted) = self._parenthesize(expr.rhs, rhs_needs_parenthesis)
 
-			if lhs_inverted and rhs_inverted and (expr.op == Operator.And):
+			if lhs_inverted and rhs_inverted and (expr.op == Operator.And) and self._implicit_and:
 				# Need to separate those two because otherwise the overlines get combined
-				op_str = " #h(0.2em) "
+				op_str = " thin "
 			else:
 				op_str = self._op(expr.op)
 			return (f"{formatted_lhs}{op_str}{formatted_rhs}", rhs_inverted)
 		elif isinstance(expr, UnaryOperator):
 			if self._neg_overline:
-				return (f"overline({self._format_expression(expr.rhs)[0]})", True)
+				return (f"bnot({self._format_expression(expr.rhs)[0]})", True)
 			else:
 				rhs_needs_parenthesis = (expr.rhs.precedence > expr.precedence)
 				return (f"{self._op(expr.op)}{self._parenthesize(expr.rhs, rhs_needs_parenthesis)[0]}", False)
