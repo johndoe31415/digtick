@@ -431,6 +431,7 @@ class ExpressionParser(tpg.Parser):
 			|	const/a					$ a = Constant(int(a))
 			|	neg_op/op Atom/a		$ a = UnaryOperator(op, a)
 			| '\(' Expr/inner '\)'		$ a = Parenthesis(inner)
+			| '<' Expr/a '>'
 		;
 
 	"""

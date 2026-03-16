@@ -38,7 +38,7 @@ NAND `@` and NOR `%` as explicit operators.
 Note that neither NAND nor NOR are associative. Their precendence in parsing is
 as following, from strongest to weakest:
 
-  1. Parenthesis
+  1. Parenthesis: explicit `()` or implicit `<>`
   2. NOT
   3. AND
   4. NAND
@@ -73,6 +73,20 @@ the exam question):
 $ digtick parse '(((((A | (B))))))'
 (((((A + (B))))))
 ```
+
+However, in certain cases it can be useful to have "invisible" parenthesis. For this, `<` and `>` can be used. For example:
+
+```
+$ digtick parse -f tex-tech 'A + !<B + C>'
+\mathrm{A \vee \overline{B \vee C}}
+
+$ digtick parse -f tex-tech 'A + !(B + C)'
+\mathrm{A \vee \overline{(B \vee C)}}
+```
+
+Note that both expressions are correct but in the former variant the
+parenthesis are omitted entirely (the overline makes it clear what
+subexpression is inverted).
 
 For convenience of notation, `AND` is implicit: adjacency separated by
 whitespace counts as `AND`:
