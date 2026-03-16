@@ -56,7 +56,7 @@ class ExpressionFormatterTex():
 			(formatted_lhs, lhs_inverted) = self._parenthesize(expr.lhs, lhs_needs_parenthesis)
 			(formatted_rhs, rhs_inverted) = self._parenthesize(expr.rhs, rhs_needs_parenthesis)
 
-			if lhs_inverted and rhs_inverted:
+			if lhs_inverted and rhs_inverted and (expr.op == Operator.And):
 				# Need to separate those two because otherwise the overlines get combined
 				op_str = "\\,"
 			else:
@@ -118,7 +118,7 @@ class ExpressionFormatterTypst():
 			(formatted_lhs, lhs_inverted) = self._parenthesize(expr.lhs, lhs_needs_parenthesis)
 			(formatted_rhs, rhs_inverted) = self._parenthesize(expr.rhs, rhs_needs_parenthesis)
 
-			if lhs_inverted and rhs_inverted:
+			if lhs_inverted and rhs_inverted and (expr.op == Operator.And):
 				# Need to separate those two because otherwise the overlines get combined
 				op_str = " #h(0.2em) "
 			else:

@@ -140,3 +140,5 @@ class ExpressionFormatterTests(unittest.TestCase):
 		self.assertEqual(format_expression(parse_expression("A C !(B + !(D + !E)) + E + !F"), "tex-math", use_mathrm = False), "A C \\neg (B \\vee \\neg (D \\vee \\neg E)) \\vee E \\vee \\neg F")
 		self.assertEqual(format_expression(parse_expression("A B !C D !E F !G !H !I !J"), "tex-math", use_mathrm = False), "A B \\neg C D \\neg E F \\neg G \\neg H \\neg I \\neg J")
 		self.assertEqual(format_expression(parse_expression("A @ B % C"), "tex-math", use_mathrm = False), "A\\overset{\\sim}{\\wedge}B\\overset{\\sim}{\\vee}C")
+
+		self.assertEqual(format_expression((~C & A & ~B) | (A & ~C) | (B & ~C & D), "tex-tech", use_mathrm = False), "\\overline{C} A \\overline{B} \\vee A \\overline{C} \\vee B \\overline{C} D")
