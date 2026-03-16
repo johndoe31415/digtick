@@ -45,11 +45,11 @@ class ExpressionTransformerTests(unittest.TestCase):
 
 	def test_simplify_remove_parenthesis(self):
 		self._assert_simplification("(((A + B)))", "A + B")
-		self._assert_simplification("(((A + B)))((X))", "(A + B) X")
+		self._assert_simplification("(((A + B)))((X))", "X (A + B)")
 		self._assert_simplification("(((A + B)))((X + Y))", "(A + B) (X + Y)")
-		self._assert_simplification("(((A + B)))((X Y))", "(A + B) X Y")
+		self._assert_simplification("(((A + B)))((X Y))", "X Y (A + B)")
 		self._assert_simplification("(((A B)))((X + Y))", "A B (X + Y)")
-		self._assert_simplification("(((A B))) + ((X + Y))", "A B + X + Y")
+		self._assert_simplification("(((A B))) + ((X + Y))", "X + Y + A B")
 
 	def test_simplify_and_constant_parenthesis(self):
 		self._assert_simplification("X 1", "X")

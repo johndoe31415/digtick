@@ -19,19 +19,34 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
-from .MultiCommand import BaseAction
-from .ExpressionFormatter import format_expression
-from .ExpressionParser import parse_expression
-from .ExpressionTransformer import ExpressionTransformer
-from .PRNG import PRNG
+import os
+import unittest
+import collections
+from digtick.PRNG import PRNG
 
-class ActionTransform(BaseAction):
-	def run(self):
-		expr = parse_expression(self._args.expression)
-		for transformation_name in self._args.transform:
-			transformer_kwargs = { }
-			transformer_kwargs["prng"] = PRNG(b"foo")
-			transformed = ExpressionTransformer.new(transformation_name, **transformer_kwargs).transform(expr)
-			print(format_expression(expression = transformed, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and))
-			assert(expr == transformed)
-			expr = transformed
+class PRNGTests(unittest.TestCase):
+	def test_bytes(self):
+		prng1 = PRNG(b"foobar")
+		prng2 = PRNG(b"barfoo")
+		prng3 = PRNG(b"foobar")
+		x = prng1.get_bytes(100)
+		y = prng2.get_bytes(100)
+		z = prng3.get_bytes(100)
+		self.assertEqual(x, z)
+		self.assertNotEqual(x, y)
+		self.assertEqual(len(x), 100)
+		self.assertEqual(len(y), 100)
+
+	def test_min_max(self):
+		prng = PRNG(os.urandom(16))
+		values = set(prng.randint(0, 1) for _ in range(100))
+		self.assertEqual(values, set([ 0, 1 ]))
+
+	def test_bias(self):
+		# Ensure reasonable bias-freeness
+		prng = PRNG(os.urandom(16))
+		values = collections.Counter(prng.randint(0, 2) for _ in range(1000))
+		diff = values.most_common()[0][1] - values.most_common()[2][1]
+		self.assertTrue(diff < 150)
+
+#	def test_shuffle(self):

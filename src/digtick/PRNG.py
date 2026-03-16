@@ -29,18 +29,18 @@ class PRNG():
 		self._counter = 0
 		self._buffer = bytearray()
 
-	def _block(self):
+	def _block(self) -> bytes:
 		block = self._HASH_FNC(self._key + self._counter.to_bytes(length = 4, byteorder = "little")).digest()
 		self._counter += 1
 		return block
 
-	def get_bytes(self, length):
+	def get_bytes(self, length: int) -> bytes:
 		while len(self._buffer) < length:
 			self._buffer += self._block()
 		(result, self._buffer) = (self._buffer[:length], self._buffer[length:])
 		return result
 
-	def randint(self, minval, maxval):
+	def randint(self, minval: int, maxval: int):
 		irange = maxval - minval + 1
 		bits = (irange - 1).bit_length()
 		mask = (1 << bits) - 1

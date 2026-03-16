@@ -353,6 +353,18 @@ class BinaryOperator(ParseTreeElement):
 			raise ValueError("Cannot join empty sequence.")
 		return result
 
+	def gather(self) -> list[ParseTreeElement]:
+		result = [ ]
+		if isinstance(self.lhs, BinaryOperator) and (self.lhs.op == self.op):
+			result += self.lhs.gather()
+		else:
+			result.append(self.lhs)
+		if isinstance(self.rhs, BinaryOperator) and (self.rhs.op == self.op):
+			result += self.rhs.gather()
+		else:
+			result.append(self.rhs)
+		return result
+
 	def identical_to(self, other: ParseTreeElement) -> bool:
 		return isinstance(other, BinaryOperator) and (self.op == other.op) and (self.lhs.identical_to(other.lhs)) and (self.rhs.identical_to(other.rhs))
 

@@ -133,7 +133,7 @@ def main():
 	mc.register("random-table", "Generate a randomized table", genparser, action = ActionRandomTable)
 
 	def genparser(parser):
-		parser.add_argument("-t", "--transform", choices = [ "simplify", "nand", "nor" ], default = [ ], action = "append", required = True, help = "Transformation to apply. Can be one of %(choices)s and may be specified multiple times to successively apply transformations. Mandatory argument.")
+		parser.add_argument("-t", "--transform", choices = [ "simplify", "shuffle", "nand", "nor" ], default = [ ], action = "append", required = True, help = "Transformation to apply. Can be one of %(choices)s and may be specified multiple times to successively apply transformations. Mandatory argument.")
 		parser.add_argument("-n", "--no-implicit-and", action = "store_true", help = "By default, AND operations are implicity expressed (using a space character). This causes an actual operator to be emitted here.")
 		parser.add_argument("-f", "--expr-format", choices = [ "text", "pretty-text", "tex-tech", "tex-math", "typst-tech", "typst-math", "dot", "internal" ], default = "text", help = "Print the expression in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increases verbosity. Can be specified multiple times to increase.")

@@ -29,3 +29,4 @@ from .ValueTableTests import ValueTableTests
 from .ExpressionTransformerTests import ExpressionTransformerTests
 from .ToolsTests import ToolsTests
 from .KVDiagramTests import KVDiagramTests
+from .PRNGTests import PRNGTests
