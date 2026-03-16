@@ -66,7 +66,8 @@ class ExpressionFormatterTex():
 			if self._neg_overline:
 				return (f"\\overline{{{self._format_expression(expr.rhs)[0]}}}", True)
 			else:
-				return (f"{self._op(expr.op)}{self._format_expression(expr.rhs)[0]}", False)
+				rhs_needs_parenthesis = (expr.rhs.precedence > expr.precedence)
+				return (f"{self._op(expr.op)}{self._parenthesize(expr.rhs, rhs_needs_parenthesis)[0]}", False)
 		elif isinstance(expr, Constant):
 			return (str(expr), False)
 		elif isinstance(expr, Parenthesis):
@@ -78,6 +79,65 @@ class ExpressionFormatterTex():
 			return f"\\mathrm{{{self._format_expression(expr)[0]}}}"
 		else:
 			return self._format_expression(expr)[0]
+
+
+class ExpressionFormatterTypst():
+	def __init__(self, neg_overline: bool = True, implicit_and: bool = True):
+		self._neg_overline = neg_overline
+		self._implicit_and = implicit_and
+		self._ops = {
+			Operator.Or: " or ",
+			Operator.And: " and ",
+			Operator.Xor: " xor ",
+			Operator.Not: "not ",
+			Operator.Nand: " #box(width: 1em, height: 0.6em)[#place(center, dy: -0.1em)[#sym.and] #place(center, dy: -0.1em)[#text(size: 0.85em)[#sym.tilde]]] ",
+			Operator.Nor: " #box(width: 1em, height: 0.6em)[#place(center, dy: -0.1em)[#sym.or] #place(center, dy: -0.1em)[#text(size: 0.85em)[#sym.tilde]]] ",
+		}
+		if implicit_and:
+			self._ops[Operator.And] = " "
+
+	def _op(self, op):
+		return self._ops[op]
+
+	def _parenthesize(self, expr: ParseTreeElement, needs_parenthesis: bool):
+		if needs_parenthesis:
+			return (f"({self._format_expression(expr)[0]})", False)
+		else:
+			return self._format_expression(expr)
+
+	def _format_expression(self, expr: ParseTreeElement):
+		if isinstance(expr, Variable):
+			if len(expr.varname) == 1:
+				return (f"upright({expr.varname})", False)
+			else:
+				return (f"upright(\"{expr.varname}\")", False)
+		elif isinstance(expr, BinaryOperator):
+			lhs_needs_parenthesis = expr.lhs.precedence > expr.precedence
+			rhs_needs_parenthesis = (expr.rhs.precedence > expr.precedence) or ((expr.rhs.precedence == expr.precedence) and (not expr.op.associative or (expr.op != expr.rhs.op)))
+
+			(formatted_lhs, lhs_inverted) = self._parenthesize(expr.lhs, lhs_needs_parenthesis)
+			(formatted_rhs, rhs_inverted) = self._parenthesize(expr.rhs, rhs_needs_parenthesis)
+
+			if lhs_inverted and rhs_inverted:
+				# Need to separate those two because otherwise the overlines get combined
+				op_str = " #h(0.2em) "
+			else:
+				op_str = self._op(expr.op)
+			return (f"{formatted_lhs}{op_str}{formatted_rhs}", rhs_inverted)
+		elif isinstance(expr, UnaryOperator):
+			if self._neg_overline:
+				return (f"overline({self._format_expression(expr.rhs)[0]})", True)
+			else:
+				rhs_needs_parenthesis = (expr.rhs.precedence > expr.precedence)
+				return (f"{self._op(expr.op)}{self._parenthesize(expr.rhs, rhs_needs_parenthesis)[0]}", False)
+		elif isinstance(expr, Constant):
+			return (str(expr), False)
+		elif isinstance(expr, Parenthesis):
+			return (f"({self._format_expression(expr.inner)[0]})", False)
+		raise NotImplementedError(expr)
+
+	def format_expression(self, expr: ParseTreeElement):
+		return self._format_expression(expr)[0]
 
 class ExpressionFormatterText():
 	def __init__(self, pretty_print: bool = False, implicit_and: bool = True):
@@ -192,6 +252,12 @@ def format_expression(expression: ParseTreeElement, expression_format: str = "te
 
 		case "tex-math":
 			formatter = ExpressionFormatterTex(neg_overline = False, **kwargs)
+
+		case "typst-tech":
+			formatter = ExpressionFormatterTypst(neg_overline = True, **kwargs)
+
+		case "typst-math":
+			formatter = ExpressionFormatterTypst(neg_overline = False, **kwargs)
 
 		case "dot":
 			formatter = GraphvizFormatter()

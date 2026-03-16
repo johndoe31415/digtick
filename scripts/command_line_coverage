@@ -25,7 +25,7 @@ $cov digtick.ExpressionParser
 $digtick parse "A B C"
 $digtick parse -n "A B C"
 $digtick parse -f text "A B C"
-for format in text pretty-text tex-tech tex-math dot internal; do
+for format in text pretty-text tex-tech tex-math typst-tech typst-math dot internal; do
 	$digtick parse -f $format "A B C ^ B A C (!A !B !C) (!(A B C)) @ D % E + 1"
 done
 (
