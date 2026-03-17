@@ -213,7 +213,7 @@ class SimplificationTransformer(ExpressionTransformer):
 			# Sort subexpressions alphabetically
 			case BinaryOperator(_, op, _) if op in [ Operator.And, Operator.Or ]:
 				terms = expr.gather()
-				sorted_terms = sorted(set(self._transform(term) for term in terms), key = self._subexpression_sort_key)
+				sorted_terms = sorted(set(self._transform(term) for term in terms), key = self.subexpression_sort_key)
 				return BinaryOperator.join(op, sorted_terms)
 
 		return BinaryOperator(self._transform(expr.lhs), expr.op, self._transform(expr.rhs))
