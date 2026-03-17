@@ -49,4 +49,21 @@ class PRNGTests(unittest.TestCase):
 		diff = values.most_common()[0][1] - values.most_common()[2][1]
 		self.assertTrue(diff < 150)
 
-#	def test_shuffle(self):
+	def test_shuffle_basic(self):
+		l = list("ABCD")
+		prng = PRNG(os.urandom(16))
+		prng.shuffle(l)
+		self.assertEqual(len(l), 4)
+		self.assertEqual(set(l), set("ABCD"))
+
+	def test_shuffle_combinations(self):
+		prng = PRNG(os.urandom(16))
+		l = list(range(20))
+		seen = set()
+		for _ in range(10000):
+			prng.shuffle(l)
+			seen |= set((i, e) for (i, e) in enumerate(l))
+			if len(seen) == (len(l) ** 2):
+				break
+		else:
+			raise AssertionError("Not all combinations seen.")

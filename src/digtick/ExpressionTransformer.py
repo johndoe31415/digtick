@@ -158,7 +158,7 @@ class SimplificationTransformer(ExpressionTransformer):
 	def _subexpression_sort_key(self, subexpression: ParseTreeElement):
 		if isinstance(subexpression, Variable):
 			return (0, sort_signal_key(subexpression.varname), 0)
-		elif isinstance(subexpression, UnaryOperator):
+		elif isinstance(subexpression, UnaryOperator) and isinstance(subexpression.rhs, Variable):
 			return (0, sort_signal_key(subexpression.rhs.varname), 1)
 		elif isinstance(subexpression, BinaryOperator):
 			return (subexpression.precedence, self._subexpression_sort_key(subexpression.lhs), self._subexpression_sort_key(subexpression.rhs))

@@ -30,7 +30,8 @@ class ActionTransform(BaseAction):
 		expr = parse_expression(self._args.expression)
 		for transformation_name in self._args.transform:
 			transformer_kwargs = { }
-			transformer_kwargs["prng"] = PRNG(b"foo")
+			if transformation_name == "shuffle":
+				transformer_kwargs["prng"] = PRNG(b"foo")
 			transformed = ExpressionTransformer.new(transformation_name, **transformer_kwargs).transform(expr)
 			print(format_expression(expression = transformed, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and))
 			assert(expr == transformed)

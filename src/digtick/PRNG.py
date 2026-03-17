@@ -50,3 +50,8 @@ class PRNG():
 			value &= mask
 			if value < irange:
 				return value + minval
+
+	def shuffle(self, data: list):
+		for i in range(len(data) - 1):
+			j = self.randint(i, len(data) - 1)
+			(data[i], data[j]) = (data[j], data[i])
