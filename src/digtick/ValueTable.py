@@ -126,6 +126,8 @@ class ValueTable():
 		Pretty = "pretty"
 		TeXHorizontal = "tex-horizontal"
 		TeXVertical = "tex-vertical"
+		TypstHorizontal = "typst-horizontal"
+		TypstVertical = "typst-vertical"
 		Compact = "compact"
 		LogiSim = "logisim"
 
@@ -382,6 +384,24 @@ class ValueTable():
 			print(f"	{' & '.join(line)}\\\\%")
 		print("\\end{tabular}")
 
+	def _print_typst_horizontal(self):
+		colcnt = (2 ** len(self.input_variable_names)) + 1
+		print("#table(")
+		print(f"	columns: (auto, {', '.join([ '0.5cm' ] * (colcnt - 1))}),")
+		print("	stroke: (x, y) => if (x == 0) { (right: 0.7pt) },")
+		print("	inset: 4pt,")
+		for (varidx, varname) in enumerate(self.input_variable_names):
+			bit = self.input_variable_count - 1 - varidx
+			line = [ varname ]
+			for i in range(2 ** self.input_variable_count):
+				line.append(str((i >> bit) & 1))
+			print(f"	{', '.join(f'[{item}]' for item in line)},")
+		print("	table.hline(stroke: 0.7pt),")
+		for (output_varname, storage) in zip(self.output_variable_names, self._output_values):
+			line = [ output_varname ] + [ "`*`" if value == CompactStorage.Entry.DontCare else value.as_str for value in storage ]
+			print(f"	{', '.join(f'[{item}]' for item in line)},")
+		print(")")
+
 	def _print_compact(self):
 		print(self.compact_representation)
 
@@ -406,7 +426,7 @@ class ValueTable():
 	def _cdnf(self, varname: str, search_value: CompactStorage.Entry):
 		term_input_values = [ self.index_to_dict(index) for index in self._named_outputs[varname].indices_with_value(search_value) ]
 		def _minterm(input_values: dict):
-			literals = [ ~Variable(varname) if input_values[varname] else Variable(varname) for varname in self.input_variable_names ]
+			literals = [ Variable(varname) if input_values[varname] else ~Variable(varname) for varname in self.input_variable_names ]
 			return BinaryOperator.join(Operator.And, literals)
 		terms = [ _minterm(term_input_value) for term_input_value in term_input_values ]
 		if len(terms) == 0:
@@ -423,7 +443,7 @@ class ValueTable():
 	def ccnf(self, varname: str) -> "ParseTreeElement":
 		term_input_values = [ self.index_to_dict(index) for index in self._named_outputs[varname].indices_with_value(CompactStorage.Entry.Low) ]
 		def _maxterm(input_values: dict):
-			literals = [ Variable(varname) if input_values[varname] else ~Variable(varname) for varname in self.input_variable_names ]
+			literals = [ ~Variable(varname) if input_values[varname] else Variable(varname) for varname in self.input_variable_names ]
 			return BinaryOperator.join(Operator.Or, literals)
 		terms = [ _maxterm(term_input_value) for term_input_value in term_input_values ]
 		if len(terms) == 0:
