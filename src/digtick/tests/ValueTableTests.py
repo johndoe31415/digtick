@@ -23,6 +23,7 @@ import io
 import contextlib
 import unittest
 import textwrap
+from digtick.ExpressionParser import parse_expression
 from digtick.ValueTable import ValueTable, CompactStorage
 from digtick.Exceptions import InvalidValueTableException
 
@@ -212,3 +213,17 @@ class ValueTableTests(unittest.TestCase):
 		cr = CompactStorage(2, initial_value = CompactStorage.Entry.High)
 		with self.assertRaises(InvalidValueTableException):
 			vt.add_output_variable("Z", cr)
+
+	def test_dnf(self):
+		vt = ValueTable.from_compact_representation(":A,B,C,D:Y:100000")
+		self.assertEqual(vt.cdnf("Y"), parse_expression("A !B C !D"))
+
+		vt = ValueTable.from_compact_representation(":A,B,C,D:Y:40044000")
+		self.assertEqual(vt.cdnf("Y"), parse_expression("A !B !C D + A B C D + !A B C D"))
+
+	def test_cnf(self):
+		vt = ValueTable.from_compact_representation(":A,B,C,D:Y:55554555")
+		self.assertEqual(vt.cdnf("Y"), parse_expression("A + !B + !C + D"))
+
+		vt = ValueTable.from_compact_representation(":A,B,C,D:Y:55544554")
+		self.assertEqual(vt.cdnf("Y"), parse_expression("(A + !B + !C + D)(A + B + C + D)(!A + B + C + D)"))
