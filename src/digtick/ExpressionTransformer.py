@@ -155,15 +155,16 @@ class SimplificationTransformer(ExpressionTransformer):
 
 		return UnaryOperator(expr.op, self._transform(expr.rhs))
 
-	def _subexpression_sort_key(self, subexpression: ParseTreeElement):
+	@classmethod
+	def subexpression_sort_key(cls, subexpression: ParseTreeElement):
 		if isinstance(subexpression, Variable):
 			return (0, sort_signal_key(subexpression.varname), 0)
 		elif isinstance(subexpression, UnaryOperator) and isinstance(subexpression.rhs, Variable):
 			return (0, sort_signal_key(subexpression.rhs.varname), 1)
 		elif isinstance(subexpression, BinaryOperator):
-			return (subexpression.precedence, self._subexpression_sort_key(subexpression.lhs), self._subexpression_sort_key(subexpression.rhs))
+			return (subexpression.precedence, cls.subexpression_sort_key(subexpression.lhs), cls.subexpression_sort_key(subexpression.rhs))
 		elif isinstance(subexpression, Parenthesis):
-			return self._subexpression_sort_key(subexpression.inner)
+			return cls.subexpression_sort_key(subexpression.inner)
 		else:
 			return (subexpression.precedence, )
 
@@ -238,8 +239,17 @@ class ShuffleTransformer(ExpressionTransformer):
 		if expr.op in [ Operator.And, Operator.Or ]:
 			terms = [ self._transform(term) for term in expr.gather() ]
 			self._prng.shuffle(terms)
-
-			print(terms)
 			return BinaryOperator.join(expr.op, terms)
 
+		return BinaryOperator(self._transform(expr.lhs), expr.op, self._transform(expr.rhs))
+
+
+class SortTransformer(ExpressionTransformer):
+	_Name = "sort"
+
+	def _transform_binary(self, expr: "Expression"):
+		if expr.op in [ Operator.And, Operator.Or ]:
+			terms = [ self._transform(term) for term in expr.gather() ]
+			sorted_terms = sorted([ self._transform(term) for term in terms ], key = SimplificationTransformer.subexpression_sort_key)
+			return BinaryOperator.join(expr.op, sorted_terms)
 		return BinaryOperator(self._transform(expr.lhs), expr.op, self._transform(expr.rhs))

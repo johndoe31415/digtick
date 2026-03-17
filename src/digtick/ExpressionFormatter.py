@@ -187,7 +187,7 @@ class ExpressionFormatterText():
 				else:
 					return f"{self._op(expr.op)}{self.format_expression(expr.rhs)}"
 			else:
-				return f"{self._op(expr.op)}({self.format_expression(expr.rhs)})"
+				return f"{self._op(expr.op)}{self._parenthesize(expr.rhs, needs_parenthesis = not isinstance(expr.rhs, Parenthesis))}"
 		elif isinstance(expr, Constant):
 			return str(expr)
 		elif isinstance(expr, Parenthesis):
