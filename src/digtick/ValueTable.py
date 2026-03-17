@@ -405,8 +405,8 @@ class ValueTable():
 	def _print_typst_vertical(self):
 		colcnt = len(self.input_variable_names) + len(self.output_variable_names)
 		print("#table(")
-		print(f"	columns: (auto, {', '.join([ '0.5cm' ] * colcnt)}),")
-		print("	stroke: (x, y) => if (x == {len(self.input_variable_names) - 1}) { (right: 0.7pt) },")
+		print(f"	columns: ({', '.join([ '1cm' ] * colcnt)}),")
+		print(f"	stroke: (x, y) => if (x == {len(self.input_variable_names) - 1}) {{ (right: 0.7pt) }},")
 		print("	inset: 4pt,")
 		line = self.input_variable_names + self.output_variable_names
 		print(f"	{', '.join(f'[{item}]' for item in line)},")
