@@ -616,6 +616,43 @@ $ digtick transform -t nor 'A ^ !B'
 Note that, as stated above, `@` is shortcut notation for NAND while `%` stands
 for NOR.
 
+Other notable transformation are the "simplify" transformation which attempts
+to algorithmically simplify expressions. Note that this is quite basic functionality:
+
+```
+$ digtick transform -t simplify 'A + A B A + (C @ 1 @ 1)'
+A + C + A B
+```
+
+As you can see, the redundant term "AB" is not removed in the above example,
+although it is clearly covered by "A".
+
+Expressions can also be rearranged/shuffled. This is useful to prepare
+randomized student questions which are all identical (but different). Note that
+there is an iteration paraemter that you can use as well to generate multiple
+variants:
+
+```
+$ digtick random-expr 4 5
+Expression: (!D C !B !C !D A + !A !D !C) !D !B + !C A B D
+Simplified: A B !C D + !A !B !C !D
+
+$ digtick transform -I 5 -t shuffle '(!D C !B !C !D A + !A !D !C) !D !B + !C A B D'
+B !C D A + !B (!D !A !C + !D !B !D !C C A) !D
+(!A !D !C + C !B !D !D !C A) !D !B + !C B A D
+!B (!C !D !A + !D C A !B !C !D) !D + !C B D A
+!D !B (!C !A !D + !C !B A C !D !D) + A D B !C
+(!D !D A !B C !C + !C !D !A) !B !D + D !C B A
+```
+
+Lastly, there is a transformation that exclusively sorts literals and
+subexpressions to create a standard form:
+
+```
+$ digtick transform -t sort '(!D !D A !B C !C + !C !D !A) !B !D + D !C B A'
+!B !D (!A !C !D + A !B C !C !D !D) + A B !C D
+```
+
 
 ## "dtd-create": Create a digital timing diagram
 `dtd-create` generates timing-diagram source text (a compact, line-based
