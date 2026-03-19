@@ -26,6 +26,7 @@ from .Tools import open_file
 
 class ActionSatisfied(BaseAction):
 	def run(self):
+		table_format = self._args.tbl_format.parse_options(self._args.tbl_format_option)
 		with open_file(self._args.filename) as f:
 			vt = ValueTable.parse_from_file(f, set_undefined_values_to = self._args.unused_value_is)
 		expr = parse_expression(self._args.expression)
@@ -46,7 +47,7 @@ class ActionSatisfied(BaseAction):
 
 		vt.add_output_variable("Eval", eval_storage)
 		vt.add_output_variable("Sat", sat_storage)
-		vt.print(self._args.tbl_format)
+		vt.print(table_format)
 
 		if not all_satisfied:
 			print("Warning: the given expression does NOT satisfy the truth table")

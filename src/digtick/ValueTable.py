@@ -326,14 +326,14 @@ class ValueTable():
 	def iter_output_variable(self, output_var_name: str):
 		yield from self.get_storage(output_var_name)
 
-	def _print_text(self):
+	def _print_text_native(self):
 		heading = self._input_variable_names + [ f">{name}" for name in self._output_variable_names ]
 		print("\t".join(heading))
 		for (inputs, outputs) in self.iter_inputlist:
 			row = [ str(bit) for bit in inputs ] + [ output_bit.as_str for output_bit in outputs ]
 			print("\t".join(row))
 
-	def _print_pretty(self):
+	def _print_text_pretty(self):
 		table = Table()
 		header = { varname: varname for varname in self.input_variable_names + self.output_variable_names }
 		header["="] = " "
@@ -344,8 +344,13 @@ class ValueTable():
 			row = { name: value.as_str for (name, value) in outputs.items() }
 			row.update(inputs)
 			table.add_row(row)
-
 		table.print(*(self.input_variable_names + self.output_variable_names))
+
+	def _print_text(self, table_format: TableFormat):
+		if table_format["pretty"]:
+			return self._print_text_pretty()
+		else:
+			return self._print_text_native()
 
 	def _print_tex_horizontal(self):
 		colcnt = (2 ** len(self.input_variable_names)) + 1
@@ -374,6 +379,12 @@ class ValueTable():
 			line += [ value.as_str for value in rhs ]
 			print(f"	{' & '.join(line)}\\\\%")
 		print("\\end{tabular}")
+
+	def _print_tex(self, table_format: TableFormat):
+		if table_format["layout"] == "vertical":
+			return self._print_tex_vertical()
+		else:
+			return self._print_tex_horizontal()
 
 	def _print_typst_horizontal(self):
 		colcnt = (2 ** len(self.input_variable_names)) + 1
@@ -408,10 +419,16 @@ class ValueTable():
 			print(f"	{', '.join(f'[{item}]' for item in line)},")
 		print(")")
 
-	def _print_compact(self):
+	def _print_typst(self, table_format: TableFormat):
+		if table_format["layout"] == "vertical":
+			return self._print_typst_vertical()
+		else:
+			return self._print_typst_horizontal()
+
+	def _print_compact(self, table_format: TableFormat):
 		print(self.compact_representation)
 
-	def _print_logisim(self):
+	def _print_logisim(self, table_format: TableFormat):
 		logisim_chars = {
 			CompactStorage.Entry.Low:		"0",
 			CompactStorage.Entry.High:		"1",
@@ -427,7 +444,7 @@ class ValueTable():
 
 	def print(self, table_format: TableFormat = TableFormat.Text):
 		method = getattr(self, f"_print_{table_format.value.replace('-', '_')}")
-		return method()
+		return method(table_format)
 
 	def _cdnf(self, varname: str, search_value: CompactStorage.Entry):
 		term_input_values = [ self.index_to_dict(index) for index in self._named_outputs[varname].indices_with_value(search_value) ]

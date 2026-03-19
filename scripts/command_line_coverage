@@ -36,8 +36,14 @@ done
 ) | $digtick parse -F -e -
 
 $digtick make-table 'A B C' '!B !C' >/tmp/table1
-for format in text pretty tex-horizontal tex-vertical typst-horizontal typst-vertical compact logisim; do
+for format in text tex typst compact logisim; do
 	cat /tmp/table1 | $digtick print-table -f $format
+done
+cat /tmp/table1 | $digtick print-table -f text -F pretty
+for format in tex typst; do
+	for layout in horizontal vertical; do 
+		cat /tmp/table1 | $digtick print-table -f $format -F layout=${layout}
+	done
 done
 $digtick print-table -L examples/logisim_full_adder.txt
 

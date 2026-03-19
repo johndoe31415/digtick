@@ -26,6 +26,7 @@ from .ValueTable import ValueTable, CompactStorage
 
 class ActionRandomTable(BaseAction):
 	def run(self):
+		table_format = self._args.tbl_format.parse_options(self._args.tbl_format_option)
 		if (self._args.zero_percentage + self._args.one_percentage) > 100:
 			raise ValueError(f"With {self._args.zero_percentage}% chance to get a zero and {self._args.one_percentage}% chance to get a zero the total proability is greater than 100% ({self._args.zero_percentage + self._args.one_percentage}%).")
 
@@ -50,4 +51,4 @@ class ActionRandomTable(BaseAction):
 				storage[index] = entry
 			output_values.append(storage)
 		vt = ValueTable(variable_names, output_var_names, output_values)
-		vt.print(self._args.tbl_format)
+		vt.print(table_format)

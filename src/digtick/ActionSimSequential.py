@@ -24,9 +24,10 @@ from .MultiCommand import BaseAction
 
 class ActionSimSequential(BaseAction):
 	def run(self):
+		table_format = self._args.tbl_format.parse_options(self._args.tbl_format_option)
 		circuit = LogisimLoader.load_from_file(self._args.circ_filename, circuit_name = self._args.circuit_name).parse()
 		circuit.power_on()
 
 		storage_element_labels = self._args.storage_element_labels.split(",")
 		vt = circuit.build_next_state_table(storage_element_labels = storage_element_labels, clock_label = self._args.clock_signal)
-		vt.print(self._args.tbl_format)
+		vt.print(table_format)

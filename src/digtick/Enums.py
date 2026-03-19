@@ -22,48 +22,75 @@
 import enum
 import argparse
 
+def _parse_bool(bool_value: str | bool) -> bool:
+	if isinstance(bool_value, bool):
+		return bool_value
+	if bool_value.lower() in ("0", "off", "false", "no"):
+		return False
+	elif bool_value.lower() in ("1", "on", "true", "yes"):
+		return True
+	else:
+		raise ValueError(f"Not a boolean value: {bool_value}")
+
+def _parse_layout(layout_value: str) -> str:
+	if layout_value.lower() in ("v", "vert", "vertical"):
+		return "vertical"
+	elif layout_value.lower() in ("h", "horiz", "horizontal"):
+		return "horizontal"
+	else:
+		raise ValueError(f"Not a layout value: {layout_value} (expect \"vertical\" or \"horizontal\")")
+
 class TableFormat(enum.StrEnum):
 	Text = "text"
-	Pretty = "pretty"
-	TeXHorizontal = "tex-horizontal"
-	TeXVertical = "tex-vertical"
-	TypstHorizontal = "typst-horizontal"
-	TypstVertical = "typst-vertical"
+	TeX = "tex"
+	Typst = "typst"
 	Compact = "compact"
 	LogiSim = "logisim"
 
 	__SUPPORTED_OPTIONS = {
 		Text: {
-			"foo": str,
-			"val": int,
+			"pretty": (_parse_bool, False),
+		},
+		TeX: {
+			"layout": (_parse_layout, "vertical"),
+		},
+		Typst: {
+			"layout": (_parse_layout, "vertical"),
 		},
 	}
 
-	def options(self, option_list: list[str]) -> dict:
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self._options = { }
+
+	def parse_options(self, option_list: list[str]) -> dict:
 		permissible_options = self.__SUPPORTED_OPTIONS.get(self.value, { })
-		options = { }
+		self._options = { }
+		for (name, (parser_class, default_value)) in permissible_options.items():
+			self._options[name] = default_value
 		for option in option_list:
 			if "=" not in option:
-				raise argparse.ArgumentTypeError(f"Arguments to {self.__class__.__name__} must be of form \"key=value\", but \"{option}\" is not.")
-			(key, value) = option.split("=", maxsplit = 1)
+				(key, value) = (option, True)
+			else:
+				(key, value) = option.split("=", maxsplit = 1)
 			key = key.lower()
 
 			if len(permissible_options) == 0:
-				raise argparse.ArgumentTypeError(f"{self.__class__.__name__} has no options, but option \"{key}\" was given.")
+				raise argparse.ArgumentTypeError(f"{self.__class__.__name__} {self.name} supports no options, but option \"{key}\" was given.")
 
 			if key not in permissible_options:
 				raise argparse.ArgumentTypeError(f"Arguments to {self.__class__.__name__} must be one of \"{', '.join(sorted(permissible_options))}\", but \"{key}\" is not.")
 
+			(parser_class, default_value) = permissible_options[key]
 			try:
-				value = permissible_options[key](value)
+				value = parser_class(value)
 			except ValueError as e:
-				raise argparse.ArgumentTypeError(f"Argument {key} to {self.__class__.__name__} must be of type {permissible_options[key].__name__}, but \"{value}\" produced error: {e.__class__.__name__} {str(e)}")
+				raise argparse.ArgumentTypeError(f"Argument {key} to {self.__class__.__name__} must be of type {parser_class.__name__}, but \"{value}\" could not be parsed: {e.__class__.__name__} {str(e)}")
+			self._options[key] = value
+		return self
 
-			options[key] = value
-		return options
+	def __getitem__(self, option_name: str):
+		return self._options[option_name]
 
 	def __str__(self):
 		return self.value
-
-#x = TableFormat.Text
-#print(x.options([ "foo=bar", "val=9x" ]))

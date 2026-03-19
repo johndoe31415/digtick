@@ -25,6 +25,7 @@ from .ValueTable import ValueTable
 
 class ActionMakeTable(BaseAction):
 	def run(self):
+		table_format = self._args.tbl_format.parse_options(self._args.tbl_format_option)
 		expr = parse_expression(self._args.expression)
 		if self._args.dc_expression is not None:
 			dc_expr = parse_expression(self._args.dc_expression)
@@ -32,4 +33,4 @@ class ActionMakeTable(BaseAction):
 			dc_expr = None
 
 		vt = ValueTable.create_from_expression(output_variable_name = self._args.output_variable_name, expression = expr, dc_expression = dc_expr)
-		vt.print(self._args.tbl_format)
+		vt.print(table_format)
