@@ -45,6 +45,13 @@ for format in tex typst; do
 		cat /tmp/table1 | $digtick print-table -f $format -F layout=${layout}
 	done
 done
+cat /tmp/table1 | $digtick print-table -f text -F pretty
+cat /tmp/table1 | $digtick print-table -f text -F pretty=false
+cat /tmp/table1 | $digtick print-table -f text -F pretty=true
+cat /tmp/table1 | $digtick print-table -f text -F pretty=slop || must_fail; assert_failed
+cat /tmp/table1 | $digtick print-table -f text -F blah=fail || must_fail; assert_failed
+cat /tmp/table1 | $digtick print-table -f logisim -F haveno=opts || must_fail; assert_failed
+cat /tmp/table1 | $digtick print-table -f tex -F layout=foo || must_fail; assert_failed
 $digtick print-table -L examples/logisim_full_adder.txt
 
 $digtick make-table 'A B + !B C' >/tmp/table2
