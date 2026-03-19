@@ -154,7 +154,7 @@ A	B	C   >Y
 1	1	0	0
 1	1	1	1
 
-$ digtick make-table --tbl-format pretty 'A B C + A !B C + C !A'
+$ digtick make-table --tbl-format-option pretty 'A B C + A !B C + C !A'
 ┌───┬───┬───┬───┐
 │ A │ B │ C │ Y │
 ├───┼───┼───┼───┤
@@ -183,10 +183,10 @@ DNF : C
 CNF : (C)
 ```
 
-There is a second format which is also automatically accepted, called the
-"compact" format. The compact format is useful when you want to modify whole
-tables in a single command line because it is, as the name indicates, a very
-compact representation of a truth table:
+There is a second format which is also accepted as input and which is
+automatically detected, called the "compact" format. The compact format is
+useful when you want to modify whole tables in a single command line because it
+is, as the name indicates, a very compact representation of a truth table:
 
 ```
 $ digtick make-table --tbl-format compact 'A B C + A !B C + C !A'
@@ -211,6 +211,14 @@ A	B	C	>Y
 1	1	0	0
 1	1	1	1
 ```
+
+Some table formats have table-specific format options, in particular the following are supported:
+
+| Format      | Option       | Type                          | Description                                                                              |
+| ----------- | ------------ | ----------------------------- | ---------------------------------------------------------------------------------------- |
+| text        | pretty       | bool                          | Produce machine readable output (default) or pretty-printed output.                      |
+| tex         | layout       | {vertical,horizontal}         | Layout table vertically (default) or horizontally.                                       |
+| typst       | layout       | {vertical,horizontal}         | Layout table vertically (default) or horizontally.                                       |
 
 
 ## Timing diagram format
