@@ -30,4 +30,4 @@ class ActionPrintTable(BaseAction):
 				vt = ValueTable.parse_logisim_file(f, set_undefined_values_to = self._args.unused_value_is)
 			else:
 				vt = ValueTable.parse_from_file(f, set_undefined_values_to = self._args.unused_value_is)
-		vt.print(ValueTable.PrintFormat(self._args.tbl_format))
+		vt.print(self._args.tbl_format)

@@ -19,14 +19,17 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
-from digtick.sim.LogisimInterface import LogisimLoader
-from .MultiCommand import BaseAction
-from .ValueTable import ValueTable
+import enum
 
-class ActionSimCombinatorial(BaseAction):
-	def run(self):
-		circuit = LogisimLoader.load_from_file(self._args.circ_filename, circuit_name = self._args.circuit_name).parse()
-		circuit.power_on()
+class TableFormat(enum.Enum):
+	Text = "text"
+	Pretty = "pretty"
+	TeXHorizontal = "tex-horizontal"
+	TeXVertical = "tex-vertical"
+	TypstHorizontal = "typst-horizontal"
+	TypstVertical = "typst-vertical"
+	Compact = "compact"
+	LogiSim = "logisim"
 
-		vt = circuit.build_table()
-		vt.print(self._args.tbl_format)
+	def __str__(self):
+		return self.value

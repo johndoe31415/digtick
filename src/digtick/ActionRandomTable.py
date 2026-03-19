@@ -50,4 +50,4 @@ class ActionRandomTable(BaseAction):
 				storage[index] = entry
 			output_values.append(storage)
 		vt = ValueTable(variable_names, output_var_names, output_values)
-		vt.print(ValueTable.PrintFormat(self._args.tbl_format))
+		vt.print(self._args.tbl_format)

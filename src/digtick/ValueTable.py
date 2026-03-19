@@ -23,6 +23,7 @@ import io
 import re
 import enum
 import collections
+from .Enums import TableFormat
 from .TableFormatter import Table
 from .ExpressionParser import Operator, Constant, Variable, BinaryOperator
 from .Exceptions import InvalidValueTableException
@@ -121,16 +122,6 @@ class CompactStorage():
 		return f"CompStor<{self.variable_count}>"
 
 class ValueTable():
-	class PrintFormat(enum.Enum):
-		Text = "text"
-		Pretty = "pretty"
-		TeXHorizontal = "tex-horizontal"
-		TeXVertical = "tex-vertical"
-		TypstHorizontal = "typst-horizontal"
-		TypstVertical = "typst-vertical"
-		Compact = "compact"
-		LogiSim = "logisim"
-
 	_TABLE_SEP = re.compile(r"\s+")
 
 	def __init__(self, input_variable_names: list[str], output_variable_names: list[str], output_values: list[CompactStorage]):
@@ -434,8 +425,8 @@ class ValueTable():
 			row = [ str(bit) for bit in inputs ] + [ "|" ] + [ logisim_chars[output_bit] for output_bit in outputs ]
 			print(" ".join(row))
 
-	def print(self, print_format: PrintFormat = PrintFormat.Text):
-		method = getattr(self, f"_print_{print_format.value.replace('-', '_')}")
+	def print(self, table_format: TableFormat = TableFormat.Text):
+		method = getattr(self, f"_print_{table_format.value.replace('-', '_')}")
 		return method()
 
 	def _cdnf(self, varname: str, search_value: CompactStorage.Entry):

@@ -30,4 +30,4 @@ class ActionSimSequential(BaseAction):
 
 		storage_element_labels = self._args.storage_element_labels.split(",")
 		vt = circuit.build_next_state_table(storage_element_labels = storage_element_labels, clock_label = self._args.clock_signal)
-		vt.print(ValueTable.PrintFormat(self._args.tbl_format))
+		vt.print(self._args.tbl_format)

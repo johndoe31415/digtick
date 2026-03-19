@@ -32,4 +32,4 @@ class ActionMakeTable(BaseAction):
 			dc_expr = None
 
 		vt = ValueTable.create_from_expression(output_variable_name = self._args.output_variable_name, expression = expr, dc_expression = dc_expr)
-		vt.print(ValueTable.PrintFormat(self._args.tbl_format))
+		vt.print(self._args.tbl_format)

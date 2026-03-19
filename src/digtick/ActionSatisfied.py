@@ -46,7 +46,7 @@ class ActionSatisfied(BaseAction):
 
 		vt.add_output_variable("Eval", eval_storage)
 		vt.add_output_variable("Sat", sat_storage)
-		vt.print(ValueTable.PrintFormat(self._args.tbl_format))
+		vt.print(self._args.tbl_format)
 
 		if not all_satisfied:
 			print("Warning: the given expression does NOT satisfy the truth table")
