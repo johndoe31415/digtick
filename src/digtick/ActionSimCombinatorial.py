@@ -21,7 +21,6 @@
 
 from digtick.sim.LogisimInterface import LogisimLoader
 from .MultiCommand import BaseAction
-from .ValueTable import ValueTable
 
 class ActionSimCombinatorial(BaseAction):
 	def run(self):
