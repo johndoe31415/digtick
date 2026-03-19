@@ -212,13 +212,43 @@ A	B	C	>Y
 1	1	1	1
 ```
 
-Some table formats have table-specific format options, in particular the following are supported:
+Some table formats have table-specific format options, of which multiple may be
+given. In particular, the following options are supported:
 
 | Format      | Option       | Type                          | Description                                                                              |
 | ----------- | ------------ | ----------------------------- | ---------------------------------------------------------------------------------------- |
 | text        | pretty       | bool                          | Produce machine readable output (default) or pretty-printed output.                      |
 | tex         | layout       | {vertical,horizontal}         | Layout table vertically (default) or horizontally.                                       |
 | typst       | layout       | {vertical,horizontal}         | Layout table vertically (default) or horizontally.                                       |
+
+For example:
+
+```
+$ echo :A,B:Y:14 | digtick print-table -f typst
+#table(
+	columns: (1cm, 1cm, 1cm),
+	stroke: (x, y) => if (x == 1) { (right: 0.7pt) },
+	inset: 4pt,
+	[A], [B], [Y],
+	table.hline(stroke: 0.7pt),
+	[0], [0], [0],
+	[0], [1], [1],
+	[1], [0], [1],
+	[1], [1], [0],
+)
+
+$ echo :A,B:Y:14 | digtick print-table -f typst -F layout=horizontal
+
+#table(
+	columns: (auto, 0.5cm, 0.5cm, 0.5cm, 0.5cm),
+	stroke: (x, y) => if (x == 0) { (right: 0.7pt) },
+	inset: 4pt,
+	[A], [0], [0], [1], [1],
+	[B], [0], [1], [0], [1],
+	table.hline(stroke: 0.7pt),
+	[Y], [0], [1], [1], [0],
+)
+```
 
 
 ## Timing diagram format
