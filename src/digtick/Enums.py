@@ -20,8 +20,9 @@
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 import enum
+import argparse
 
-class TableFormat(enum.Enum):
+class TableFormat(enum.StrEnum):
 	Text = "text"
 	Pretty = "pretty"
 	TeXHorizontal = "tex-horizontal"
@@ -31,5 +32,38 @@ class TableFormat(enum.Enum):
 	Compact = "compact"
 	LogiSim = "logisim"
 
+	__SUPPORTED_OPTIONS = {
+		Text: {
+			"foo": str,
+			"val": int,
+		},
+	}
+
+	def options(self, option_list: list[str]) -> dict:
+		permissible_options = self.__SUPPORTED_OPTIONS.get(self.value, { })
+		options = { }
+		for option in option_list:
+			if "=" not in option:
+				raise argparse.ArgumentTypeError(f"Arguments to {self.__class__.__name__} must be of form \"key=value\", but \"{option}\" is not.")
+			(key, value) = option.split("=", maxsplit = 1)
+			key = key.lower()
+
+			if len(permissible_options) == 0:
+				raise argparse.ArgumentTypeError(f"{self.__class__.__name__} has no options, but option \"{key}\" was given.")
+
+			if key not in permissible_options:
+				raise argparse.ArgumentTypeError(f"Arguments to {self.__class__.__name__} must be one of \"{', '.join(sorted(permissible_options))}\", but \"{key}\" is not.")
+
+			try:
+				value = permissible_options[key](value)
+			except ValueError as e:
+				raise argparse.ArgumentTypeError(f"Argument {key} to {self.__class__.__name__} must be of type {permissible_options[key].__name__}, but \"{value}\" produced error: {e.__class__.__name__} {str(e)}")
+
+			options[key] = value
+		return options
+
 	def __str__(self):
 		return self.value
+
+#x = TableFormat.Text
+#print(x.options([ "foo=bar", "val=9x" ]))
