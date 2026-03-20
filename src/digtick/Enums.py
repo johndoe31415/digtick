@@ -46,15 +46,15 @@ class OptionEnum(enum.StrEnum):
 		super().__init__(*args, **kwargs)
 		self._options = { }
 
-	@classmethod
+	@property
 	@abc.abstractmethod
-	def _supported_options(cls):
+	def supported_options(self):
 		pass
 
 	def parse_options(self, option_list: list[str]) -> dict:
-		permissible_options = self._supported_options().get(self.value, { })
+		supported_options = self.supported_options
 		self._options = { }
-		for (name, (parser_class, default_value)) in permissible_options.items():
+		for (name, (parser_class, default_value)) in supported_options.items():
 			self._options[name] = default_value
 		for option in option_list:
 			if "=" not in option:
@@ -63,13 +63,13 @@ class OptionEnum(enum.StrEnum):
 				(key, value) = option.split("=", maxsplit = 1)
 			key = key.lower()
 
-			if len(permissible_options) == 0:
+			if len(supported_options) == 0:
 				raise argparse.ArgumentTypeError(f"{self.__class__.__name__} {self.name} supports no options, but option \"{key}\" was given.")
 
-			if key not in permissible_options:
-				raise argparse.ArgumentTypeError(f"Arguments to {self.__class__.__name__} must be one of \"{', '.join(sorted(permissible_options))}\", but \"{key}\" is not.")
+			if key not in supported_options:
+				raise argparse.ArgumentTypeError(f"Arguments to {self.__class__.__name__} must be one of \"{', '.join(sorted(supported_options))}\", but \"{key}\" is not.")
 
-			(parser_class, default_value) = permissible_options[key]
+			(parser_class, default_value) = supported_options[key]
 			try:
 				value = parser_class(value)
 			except ValueError as e:
@@ -78,6 +78,11 @@ class OptionEnum(enum.StrEnum):
 		return self
 
 	def __getitem__(self, option_name: str):
+		if option_name not in self._options:
+			if option_name not in self.supported_options:
+				raise KeyError(f"{self.__class__.__name__} {self.name} supports {len(self.supported_options)} options: \"{', '.join(sorted(self.supported_options))}\", but option \"{option_name}\" was asked for.")
+			(_, default_value) = self.supported_options[option_name]
+			return default_value
 		return self._options[option_name]
 
 	def __str__(self):
@@ -90,16 +95,41 @@ class TableFormat(OptionEnum):
 	Compact = "compact"
 	LogiSim = "logisim"
 
-	@classmethod
-	def _supported_options(cls):
+	@property
+	def supported_options(self):
 		return {
-			cls.Text: {
+			self.Text: {
 				"pretty": (_parse_bool, False),
 			},
-			cls.TeX: {
+			self.TeX: {
 				"layout": (_parse_layout, "vertical"),
 			},
-			cls.Typst: {
+			self.Typst: {
 				"layout": (_parse_layout, "vertical"),
 			},
-		}
+		}.get(self, { })
+
+class ExpressionFormat(OptionEnum):
+	Text = "text"
+	TeX = "tex"
+	Typst = "typst"
+	Dot = "dot"
+	Internal = "internal"
+
+	@property
+	def supported_options(self):
+		return {
+			self.Text: {
+				"implicit-and": (_parse_bool, True),
+				"pretty": (_parse_bool, False),
+			},
+			self.TeX: {
+				"implicit-and": (_parse_bool, True),
+				"math-operators": (_parse_bool, False),
+				"use-mathrm": (_parse_bool, True),
+			},
+			self.Typst: {
+				"implicit-and": (_parse_bool, True),
+				"math-operators": (_parse_bool, False),
+			},
+		}.get(self, { })

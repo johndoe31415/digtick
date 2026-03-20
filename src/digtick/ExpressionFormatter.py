@@ -19,13 +19,15 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
+from .Enums import ExpressionFormat
 from .ExpressionParser import ParseTreeElement, Operator, Variable, Constant, UnaryOperator, BinaryOperator, Parenthesis
 
 class ExpressionFormatterTex():
-	def __init__(self, neg_overline: bool = True, implicit_and: bool = True, use_mathrm: bool = True):
-		self._neg_overline = neg_overline
-		self._implicit_and = implicit_and
-		self._use_mathrm = use_mathrm
+	def __init__(self, expression_format: ExpressionFormat):
+		self._format = expression_format
+#		self._format["neg-overline"] = neg_overline
+#		self._format["implicit-and"] = implicit_and
+#		self._format["use-mathrm"] = use_mathrm
 		self._ops = {
 			Operator.Or: " \\vee ",
 			Operator.And: " \\wedge ",
@@ -34,7 +36,7 @@ class ExpressionFormatterTex():
 			Operator.Nand: "\\overset{\\sim}{\\wedge}",
 			Operator.Nor: "\\overset{\\sim}{\\vee}",
 		}
-		if implicit_and:
+		if self._format["implicit-and"]:
 			self._ops[Operator.And] = " "
 
 	def _op(self, op):
@@ -56,14 +58,14 @@ class ExpressionFormatterTex():
 			(formatted_lhs, lhs_inverted) = self._parenthesize(expr.lhs, lhs_needs_parenthesis)
 			(formatted_rhs, rhs_inverted) = self._parenthesize(expr.rhs, rhs_needs_parenthesis)
 
-			if lhs_inverted and rhs_inverted and (expr.op == Operator.And) and self._implicit_and:
+			if lhs_inverted and rhs_inverted and (expr.op == Operator.And) and self._format["implicit-and"]:
 				# Need to separate those two because otherwise the overlines get combined
 				op_str = "\\,"
 			else:
 				op_str = self._op(expr.op)
 			return (f"{formatted_lhs}{op_str}{formatted_rhs}", rhs_inverted)
 		elif isinstance(expr, UnaryOperator):
-			if self._neg_overline:
+			if self._format["neg-overline"]:
 				return (f"\\overline{{{self._format_expression(expr.rhs)[0]}}}", True)
 			else:
 				rhs_needs_parenthesis = (expr.rhs.precedence > expr.precedence)
@@ -75,16 +77,18 @@ class ExpressionFormatterTex():
 		raise NotImplementedError(expr)
 
 	def format_expression(self, expr: ParseTreeElement):
-		if self._use_mathrm:
+		if self._format["use-mathrm"]:
 			return f"\\mathrm{{{self._format_expression(expr)[0]}}}"
 		else:
 			return self._format_expression(expr)[0]
 
 
 class ExpressionFormatterTypst():
-	def __init__(self, neg_overline: bool = True, implicit_and: bool = True):
-		self._neg_overline = neg_overline
-		self._implicit_and = implicit_and
+#	def __init__(self, neg_overline: bool = True, implicit_and: bool = True):
+	def __init__(self, expression_format: ExpressionFormat):
+		self._format = expression_format
+#		self._format["neg-overline"] = neg_overline
+#		self._format["implicit-and"] = implicit_and
 		self._ops = {
 			Operator.Or: " or ",
 			Operator.And: " and ",
@@ -118,14 +122,14 @@ class ExpressionFormatterTypst():
 			(formatted_lhs, lhs_inverted) = self._parenthesize(expr.lhs, lhs_needs_parenthesis)
 			(formatted_rhs, rhs_inverted) = self._parenthesize(expr.rhs, rhs_needs_parenthesis)
 
-			if lhs_inverted and rhs_inverted and (expr.op == Operator.And) and self._implicit_and:
+			if lhs_inverted and rhs_inverted and (expr.op == Operator.And) and self._format["implicit-and"]:
 				# Need to separate those two because otherwise the overlines get combined
 				op_str = " thin "
 			else:
 				op_str = self._op(expr.op)
 			return (f"{formatted_lhs}{op_str}{formatted_rhs}", rhs_inverted)
 		elif isinstance(expr, UnaryOperator):
-			if self._neg_overline:
+			if self._format["neg-overline"]:
 				return (f"bnot({self._format_expression(expr.rhs)[0]})", True)
 			else:
 				rhs_needs_parenthesis = (expr.rhs.precedence > expr.precedence)
@@ -140,10 +144,9 @@ class ExpressionFormatterTypst():
 		return self._format_expression(expr)[0]
 
 class ExpressionFormatterText():
-	def __init__(self, pretty_print: bool = False, implicit_and: bool = True):
-		self._pretty_print = pretty_print
-		self._implicit_and = implicit_and
-		if pretty_print:
+	def __init__(self, expression_format: ExpressionFormat):
+		self._format = expression_format
+		if self._format["pretty"]:
 			self._ops = {
 				Operator.Or: " ∨ ",
 				Operator.And: " ∧ ",
@@ -161,7 +164,7 @@ class ExpressionFormatterText():
 				Operator.Nand: " @ ",
 				Operator.Nor: " % ",
 			}
-		if self._implicit_and:
+		if self._format["implicit-and"]:
 			self._ops[Operator.And] = " "
 
 	def _op(self, op):
@@ -182,7 +185,7 @@ class ExpressionFormatterText():
 			return f"{self._parenthesize(expr.lhs, lhs_needs_parenthesis)}{self._op(expr.op)}{self._parenthesize(expr.rhs, rhs_needs_parenthesis)}"
 		elif isinstance(expr, UnaryOperator):
 			if isinstance(expr.rhs, Variable) or isinstance(expr.rhs, Constant):
-				if self._pretty_print and (expr.op == Operator.Not):
+				if self._format["pretty"] and (expr.op == Operator.Not):
 					return f"{self.format_expression(expr.rhs)}\u0305"
 				else:
 					return f"{self._op(expr.op)}{self.format_expression(expr.rhs)}"
@@ -194,8 +197,9 @@ class ExpressionFormatterText():
 			return f"({self.format_expression(expr.inner)})"
 		raise NotImplementedError(expr)
 
-class GraphvizFormatter():
-	def __init__(self):
+class ExpressionFormatterDot():
+	def __init__(self, expression_format: ExpressionFormat):
+		self._format = expression_format
 		self._op_label = {
 			Operator.Or: "\\|\\|",
 			Operator.And: "&&",
@@ -235,33 +239,19 @@ class GraphvizFormatter():
 		lines += [ "}" ]
 		return "\n".join(lines)
 
-def format_expression(expression: ParseTreeElement, expression_format: str = "text", **kwargs):
+def expression_formatter(expression_format: ExpressionFormat = ExpressionFormat.Text):
+	assert(isinstance(expression_format, ExpressionFormat))
+	if expression_format == ExpressionFormat.Internal:
+		return str
+	formatter_class = {
+		ExpressionFormat.Text: ExpressionFormatterText,
+		ExpressionFormat.TeX: ExpressionFormatterTex,
+		ExpressionFormat.Typst: ExpressionFormatterTypst,
+		ExpressionFormat.Dot: ExpressionFormatterDot,
+	}[expression_format]
+	formatter = formatter_class(expression_format)
+	return formatter.format_expression
+
+def format_expression(expression: ParseTreeElement, expression_format: ExpressionFormat = ExpressionFormat.Text):
 	assert(isinstance(expression, ParseTreeElement))
-	match expression_format:
-		case "internal":
-			return str(expression)
-
-		case "text":
-			formatter = ExpressionFormatterText(pretty_print = False, **kwargs)
-
-		case "pretty-text":
-			formatter = ExpressionFormatterText(pretty_print = True, **kwargs)
-
-		case "tex-tech":
-			formatter = ExpressionFormatterTex(neg_overline = True, **kwargs)
-
-		case "tex-math":
-			formatter = ExpressionFormatterTex(neg_overline = False, **kwargs)
-
-		case "typst-tech":
-			formatter = ExpressionFormatterTypst(neg_overline = True, **kwargs)
-
-		case "typst-math":
-			formatter = ExpressionFormatterTypst(neg_overline = False, **kwargs)
-
-		case "dot":
-			formatter = GraphvizFormatter()
-
-		case _: # pragma unreachable
-			raise NotImplementedError(expression_format)
-	return formatter.format_expression(expression)
+	return expression_formatter(expression_format = expression_format)(expression)

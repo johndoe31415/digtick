@@ -21,6 +21,7 @@
 
 import os
 import unittest
+from digtick.Enums import ExpressionFormat
 from digtick.ExpressionParser import parse_expression, Variable
 from digtick.ExpressionFormatter import format_expression
 from digtick.RandomExpressionGenerator import RandomExpressionGenerator
@@ -116,29 +117,30 @@ class ExpressionFormatterTests(unittest.TestCase):
 
 	def test_tex_output(self):
 		(A, B, C, D) = (Variable("A"), Variable("B"), Variable("C"), Variable("D"))
-		self.assertEqual(format_expression(A & B, "tex-tech"), "\\mathrm{A B}")
-		self.assertEqual(format_expression(A & B, "tex-tech", use_mathrm = False), "A B")
-		self.assertEqual(format_expression(A & ~B, "tex-tech", use_mathrm = False), "A \\overline{B}")
-		self.assertEqual(format_expression(A & ~B & C, "tex-tech", use_mathrm = False), "A \\overline{B} C")
-		self.assertEqual(format_expression(A & ~B & ~C, "tex-tech", use_mathrm = False), "A \\overline{B}\\,\\overline{C}")
-		self.assertEqual(format_expression(A & ~B & ~C & ~D, "tex-tech", use_mathrm = False), "A \\overline{B}\\,\\overline{C}\\,\\overline{D}")
-		self.assertEqual(format_expression(A & ~B & ~C & ~D, "tex-tech", use_mathrm = False), "A \\overline{B}\\,\\overline{C}\\,\\overline{D}")
-		self.assertEqual(format_expression(A & ~B & C & ~D, "tex-tech", use_mathrm = False), "A \\overline{B} C \\overline{D}")
+		formatter = ExpressionFormat.TeX.parse_options([ "use-mathrm=0" ])
+		self.assertEqual(format_expression(A & B, ExpressionFormat.TeX), "\\mathrm{A B}")
+		self.assertEqual(formatter(A & B), "A B")
+		self.assertEqual(formatter(A & ~B), "A \\overline{B}")
+		self.assertEqual(formatter(A & ~B & C), "A \\overline{B} C")
+		self.assertEqual(formatter(A & ~B & ~C), "A \\overline{B}\\,\\overline{C}")
+		self.assertEqual(formatter(A & ~B & ~C & ~D), "A \\overline{B}\\,\\overline{C}\\,\\overline{D}")
+		self.assertEqual(formatter(A & ~B & ~C & ~D), "A \\overline{B}\\,\\overline{C}\\,\\overline{D}")
+		self.assertEqual(formatter(A & ~B & C & ~D), "A \\overline{B} C \\overline{D}")
 
-		self.assertEqual(format_expression(A & (~B | C), "tex-tech", use_mathrm = False), "A (\\overline{B} \\vee C)")
+		self.assertEqual(formatter(A & (~B | C)), "A (\\overline{B} \\vee C)")
 
-		self.assertEqual(format_expression(parse_expression("A !B !C + B C"), "tex-tech", use_mathrm = False), "A \\overline{B}\\,\\overline{C} \\vee B C")
-		self.assertEqual(format_expression(parse_expression("A (B + C)"), "tex-tech", use_mathrm = False), "A (B \\vee C)")
-		self.assertEqual(format_expression(parse_expression("A C (B + D) + E + F"), "tex-tech", use_mathrm = False), "A C (B \\vee D) \\vee E \\vee F")
-		self.assertEqual(format_expression(parse_expression("A C !(B + !(D + !E)) + E + !F"), "tex-tech", use_mathrm = False), "A C \\overline{(B \\vee \\overline{(D \\vee \\overline{E})})} \\vee E \\vee \\overline{F}")
-		self.assertEqual(format_expression(parse_expression("A B !C D !E F !G !H !I !J"), "tex-tech", use_mathrm = False), "A B \\overline{C} D \\overline{E} F \\overline{G}\\,\\overline{H}\\,\\overline{I}\\,\\overline{J}")
-		self.assertEqual(format_expression(parse_expression("A @ B % C"), "tex-tech", use_mathrm = False), "A\\overset{\\sim}{\\wedge}B\\overset{\\sim}{\\vee}C")
+		self.assertEqual(formatter(parse_expression("A !B !C + B C")), "A \\overline{B}\\,\\overline{C} \\vee B C")
+		self.assertEqual(formatter(parse_expression("A (B + C)")), "A (B \\vee C)")
+		self.assertEqual(formatter(parse_expression("A C (B + D) + E + F")), "A C (B \\vee D) \\vee E \\vee F")
+		self.assertEqual(formatter(parse_expression("A C !(B + !(D + !E)) + E + !F")), "A C \\overline{(B \\vee \\overline{(D \\vee \\overline{E})})} \\vee E \\vee \\overline{F}")
+		self.assertEqual(formatter(parse_expression("A B !C D !E F !G !H !I !J")), "A B \\overline{C} D \\overline{E} F \\overline{G}\\,\\overline{H}\\,\\overline{I}\\,\\overline{J}")
+		self.assertEqual(formatter(parse_expression("A @ B % C")), "A\\overset{\\sim}{\\wedge}B\\overset{\\sim}{\\vee}C")
 
-		self.assertEqual(format_expression(parse_expression("A !B !C + B C"), "tex-math", use_mathrm = False), "A \\neg B \\neg C \\vee B C")
-		self.assertEqual(format_expression(parse_expression("A (B + C)"), "tex-math", use_mathrm = False), "A (B \\vee C)")
-		self.assertEqual(format_expression(parse_expression("A C (B + D) + E + F"), "tex-math", use_mathrm = False), "A C (B \\vee D) \\vee E \\vee F")
-		self.assertEqual(format_expression(parse_expression("A C !(B + !(D + !E)) + E + !F"), "tex-math", use_mathrm = False), "A C \\neg (B \\vee \\neg (D \\vee \\neg E)) \\vee E \\vee \\neg F")
-		self.assertEqual(format_expression(parse_expression("A B !C D !E F !G !H !I !J"), "tex-math", use_mathrm = False), "A B \\neg C D \\neg E F \\neg G \\neg H \\neg I \\neg J")
-		self.assertEqual(format_expression(parse_expression("A @ B % C"), "tex-math", use_mathrm = False), "A\\overset{\\sim}{\\wedge}B\\overset{\\sim}{\\vee}C")
+		self.assertEqual(formatter(parse_expression("A !B !C + B C")), "A \\neg B \\neg C \\vee B C")
+		self.assertEqual(formatter(parse_expression("A (B + C)")), "A (B \\vee C)")
+		self.assertEqual(formatter(parse_expression("A C (B + D) + E + F")), "A C (B \\vee D) \\vee E \\vee F")
+		self.assertEqual(formatter(parse_expression("A C !(B + !(D + !E)) + E + !F")), "A C \\neg (B \\vee \\neg (D \\vee \\neg E)) \\vee E \\vee \\neg F")
+		self.assertEqual(formatter(parse_expression("A B !C D !E F !G !H !I !J")), "A B \\neg C D \\neg E F \\neg G \\neg H \\neg I \\neg J")
+		self.assertEqual(formatter(parse_expression("A @ B % C")), "A\\overset{\\sim}{\\wedge}B\\overset{\\sim}{\\vee}C")
 
-		self.assertEqual(format_expression((~C & A & ~B) | (A & ~C) | (B & ~C & D), "tex-tech", use_mathrm = False), "\\overline{C} A \\overline{B} \\vee A \\overline{C} \\vee B \\overline{C} D")
+		self.assertEqual(formatter((~C & A & ~B) | (A & ~C) | (B & ~C & D)), "\\overline{C} A \\overline{B} \\vee A \\overline{C} \\vee B \\overline{C} D")
