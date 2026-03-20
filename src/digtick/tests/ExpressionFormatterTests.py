@@ -117,7 +117,7 @@ class ExpressionFormatterTests(unittest.TestCase):
 
 	def test_tex_output(self):
 		(A, B, C, D) = (Variable("A"), Variable("B"), Variable("C"), Variable("D"))
-		formatter = ExpressionFormat.TeX.parse_options([ "use-mathrm=0" ])
+		formatter = expression_formatter(OptionEnum(ExpressionFormat.TeX, [ "use-mathrm=0" ]))
 		self.assertEqual(format_expression(A & B, ExpressionFormat.TeX), "\\mathrm{A B}")
 		self.assertEqual(formatter(A & B), "A B")
 		self.assertEqual(formatter(A & ~B), "A \\overline{B}")

@@ -19,7 +19,7 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
-from .Enums import ExpressionFormat
+from .Enums import OptionEnum, ExpressionFormat
 from .ExpressionParser import ParseTreeElement, Operator, Variable, Constant, UnaryOperator, BinaryOperator, Parenthesis
 
 class ExpressionFormatterTex():
@@ -252,6 +252,6 @@ def expression_formatter(expression_format: ExpressionFormat = ExpressionFormat.
 	formatter = formatter_class(expression_format)
 	return formatter.format_expression
 
-def format_expression(expression: ParseTreeElement, expression_format: ExpressionFormat = ExpressionFormat.Text):
+def format_expression(expression: ParseTreeElement, expression_format: "OptionEnum[ExpressionFormat]" = OptionEnum(ExpressionFormat.Text)):
 	assert(isinstance(expression, ParseTreeElement))
 	return expression_formatter(expression_format = expression_format)(expression)

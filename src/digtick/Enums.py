@@ -41,21 +41,61 @@ def _parse_layout(layout_value: str) -> str:
 	else:
 		raise ValueError(f"Not a layout value: {layout_value} (expect \"vertical\" or \"horizontal\")")
 
-class OptionEnum(enum.StrEnum):
-	def __init__(self, *args, **kwargs):
-		super().__init__(*args, **kwargs)
-		self._options = { }
+class TableFormat(enum.StrEnum):
+	Text = "text"
+	TeX = "tex"
+	Typst = "typst"
+	Compact = "compact"
+	LogiSim = "logisim"
+
+class ExpressionFormat(enum.StrEnum):
+	Text = "text"
+	TeX = "tex"
+	Typst = "typst"
+	Dot = "dot"
+	Internal = "internal"
+
+
+class OptionEnum():
+	_SUPPORTED_OPTIONS = {
+		TableFormat.Text: {
+			"pretty": (_parse_bool, False),
+		},
+		TableFormat.TeX: {
+			"layout": (_parse_layout, "vertical"),
+		},
+		TableFormat.Typst: {
+			"layout": (_parse_layout, "vertical"),
+		},
+
+		ExpressionFormat.Text: {
+			"implicit-and": (_parse_bool, True),
+			"pretty": (_parse_bool, False),
+		},
+		ExpressionFormat.TeX: {
+			"implicit-and": (_parse_bool, True),
+			"math-operators": (_parse_bool, False),
+			"use-mathrm": (_parse_bool, True),
+		},
+		ExpressionFormat.Typst: {
+			"implicit-and": (_parse_bool, True),
+			"math-operators": (_parse_bool, False),
+		},
+	}
+
+	def __init__(self, enum_value: enum.Enum, option_list: list[str] | None = None):
+		self._value = enum_value
+		self._options = self._parse_options([ ] if (option_list is None) else option_list)
 
 	@property
-	@abc.abstractmethod
 	def supported_options(self):
-		pass
+		return self._SUPPORTED_OPTIONS.get(self._value, { })
 
-	def parse_options(self, option_list: list[str]) -> dict:
+	def _parse_options(self, option_list: list[str]) -> dict:
 		supported_options = self.supported_options
-		self._options = { }
+		parsed_options = { }
 		for (name, (parser_class, default_value)) in supported_options.items():
-			self._options[name] = default_value
+			parsed_options[name] = default_value
 		for option in option_list:
 			if "=" not in option:
 				(key, value) = (option, True)
@@ -74,62 +114,13 @@ class OptionEnum(enum.StrEnum):
 				value = parser_class(value)
 			except ValueError as e:
 				raise argparse.ArgumentTypeError(f"Argument {key} to {self.__class__.__name__} must be of type {parser_class.__name__}, but \"{value}\" could not be parsed: {e.__class__.__name__} {str(e)}")
-			self._options[key] = value
-		return self
+			parsed_options[key] = value
+		return parsed_options
 
 	def __getitem__(self, option_name: str):
 		if option_name not in self._options:
-			if option_name not in self.supported_options:
-				raise KeyError(f"{self.__class__.__name__} {self.name} supports {len(self.supported_options)} options: \"{', '.join(sorted(self.supported_options))}\", but option \"{option_name}\" was asked for.")
-			(_, default_value) = self.supported_options[option_name]
-			return default_value
+			raise KeyError(f"{self.__class__.__name__} {self.name} supports {len(self.supported_options)} options: \"{', '.join(sorted(self.supported_options))}\", but option \"{option_name}\" was asked for.")
 		return self._options[option_name]
 
-	def __str__(self):
-		return self.value
-
-class TableFormat(OptionEnum):
-	Text = "text"
-	TeX = "tex"
-	Typst = "typst"
-	Compact = "compact"
-	LogiSim = "logisim"
-
-	@property
-	def supported_options(self):
-		return {
-			self.Text: {
-				"pretty": (_parse_bool, False),
-			},
-			self.TeX: {
-				"layout": (_parse_layout, "vertical"),
-			},
-			self.Typst: {
-				"layout": (_parse_layout, "vertical"),
-			},
-		}.get(self, { })
-
-class ExpressionFormat(OptionEnum):
-	Text = "text"
-	TeX = "tex"
-	Typst = "typst"
-	Dot = "dot"
-	Internal = "internal"
-
-	@property
-	def supported_options(self):
-		return {
-			self.Text: {
-				"implicit-and": (_parse_bool, True),
-				"pretty": (_parse_bool, False),
-			},
-			self.TeX: {
-				"implicit-and": (_parse_bool, True),
-				"math-operators": (_parse_bool, False),
-				"use-mathrm": (_parse_bool, True),
-			},
-			self.Typst: {
-				"implicit-and": (_parse_bool, True),
-				"math-operators": (_parse_bool, False),
-			},
-		}.get(self, { })
+	def __repr__(self):
+		return f"{repr(self._value)} <{self._options}>"
