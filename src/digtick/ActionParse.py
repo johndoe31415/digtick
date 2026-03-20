@@ -20,19 +20,19 @@
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 import sys
+from .Enums import ExpressionFormatOpts
 from .MultiCommand import BaseAction
 from .ExpressionParser import parse_expression
-from .ExpressionFormatter import format_expression
+from .ExpressionFormatter import expression_formatter
 from .Tools import open_file
 
 class ActionParse(BaseAction):
-	def _fmt(self, expr: "ParseTreeElement") -> str:
-		return format_expression(expression = expr, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and)
-
 	def run(self):
+		self._formatter = expression_formatter(ExpressionFormatOpts(self._args.expr_format, self._args.expr_format_option))
+
 		if not self._args.read_as_filename:
 			expr = parse_expression(self._args.expression)
-			print(self._fmt(expr))
+			print(self._formatter(expr))
 		else:
 			validation_successful = True
 			with open_file(self._args.expression) as f:
@@ -45,11 +45,11 @@ class ActionParse(BaseAction):
 						continue
 
 					expr = parse_expression(line)
-					print(self._fmt(expr))
+					print(self._formatter(expr))
 
 					if self._args.validate_equivalence and (prev_expression is not None):
 						if expr != prev_expression:
-							print(f"Warning: expression \"{format_expression(prev_expression)}\" on line {prev_line} is not equivalent to expression \"{format_expression(expr)}\" on line {lineno}.", file = sys.stderr)
+							print(f"Warning: expression \"{self._formatter(prev_expression)}\" on line {prev_line} is not equivalent to expression \"{self._formatter(expr)}\" on line {lineno}.", file = sys.stderr)
 							validation_successful = False
 
 					(prev_expression, prev_line) = (expr, lineno)

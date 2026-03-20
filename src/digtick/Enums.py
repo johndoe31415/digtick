@@ -43,7 +43,7 @@ def _parse_layout(layout_value: str) -> str:
 
 class OptionedEnum():
 	Value = None
-	OPTIONS = { }
+	_OPTIONS = { }
 
 	def __init__(self, enum_value: enum.Enum, option_list: list[str] | None = None):
 		self._value = enum_value
@@ -51,7 +51,15 @@ class OptionedEnum():
 
 	@property
 	def supported_options(self):
-		return self._SUPPORTED_OPTIONS.get(self._value, { })
+		return self._OPTIONS.get(self._value, { })
+
+	@property
+	def value(self):
+		return self._value
+
+	@property
+	def name(self):
+		return self.value.name
 
 	def _parse_options(self, option_list: list[str]) -> dict:
 		supported_options = self.supported_options
@@ -114,6 +122,13 @@ class ExpressionFormatOpts(OptionedEnum):
 		Typst = "typst"
 		Dot = "dot"
 		Internal = "internal"
+
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		if self.value == self.Value.TeX:
+			self._options["neg-overline"] = not self["math-operators"]
+		elif self.value == self.Value.Typst:
+			self._options["neg-overline"] = not self["math-operators"]
 
 	_OPTIONS = {
 		Value.Text: {

@@ -23,7 +23,7 @@ import io
 import re
 import enum
 import collections
-from .Enums import TableFormat
+from .Enums import TableFormatOpts
 from .TableFormatter import Table
 from .ExpressionParser import Operator, Constant, Variable, BinaryOperator
 from .Exceptions import InvalidValueTableException
@@ -346,7 +346,7 @@ class ValueTable():
 			table.add_row(row)
 		table.print(*(self.input_variable_names + self.output_variable_names))
 
-	def _print_text(self, table_format: TableFormat):
+	def _print_text(self, table_format: TableFormatOpts):
 		if table_format["pretty"]:
 			return self._print_text_pretty()
 		else:
@@ -380,7 +380,7 @@ class ValueTable():
 			print(f"	{' & '.join(line)}\\\\%")
 		print("\\end{tabular}")
 
-	def _print_tex(self, table_format: TableFormat):
+	def _print_tex(self, table_format: TableFormatOpts):
 		if table_format["layout"] == "vertical":
 			return self._print_tex_vertical()
 		else:
@@ -419,16 +419,16 @@ class ValueTable():
 			print(f"	{', '.join(f'[{item}]' for item in line)},")
 		print(")")
 
-	def _print_typst(self, table_format: TableFormat):
+	def _print_typst(self, table_format: TableFormatOpts):
 		if table_format["layout"] == "vertical":
 			return self._print_typst_vertical()
 		else:
 			return self._print_typst_horizontal()
 
-	def _print_compact(self, table_format: TableFormat):
+	def _print_compact(self, table_format: TableFormatOpts):
 		print(self.compact_representation)
 
-	def _print_logisim(self, table_format: TableFormat):
+	def _print_logisim(self, table_format: TableFormatOpts):
 		logisim_chars = {
 			CompactStorage.Entry.Low:		"0",
 			CompactStorage.Entry.High:		"1",
@@ -442,7 +442,9 @@ class ValueTable():
 			row = [ str(bit) for bit in inputs ] + [ "|" ] + [ logisim_chars[output_bit] for output_bit in outputs ]
 			print(" ".join(row))
 
-	def print(self, table_format: TableFormat = TableFormat.Text):
+	def print(self, table_format: TableFormatOpts | None):
+		if table_format is None:
+			table_format = TableFormatOpts(TableFormatOpts.Value.Text)
 		method = getattr(self, f"_print_{table_format.value.replace('-', '_')}")
 		return method(table_format)
 

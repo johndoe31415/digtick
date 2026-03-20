@@ -21,9 +21,9 @@
 
 import os
 import unittest
-from digtick.Enums import ExpressionFormat
+from digtick.Enums import ExpressionFormatOpts
 from digtick.ExpressionParser import parse_expression, Variable
-from digtick.ExpressionFormatter import format_expression
+from digtick.ExpressionFormatter import expression_formatter, format_expression
 from digtick.RandomExpressionGenerator import RandomExpressionGenerator
 
 _run_slow_tests = (os.getenv("UNITTEST_RUN_ALL") == "1")
@@ -117,8 +117,8 @@ class ExpressionFormatterTests(unittest.TestCase):
 
 	def test_tex_output(self):
 		(A, B, C, D) = (Variable("A"), Variable("B"), Variable("C"), Variable("D"))
-		formatter = expression_formatter(OptionEnum(ExpressionFormat.TeX, [ "use-mathrm=0" ]))
-		self.assertEqual(format_expression(A & B, ExpressionFormat.TeX), "\\mathrm{A B}")
+		formatter = expression_formatter(ExpressionFormatOpts(ExpressionFormatOpts.Value.TeX, [ "use-mathrm=0" ]))
+		self.assertEqual(format_expression(A & B, ExpressionFormatOpts(ExpressionFormatOpts.Value.TeX)), "\\mathrm{A B}")
 		self.assertEqual(formatter(A & B), "A B")
 		self.assertEqual(formatter(A & ~B), "A \\overline{B}")
 		self.assertEqual(formatter(A & ~B & C), "A \\overline{B} C")
@@ -135,12 +135,12 @@ class ExpressionFormatterTests(unittest.TestCase):
 		self.assertEqual(formatter(parse_expression("A C !(B + !(D + !E)) + E + !F")), "A C \\overline{(B \\vee \\overline{(D \\vee \\overline{E})})} \\vee E \\vee \\overline{F}")
 		self.assertEqual(formatter(parse_expression("A B !C D !E F !G !H !I !J")), "A B \\overline{C} D \\overline{E} F \\overline{G}\\,\\overline{H}\\,\\overline{I}\\,\\overline{J}")
 		self.assertEqual(formatter(parse_expression("A @ B % C")), "A\\overset{\\sim}{\\wedge}B\\overset{\\sim}{\\vee}C")
+		self.assertEqual(formatter((~C & A & ~B) | (A & ~C) | (B & ~C & D)), "\\overline{C} A \\overline{B} \\vee A \\overline{C} \\vee B \\overline{C} D")
 
+		formatter = expression_formatter(ExpressionFormatOpts(ExpressionFormatOpts.Value.TeX, [ "use-mathrm=0", "math-operators" ]))
 		self.assertEqual(formatter(parse_expression("A !B !C + B C")), "A \\neg B \\neg C \\vee B C")
 		self.assertEqual(formatter(parse_expression("A (B + C)")), "A (B \\vee C)")
 		self.assertEqual(formatter(parse_expression("A C (B + D) + E + F")), "A C (B \\vee D) \\vee E \\vee F")
 		self.assertEqual(formatter(parse_expression("A C !(B + !(D + !E)) + E + !F")), "A C \\neg (B \\vee \\neg (D \\vee \\neg E)) \\vee E \\vee \\neg F")
 		self.assertEqual(formatter(parse_expression("A B !C D !E F !G !H !I !J")), "A B \\neg C D \\neg E F \\neg G \\neg H \\neg I \\neg J")
 		self.assertEqual(formatter(parse_expression("A @ B % C")), "A\\overset{\\sim}{\\wedge}B\\overset{\\sim}{\\vee}C")
-
-		self.assertEqual(formatter((~C & A & ~B) | (A & ~C) | (B & ~C & D)), "\\overline{C} A \\overline{B} \\vee A \\overline{C} \\vee B \\overline{C} D")

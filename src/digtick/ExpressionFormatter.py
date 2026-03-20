@@ -19,11 +19,11 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
-from .Enums import OptionEnum, ExpressionFormat
+from .Enums import ExpressionFormatOpts
 from .ExpressionParser import ParseTreeElement, Operator, Variable, Constant, UnaryOperator, BinaryOperator, Parenthesis
 
 class ExpressionFormatterTex():
-	def __init__(self, expression_format: ExpressionFormat):
+	def __init__(self, expression_format: ExpressionFormatOpts):
 		self._format = expression_format
 #		self._format["neg-overline"] = neg_overline
 #		self._format["implicit-and"] = implicit_and
@@ -85,7 +85,7 @@ class ExpressionFormatterTex():
 
 class ExpressionFormatterTypst():
 #	def __init__(self, neg_overline: bool = True, implicit_and: bool = True):
-	def __init__(self, expression_format: ExpressionFormat):
+	def __init__(self, expression_format: ExpressionFormatOpts):
 		self._format = expression_format
 #		self._format["neg-overline"] = neg_overline
 #		self._format["implicit-and"] = implicit_and
@@ -97,7 +97,7 @@ class ExpressionFormatterTypst():
 			Operator.Nand: " bnand ",
 			Operator.Nor: " bnor ",
 		}
-		if implicit_and:
+		if self._format["implicit-and"]:
 			self._ops[Operator.And] = " "
 
 	def _op(self, op):
@@ -144,7 +144,7 @@ class ExpressionFormatterTypst():
 		return self._format_expression(expr)[0]
 
 class ExpressionFormatterText():
-	def __init__(self, expression_format: ExpressionFormat):
+	def __init__(self, expression_format: ExpressionFormatOpts):
 		self._format = expression_format
 		if self._format["pretty"]:
 			self._ops = {
@@ -198,7 +198,7 @@ class ExpressionFormatterText():
 		raise NotImplementedError(expr)
 
 class ExpressionFormatterDot():
-	def __init__(self, expression_format: ExpressionFormat):
+	def __init__(self, expression_format: ExpressionFormatOpts):
 		self._format = expression_format
 		self._op_label = {
 			Operator.Or: "\\|\\|",
@@ -239,19 +239,21 @@ class ExpressionFormatterDot():
 		lines += [ "}" ]
 		return "\n".join(lines)
 
-def expression_formatter(expression_format: ExpressionFormat = ExpressionFormat.Text):
-	assert(isinstance(expression_format, ExpressionFormat))
-	if expression_format == ExpressionFormat.Internal:
+def expression_formatter(expression_format: ExpressionFormatOpts | None = None):
+	if expression_format is None:
+		expression_format = ExpressionFormatOpts(ExpressionFormatOpts.Value.Text)
+	assert(isinstance(expression_format, ExpressionFormatOpts))
+	if expression_format.value == ExpressionFormatOpts.Value.Internal:
 		return str
 	formatter_class = {
-		ExpressionFormat.Text: ExpressionFormatterText,
-		ExpressionFormat.TeX: ExpressionFormatterTex,
-		ExpressionFormat.Typst: ExpressionFormatterTypst,
-		ExpressionFormat.Dot: ExpressionFormatterDot,
-	}[expression_format]
+		ExpressionFormatOpts.Value.Text: ExpressionFormatterText,
+		ExpressionFormatOpts.Value.TeX: ExpressionFormatterTex,
+		ExpressionFormatOpts.Value.Typst: ExpressionFormatterTypst,
+		ExpressionFormatOpts.Value.Dot: ExpressionFormatterDot,
+	}[expression_format.value]
 	formatter = formatter_class(expression_format)
 	return formatter.format_expression
 
-def format_expression(expression: ParseTreeElement, expression_format: "OptionEnum[ExpressionFormat]" = OptionEnum(ExpressionFormat.Text)):
+def format_expression(expression: ParseTreeElement, expression_format: ExpressionFormatOpts | None = None):
 	assert(isinstance(expression, ParseTreeElement))
 	return expression_formatter(expression_format = expression_format)(expression)

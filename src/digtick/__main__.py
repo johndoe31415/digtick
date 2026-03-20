@@ -21,7 +21,7 @@
 
 import sys
 import digtick
-from .Enums import TableFormat, ExpressionFormat
+from .Enums import TableFormatOpts, ExpressionFormatOpts
 from .ActionParse import ActionParse
 from .ActionMakeTable import ActionMakeTable
 from .ActionPrintTable import ActionPrintTable
@@ -47,7 +47,7 @@ def main():
 	def genparser(parser):
 		parser.add_argument("-r", "--read-as-filename", action = "store_true", help = "Instead of having an expression on the command line, specify a file name that contains multiple expressios and format each one linewise.")
 		parser.add_argument("-n", "--no-implicit-and", action = "store_true", help = "By default, AND operations are implicity expressed (using a space character). This causes an actual operator to be emitted here.")
-		parser.add_argument("-f", "--expr-format", choices = list(ExpressionFormat), type = ExpressionFormat, default = ExpressionFormat.Text, help = "Print the expression in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-f", "--expr-format", choices = list(ExpressionFormatOpts.Value), type = ExpressionFormatOpts.Value, default = ExpressionFormatOpts.Value.Text, help = "Print the expression in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-F", "--expr-format-option", metavar = "key[=value]", action = "append", default = [ ], help = "Expression-format specific options. Valid options depend on the chosen expression format. When \"value\" is omitted, defaults to the Boolean \"True\" value.")
 		parser.add_argument("-e", "--validate-equivalence", action = "store_true", help = "When reading a file, ensures that every parsed equation is semantically identical to that before it. Useful for validation of manual computation.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
@@ -56,7 +56,7 @@ def main():
 
 	def genparser(parser):
 		parser.add_argument("-o", "--output-variable-name", metavar = "name", default = "Y", help = "Name of the output variable to use. Defaults to %(default)s.")
-		parser.add_argument("-f", "--tbl-format", choices = list(TableFormat), type = TableFormat, default = TableFormat.Text, help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-f", "--tbl-format", choices = list(TableFormatOpts.Value), type = TableFormatOpts.Value, default = TableFormatOpts.Value.Text, help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-F", "--tbl-format-option", metavar = "key[=value]", action = "append", default = [ ], help = "Table-format specific options. Valid options depend on the chosen table format. When \"value\" is omitted, defaults to the Boolean \"True\" value.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
 		parser.add_argument("expression", help = "Input expression to create truth table from")
@@ -64,7 +64,7 @@ def main():
 	mc.register("make-table", "Create a truth table for a Boolean expression", genparser, action = ActionMakeTable, aliases = [ "mkt" ])
 
 	def genparser(parser):
-		parser.add_argument("-f", "--tbl-format", choices = list(TableFormat), type = TableFormat, default = TableFormat.Text, help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-f", "--tbl-format", choices = list(TableFormatOpts.Value), type = TableFormatOpts.Value, default = TableFormatOpts.Value.Text, help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-F", "--tbl-format-option", metavar = "key[=value]", action = "append", default = [ ], help = "Table-format specific options. Valid options depend on the chosen table format. When \"value\" is omitted, defaults to the Boolean \"True\" value.")
 		parser.add_argument("-u", "--unused-value-is", choices = [ "forbidden", "0", "1", "*" ], default = "forbidden", help = "Treat values that do not appear in truth table as the specified value (0, 1, or \"don't care\" value). By default, strict parsing is performed which means unused values are forbidden and all values need to be set explicitly.")
 		parser.add_argument("-L", "--input-format-logisim", action = "store_true", help = "Input file is a LogiSim truth table.")
@@ -97,7 +97,7 @@ def main():
 		parser.add_argument("-a", "--show-all-solutions", action = "store_true", help = "By default, only a single solution is shown. However, there may be multiple solutions which are identical in minterm/maxterm count as well as identical in number of used literals. In those cases, show all solutions.")
 		parser.add_argument("-o", "--output-variable-name", metavar = "name", default = "Y", help = "Name of the output variable to use. Defaults to %(default)s.")
 		parser.add_argument("-N", "--no-implicit-and", action = "store_true", help = "By default, AND operations are implicity expressed (using a space character). This causes an actual operator to be emitted here.")
-		parser.add_argument("-f", "--expr-format", choices = list(ExpressionFormat), type = ExpressionFormat, default = ExpressionFormat.Text, help = "Print the expression in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-f", "--expr-format", choices = list(ExpressionFormatOpts.Value), type = ExpressionFormatOpts.Value, default = ExpressionFormatOpts.Value.Text, help = "Print the expression in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-F", "--expr-format-option", metavar = "key[=value]", action = "append", default = [ ], help = "Expression-format specific options. Valid options depend on the chosen expression format. When \"value\" is omitted, defaults to the Boolean \"True\" value.")
 		parser.add_argument("-u", "--unused-value-is", choices = [ "forbidden", "0", "1", "*" ], default = "forbidden", help = "Treat values that do not appear in truth table as the specified value (0, 1, or \"don't care\" value). By default, strict parsing is performed which means unused values are forbidden and all values need to be set explicitly.")
 		parser.add_argument("-c", "--compute", choices = [ "dnf", "cnf", "both" ], default = "both", help = "Compute DNF, CNF or both. Can be one of %(default)s. Defaults to %(default)s.")
@@ -106,7 +106,7 @@ def main():
 	mc.register("synthesize", "Synthesize a Boolean expression from a given truth table", genparser, action = ActionSynthesize, aliases = [ "qmc" ])
 
 	def genparser(parser):
-		parser.add_argument("-f", "--tbl-format", choices = list(TableFormat), type = TableFormat, default = TableFormat.Text, help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-f", "--tbl-format", choices = list(TableFormatOpts.Value), type = TableFormatOpts.Value, default = TableFormatOpts.Value.Text, help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-F", "--tbl-format-option", metavar = "key[=value]", action = "append", default = [ ], help = "Table-format specific options. Valid options depend on the chosen table format. When \"value\" is omitted, defaults to the Boolean \"True\" value.")
 		parser.add_argument("-o", "--output-variable-name", metavar = "name", default = "Y", help = "Name of the output variable to use. Defaults to %(default)s.")
 		parser.add_argument("-u", "--unused-value-is", choices = [ "forbidden", "0", "1", "*" ], default = "forbidden", help = "Treat values that do not appear in truth table as the specified value (0, 1, or \"don't care\" value). By default, strict parsing is performed which means unused values are forbidden and all values need to be set explicitly.")
@@ -130,7 +130,7 @@ def main():
 	mc.register("random-expr", "Generate a randomized expression", genparser, action = ActionRandomExpression)
 
 	def genparser(parser):
-		parser.add_argument("-f", "--tbl-format", choices = list(TableFormat), type = TableFormat, default = TableFormat.Text, help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-f", "--tbl-format", choices = list(TableFormatOpts.Value), type = TableFormatOpts.Value, default = TableFormatOpts.Value.Text, help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-F", "--tbl-format-option", metavar = "key[=value]", action = "append", default = [ ], help = "Table-format specific options. Valid options depend on the chosen table format. When \"value\" is omitted, defaults to the Boolean \"True\" value.")
 		parser.add_argument("-o", "--output-variable-name", metavar = "name", action = "append", default = [ ], help = "Name the output variable. Can be specified multiple times to generate a table that has multiple outputs. If omitted, a single output named \"Y\" is generated.")
 		parser.add_argument("-0", "--zero-percentage", metavar = "percentage", type = float, default = 40, help = "Percentage of values that have result 0. Defaults to %(default).0f%%.")
@@ -144,7 +144,7 @@ def main():
 		parser.add_argument("-p", "--prng-seed", metavar = "seedstr", help = "For nondeterministic transformations (e.g., shuffling of expressions), use this particular PRNG seed. By default, is fully randomized at runtime.")
 		parser.add_argument("-t", "--transform", choices = [ "simplify", "shuffle", "sort", "nand", "nor" ], default = [ ], action = "append", required = True, help = "Transformation to apply. Can be one of %(choices)s and may be specified multiple times to successively apply transformations. Mandatory argument.")
 		parser.add_argument("-n", "--no-implicit-and", action = "store_true", help = "By default, AND operations are implicity expressed (using a space character). This causes an actual operator to be emitted here.")
-		parser.add_argument("-f", "--expr-format", choices = list(ExpressionFormat), type = ExpressionFormat, default = ExpressionFormat.Text, help = "Print the expression in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-f", "--expr-format", choices = list(ExpressionFormatOpts.Value), type = ExpressionFormatOpts.Value, default = ExpressionFormatOpts.Value.Text, help = "Print the expression in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-F", "--expr-format-option", metavar = "key[=value]", action = "append", default = [ ], help = "Expression-format specific options. Valid options depend on the chosen expression format. When \"value\" is omitted, defaults to the Boolean \"True\" value.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increases verbosity. Can be specified multiple times to increase.")
 		parser.add_argument("expression", help = "Input expression to transform")
@@ -168,7 +168,7 @@ def main():
 	mc.register("dtd-render", "Render a digital timing diagram to SVG", genparser, action = ActionDTDRender)
 
 	def genparser(parser):
-		parser.add_argument("-f", "--tbl-format", choices = list(TableFormat), type = TableFormat, default = TableFormat.Text, help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-f", "--tbl-format", choices = list(TableFormatOpts.Value), type = TableFormatOpts.Value, default = TableFormatOpts.Value.Text, help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-F", "--tbl-format-option", metavar = "key[=value]", action = "append", default = [ ], help = "Table-format specific options. Valid options depend on the chosen table format. When \"value\" is omitted, defaults to the Boolean \"True\" value.")
 		parser.add_argument("-n", "--circuit-name", metavar = "name", default = "main", help = "Name of the circuit to be simulated. Defaults to %(default)s.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increases verbosity. Can be specified multiple times to increase.")
@@ -178,7 +178,7 @@ def main():
 	def genparser(parser):
 		parser.add_argument("-s", "--storage-element-labels", metavar = "labels", required = True, help = "Name the storage elements to be set, clocked and read out. Labels must be separated by commas.")
 		parser.add_argument("-c", "--clock-signal", metavar = "label", default = "CLK", help = "Name of the clock signal to be repeatedly clocked. Defaults to %(default)s.")
-		parser.add_argument("-f", "--tbl-format", choices = list(TableFormat), type = TableFormat, default = TableFormat.Text, help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
+		parser.add_argument("-f", "--tbl-format", choices = list(TableFormatOpts.Value), type = TableFormatOpts.Value, default = TableFormatOpts.Value.Text, help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-F", "--tbl-format-option", metavar = "key[=value]", action = "append", default = [ ], help = "Table-format specific options. Valid options depend on the chosen table format. When \"value\" is omitted, defaults to the Boolean \"True\" value.")
 		parser.add_argument("-n", "--circuit-name", metavar = "name", default = "main", help = "Name of the circuit to be simulated. Defaults to %(default)s.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increases verbosity. Can be specified multiple times to increase.")
