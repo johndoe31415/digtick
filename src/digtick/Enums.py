@@ -41,47 +41,9 @@ def _parse_layout(layout_value: str) -> str:
 	else:
 		raise ValueError(f"Not a layout value: {layout_value} (expect \"vertical\" or \"horizontal\")")
 
-class TableFormat(enum.StrEnum):
-	Text = "text"
-	TeX = "tex"
-	Typst = "typst"
-	Compact = "compact"
-	LogiSim = "logisim"
-
-class ExpressionFormat(enum.StrEnum):
-	Text = "text"
-	TeX = "tex"
-	Typst = "typst"
-	Dot = "dot"
-	Internal = "internal"
-
-
-class OptionEnum():
-	_SUPPORTED_OPTIONS = {
-		TableFormat.Text: {
-			"pretty": (_parse_bool, False),
-		},
-		TableFormat.TeX: {
-			"layout": (_parse_layout, "vertical"),
-		},
-		TableFormat.Typst: {
-			"layout": (_parse_layout, "vertical"),
-		},
-
-		ExpressionFormat.Text: {
-			"implicit-and": (_parse_bool, True),
-			"pretty": (_parse_bool, False),
-		},
-		ExpressionFormat.TeX: {
-			"implicit-and": (_parse_bool, True),
-			"math-operators": (_parse_bool, False),
-			"use-mathrm": (_parse_bool, True),
-		},
-		ExpressionFormat.Typst: {
-			"implicit-and": (_parse_bool, True),
-			"math-operators": (_parse_bool, False),
-		},
-	}
+class OptionedEnum():
+	Value = None
+	OPTIONS = { }
 
 	def __init__(self, enum_value: enum.Enum, option_list: list[str] | None = None):
 		self._value = enum_value
@@ -124,3 +86,47 @@ class OptionEnum():
 
 	def __repr__(self):
 		return f"{repr(self._value)} <{self._options}>"
+
+class TableFormatOpts(OptionedEnum):
+	class Value(enum.StrEnum):
+		Text = "text"
+		TeX = "tex"
+		Typst = "typst"
+		Compact = "compact"
+		LogiSim = "logisim"
+
+	_OPTIONS = {
+		Value.Text: {
+			"pretty": (_parse_bool, False),
+		},
+		Value.TeX: {
+			"layout": (_parse_layout, "vertical"),
+		},
+		Value.Typst: {
+			"layout": (_parse_layout, "vertical"),
+		},
+	}
+
+class ExpressionFormatOpts(OptionedEnum):
+	class Value(enum.StrEnum):
+		Text = "text"
+		TeX = "tex"
+		Typst = "typst"
+		Dot = "dot"
+		Internal = "internal"
+
+	_OPTIONS = {
+		Value.Text: {
+			"implicit-and": (_parse_bool, True),
+			"pretty": (_parse_bool, False),
+		},
+		Value.TeX: {
+			"implicit-and": (_parse_bool, True),
+			"math-operators": (_parse_bool, False),
+			"use-mathrm": (_parse_bool, True),
+		},
+		Value.Typst: {
+			"implicit-and": (_parse_bool, True),
+			"math-operators": (_parse_bool, False),
+		},
+	}
