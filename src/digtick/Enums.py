@@ -21,6 +21,7 @@
 
 import enum
 import argparse
+import abc
 
 def _parse_bool(bool_value: str | bool) -> bool:
 	if isinstance(bool_value, bool):
@@ -40,31 +41,18 @@ def _parse_layout(layout_value: str) -> str:
 	else:
 		raise ValueError(f"Not a layout value: {layout_value} (expect \"vertical\" or \"horizontal\")")
 
-class TableFormat(enum.StrEnum):
-	Text = "text"
-	TeX = "tex"
-	Typst = "typst"
-	Compact = "compact"
-	LogiSim = "logisim"
-
-	__SUPPORTED_OPTIONS = {
-		Text: {
-			"pretty": (_parse_bool, False),
-		},
-		TeX: {
-			"layout": (_parse_layout, "vertical"),
-		},
-		Typst: {
-			"layout": (_parse_layout, "vertical"),
-		},
-	}
-
+class OptionEnum(enum.StrEnum):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self._options = { }
 
+	@classmethod
+	@abc.abstractmethod
+	def _supported_options(cls):
+		pass
+
 	def parse_options(self, option_list: list[str]) -> dict:
-		permissible_options = self.__SUPPORTED_OPTIONS.get(self.value, { })
+		permissible_options = self._supported_options().get(self.value, { })
 		self._options = { }
 		for (name, (parser_class, default_value)) in permissible_options.items():
 			self._options[name] = default_value
@@ -94,3 +82,24 @@ class TableFormat(enum.StrEnum):
 
 	def __str__(self):
 		return self.value
+
+class TableFormat(OptionEnum):
+	Text = "text"
+	TeX = "tex"
+	Typst = "typst"
+	Compact = "compact"
+	LogiSim = "logisim"
+
+	@classmethod
+	def _supported_options(cls):
+		return {
+			cls.Text: {
+				"pretty": (_parse_bool, False),
+			},
+			cls.TeX: {
+				"layout": (_parse_layout, "vertical"),
+			},
+			cls.Typst: {
+				"layout": (_parse_layout, "vertical"),
+			},
+		}
