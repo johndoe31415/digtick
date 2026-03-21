@@ -33,6 +33,7 @@ class ActionParse(BaseAction):
 		if not self._args.read_as_filename:
 			expr = parse_expression(self._args.expression)
 			print(self._formatter(expr))
+			return 0
 		else:
 			validation_successful = True
 			with open_file(self._args.expression) as f:
@@ -55,3 +56,6 @@ class ActionParse(BaseAction):
 					(prev_expression, prev_line) = (expr, lineno)
 			if not validation_successful:
 				print("There were validation errors, some of the equations are not equivalent to each other.", file = sys.stderr)
+				return 1
+			else:
+				return 0

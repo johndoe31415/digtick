@@ -1,0 +1,12 @@
+digraph g {
+	node [ shape=box, style="filled,rounded", fontname="Fira Mono", fontsize=12, fontcolor="#111111" ];
+	n0 [ label="&&", fillcolor="#fff3b0" ];
+	n0 -> n1;
+	n0 -> n4;
+	n1 [ label="&&", fillcolor="#fff3b0" ];
+	n1 -> n2;
+	n1 -> n3;
+	n2 [ label="A", fillcolor="#d9c2ff" ];
+	n3 [ label="B", fillcolor="#d9c2ff" ];
+	n4 [ label="C", fillcolor="#d9c2ff" ];
+}

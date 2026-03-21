@@ -37,6 +37,10 @@ class Cmd():
 
 
 	@property
+	def show_cmdline(self):
+		return self.cmdline.replace("$digtick", "digtick")
+
+	@property
 	def hash(self):
 		return hashlib.md5(self.cmdline.encode("utf-8")).hexdigest()
 
@@ -48,39 +52,49 @@ class CmdRunner():
 		self._produced_output_dir = "/tmp/output/"
 		os.makedirs(self._produced_output_dir, exist_ok = True)
 
+	def _compare(self, cmd: Cmd, channel: str, produced: bytes, produced_filename: str, reference_filename: str):
+		with open(produced_filename, "wb") as f:
+			f.write(produced)
+
+		try:
+			with open(reference_filename, "rb") as f:
+				ref = f.read()
+			if ref != produced:
+				print(f"Different {channel} output in {cmd.show_cmdline}")
+				print(f"Reference: {reference_filename}")
+				print(ref.decode("utf-8"))
+				print(f"Produced : {produced_filename}")
+				print(produced.decode("utf-8"))
+				raise RuntimeError(f"Command returned different output than expected: {cmd.show_cmdline}")
+		except FileNotFoundError:
+			print(f"No {channel} reference found for command: {cmd.show_cmdline}")
+			if self._interactive:
+				print(f"This was produced on {channel}:")
+				print(produced.decode("utf-8"))
+				yn = input("Output OK (y/n)? ")
+				if (yn.lower() == "y") or (yn == ""):
+					with open(reference_filename, "wb") as f:
+						f.write(produced)
+			else:
+				raise
+
 	def _run(self, cmd: Cmd):
 		print(cmd)
 		cmdline = cmd.cmdline.replace("$digtick", "digtick")
 		proc = subprocess.run(cmdline, shell = True, check = False, capture_output = True)
 		if cmd.expect_success and (proc.returncode != 0):
 			raise RuntimeError(f"Command expected success but failed: {cmdline}")
+		elif (not cmd.expect_success) and (proc.returncode == 0):
+			raise RuntimeError(f"Command expected failure but returned successful: {cmdline}")
 
-		produced_output_filename = f"{self._produced_output_dir}{cmd.hash}.txt"
-		reference_filename = f"{self._reference_output_dir}{cmd.hash}.txt"
-		with open(produced_output_filename, "wb") as f:
-			f.write(proc.stdout)
+		produced_stdout_filename = f"{self._produced_output_dir}{cmd.hash}-stdout.txt"
+		produced_stderr_filename = f"{self._produced_output_dir}{cmd.hash}-stderr.txt"
+		reference_stdout_filename = f"{self._reference_output_dir}{cmd.hash}-stdout.txt"
+		reference_stderr_filename = f"{self._reference_output_dir}{cmd.hash}-stderr.txt"
 
-		try:
-			with open(reference_filename, "rb") as f:
-				ref = f.read()
-			if ref != proc.stdout:
-				print(f"Different output in {cmdline}")
-				print(f"Reference: {reference_filename}")
-				print(ref.decode("utf-8"))
-				print(f"Produced : {produced_output_filename}")
-				print(proc.stdout.decode("utf-8"))
-				raise RuntimeError(f"Command returned different output than expected: {cmdline}")
-		except FileNotFoundError:
-			print(f"No reference found for command: {cmdline}")
-			if self._interactive:
-				print("This was produced:")
-				print(proc.stdout.decode("utf-8"))
-				yn = input("Output OK (y/n)? ")
-				if (yn.lower() == "y") or (yn == ""):
-					with open(reference_filename, "wb") as f:
-						f.write(proc.stdout)
-			else:
-				raise
+		self._compare(cmd, "stdout", proc.stdout, produced_stdout_filename, reference_stdout_filename)
+		self._compare(cmd, "stderr", proc.stderr, produced_stderr_filename, reference_stderr_filename)
+
 
 	def run(self):
 		for cmd in self._cmds:
@@ -92,4 +106,23 @@ $digtick parse "A B C"
 $digtick parse -F implicit-and=0 "A B C"
 $digtick parse -f text "A B C"
 """)
+for fmt in[ "text", "tex", "typst", "dot", "internal" ]:
+	cmds.append(Cmd(f"$digtick parse -f {fmt} \"A B C\""))
+cmds.append(Cmd("""
+(
+	echo "A B C"
+	echo "B C A"
+	echo "# test that comment works"
+) | $digtick parse --read-as-filename --validate-equivalence -
+"""))
+cmds.append(Cmd("""
+(
+	echo "A B C"
+	echo "B C A"
+	echo "# test that comment works"
+	echo "A !B C"
+) | $digtick parse --read-as-filename --validate-equivalence -
+""", expect_success = False))
+
+
 CmdRunner(cmds, interactive = True).run()
