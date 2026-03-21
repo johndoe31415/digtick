@@ -46,7 +46,6 @@ def main():
 
 	def genparser(parser):
 		parser.add_argument("-r", "--read-as-filename", action = "store_true", help = "Instead of having an expression on the command line, specify a file name that contains multiple expressios and format each one linewise.")
-		parser.add_argument("-n", "--no-implicit-and", action = "store_true", help = "By default, AND operations are implicity expressed (using a space character). This causes an actual operator to be emitted here.")
 		parser.add_argument("-f", "--expr-format", choices = list(ExpressionFormatOpts.Value), type = ExpressionFormatOpts.Value, default = ExpressionFormatOpts.Value.Text, help = "Print the expression in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-F", "--expr-format-option", metavar = "key[=value]", action = "append", default = [ ], help = "Expression-format specific options. Valid options depend on the chosen expression format. When \"value\" is omitted, defaults to the Boolean \"True\" value.")
 		parser.add_argument("-e", "--validate-equivalence", action = "store_true", help = "When reading a file, ensures that every parsed equation is semantically identical to that before it. Useful for validation of manual computation.")
@@ -96,7 +95,6 @@ def main():
 	def genparser(parser):
 		parser.add_argument("-a", "--show-all-solutions", action = "store_true", help = "By default, only a single solution is shown. However, there may be multiple solutions which are identical in minterm/maxterm count as well as identical in number of used literals. In those cases, show all solutions.")
 		parser.add_argument("-o", "--output-variable-name", metavar = "name", default = "Y", help = "Name of the output variable to use. Defaults to %(default)s.")
-		parser.add_argument("-N", "--no-implicit-and", action = "store_true", help = "By default, AND operations are implicity expressed (using a space character). This causes an actual operator to be emitted here.")
 		parser.add_argument("-f", "--expr-format", choices = list(ExpressionFormatOpts.Value), type = ExpressionFormatOpts.Value, default = ExpressionFormatOpts.Value.Text, help = "Print the expression in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-F", "--expr-format-option", metavar = "key[=value]", action = "append", default = [ ], help = "Expression-format specific options. Valid options depend on the chosen expression format. When \"value\" is omitted, defaults to the Boolean \"True\" value.")
 		parser.add_argument("-u", "--unused-value-is", choices = [ "forbidden", "0", "1", "*" ], default = "forbidden", help = "Treat values that do not appear in truth table as the specified value (0, 1, or \"don't care\" value). By default, strict parsing is performed which means unused values are forbidden and all values need to be set explicitly.")
@@ -143,7 +141,6 @@ def main():
 		parser.add_argument("-I", "--iteration-count", metavar = "count", type = int, default = 1, help = "Run all transformations this amount of times. Defaults to %(default)d. Useful if you want, e.g., generate multiple variations of a shuffled expression.")
 		parser.add_argument("-p", "--prng-seed", metavar = "seedstr", help = "For nondeterministic transformations (e.g., shuffling of expressions), use this particular PRNG seed. By default, is fully randomized at runtime.")
 		parser.add_argument("-t", "--transform", choices = [ "simplify", "shuffle", "sort", "nand", "nor" ], default = [ ], action = "append", required = True, help = "Transformation to apply. Can be one of %(choices)s and may be specified multiple times to successively apply transformations. Mandatory argument.")
-		parser.add_argument("-n", "--no-implicit-and", action = "store_true", help = "By default, AND operations are implicity expressed (using a space character). This causes an actual operator to be emitted here.")
 		parser.add_argument("-f", "--expr-format", choices = list(ExpressionFormatOpts.Value), type = ExpressionFormatOpts.Value, default = ExpressionFormatOpts.Value.Text, help = "Print the expression in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-F", "--expr-format-option", metavar = "key[=value]", action = "append", default = [ ], help = "Expression-format specific options. Valid options depend on the chosen expression format. When \"value\" is omitted, defaults to the Boolean \"True\" value.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increases verbosity. Can be specified multiple times to increase.")
