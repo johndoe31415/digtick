@@ -22,10 +22,11 @@
 from .MultiCommand import BaseAction
 from .ValueTable import ValueTable
 from .Tools import open_file
+from .Enums import TableFormatOpts
 
 class ActionPrintTable(BaseAction):
 	def run(self):
-		table_format = self._args.tbl_format.parse_options(self._args.tbl_format_option)
+		table_format = TableFormatOpts(self._args.tbl_format, self._args.tbl_format_option)
 		with open_file(self._args.filename) as f:
 			if self._args.input_format_logisim:
 				vt = ValueTable.parse_logisim_file(f, set_undefined_values_to = self._args.unused_value_is)

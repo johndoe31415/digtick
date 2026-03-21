@@ -21,13 +21,16 @@
 
 import os
 from .MultiCommand import BaseAction
-from .ExpressionFormatter import format_expression
+from .ExpressionFormatter import expression_formatter
 from .ExpressionParser import parse_expression
 from .ExpressionTransformer import ExpressionTransformer
+from .Enums import ExpressionFormatOpts
 from .PRNG import PRNG
 
 class ActionTransform(BaseAction):
 	def run(self):
+		self._formatter = expression_formatter(ExpressionFormatOpts(self._args.expr_format, self._args.expr_format_option))
+
 		if self._args.prng_seed is None:
 			prng = PRNG(os.urandom(16))
 		else:
@@ -41,6 +44,6 @@ class ActionTransform(BaseAction):
 					transformer_kwargs["prng"] = prng
 
 				transformed = ExpressionTransformer.new(transformation_name, **transformer_kwargs).transform(expr)
-				print(format_expression(expression = transformed, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and))
+				print(self._formatter(transformed))
 				assert(expr == transformed)
 				expr = transformed

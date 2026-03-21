@@ -20,13 +20,16 @@
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
 from .MultiCommand import BaseAction
-from .ExpressionFormatter import format_expression
+from .ExpressionFormatter import expression_formatter
 from .QuineMcCluskey import QuineMcCluskey
 from .ValueTable import ValueTable
 from .Tools import open_file
+from .Enums import ExpressionFormatOpts
 
 class ActionSynthesize(BaseAction):
 	def run(self):
+		self._formatter = expression_formatter(ExpressionFormatOpts(self._args.expr_format, self._args.expr_format_option))
+
 		with open_file(self._args.filename) as f:
 			vt = ValueTable.parse_from_file(f, set_undefined_values_to = self._args.unused_value_is)
 
@@ -35,10 +38,10 @@ class ActionSynthesize(BaseAction):
 
 		if self._args.compute in [ "dnf", "both" ]:
 			cdnf = vt.cdnf(self._args.output_variable_name)
-			print(f"CDNF: {format_expression(expression = cdnf, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and)}")
+			print(f"CDNF: {self._formatter(cdnf)}")
 			opt_expressions = qmc.all_solutions(emit_dnf = True)
 			for (expr_no, opt_expression) in enumerate(opt_expressions, 1):
-				opt_expr_str = format_expression(expression = opt_expression, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and)
+				opt_expr_str = self._formatter(opt_expression)
 				if not self._args.show_all_solutions:
 					print(f"DNF : {opt_expr_str}")
 					break
@@ -49,10 +52,10 @@ class ActionSynthesize(BaseAction):
 			if self._args.compute == "both":
 				print()
 			ccnf = vt.ccnf(self._args.output_variable_name)
-			print(f"CCNF: {format_expression(expression = ccnf, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and)}")
+			print(f"CDNF: {self._formatter(ccnf)}")
 			opt_expressions = qmc.all_solutions(emit_dnf = False)
 			for (expr_no, opt_expression) in enumerate(opt_expressions, 1):
-				opt_expr_str = format_expression(expression = opt_expression, expression_format = self._args.expr_format, implicit_and = not self._args.no_implicit_and)
+				opt_expr_str = self._formatter(opt_expression)
 				if not self._args.show_all_solutions:
 					print(f"CNF : {opt_expr_str}")
 					break

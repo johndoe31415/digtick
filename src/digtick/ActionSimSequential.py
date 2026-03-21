@@ -21,10 +21,11 @@
 
 from digtick.sim.LogisimInterface import LogisimLoader
 from .MultiCommand import BaseAction
+from .Enums import TableFormatOpts
 
 class ActionSimSequential(BaseAction):
 	def run(self):
-		table_format = self._args.tbl_format.parse_options(self._args.tbl_format_option)
+		table_format = TableFormatOpts(self._args.tbl_format, self._args.tbl_format_option)
 		circuit = LogisimLoader.load_from_file(self._args.circ_filename, circuit_name = self._args.circuit_name).parse()
 		circuit.power_on()
 

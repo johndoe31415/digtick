@@ -21,7 +21,6 @@
 
 import enum
 import argparse
-import abc
 
 def _parse_bool(bool_value: str | bool) -> bool:
 	if isinstance(bool_value, bool):

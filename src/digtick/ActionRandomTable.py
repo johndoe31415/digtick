@@ -23,10 +23,11 @@ import random
 import string
 from .MultiCommand import BaseAction
 from .ValueTable import ValueTable, CompactStorage
+from .Enums import TableFormatOpts
 
 class ActionRandomTable(BaseAction):
 	def run(self):
-		table_format = self._args.tbl_format.parse_options(self._args.tbl_format_option)
+		table_format = TableFormatOpts(self._args.tbl_format, self._args.tbl_format_option)
 		if (self._args.zero_percentage + self._args.one_percentage) > 100:
 			raise ValueError(f"With {self._args.zero_percentage}% chance to get a zero and {self._args.one_percentage}% chance to get a zero the total proability is greater than 100% ({self._args.zero_percentage + self._args.one_percentage}%).")
 

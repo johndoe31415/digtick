@@ -22,10 +22,11 @@
 from .MultiCommand import BaseAction
 from .ExpressionParser import parse_expression
 from .ValueTable import ValueTable
+from .Enums import TableFormatOpts
 
 class ActionMakeTable(BaseAction):
 	def run(self):
-		table_format = self._args.tbl_format.parse_options(self._args.tbl_format_option)
+		table_format = TableFormatOpts(self._args.tbl_format, self._args.tbl_format_option)
 		expr = parse_expression(self._args.expression)
 		if self._args.dc_expression is not None:
 			dc_expr = parse_expression(self._args.dc_expression)
