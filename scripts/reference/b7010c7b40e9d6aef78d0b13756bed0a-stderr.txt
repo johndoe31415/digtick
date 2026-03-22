@@ -1,2 +1,0 @@
-Warning: expression "B C A" on line 2 is not equivalent to expression "A !B C" on line 4.
-There were validation errors, some of the equations are not equivalent to each other.

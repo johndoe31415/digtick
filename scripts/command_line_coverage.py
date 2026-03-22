@@ -84,8 +84,11 @@ class CmdRunner():
 				print(ref.decode("utf-8"))
 				print(f"Produced : {produced_filename}")
 				print(produced.decode("utf-8"))
-				print()
-				yn = input("{channel} OK (y/n)? ")
+				if not self._args.accept_all:
+					print()
+					yn = input("{channel} OK (y/n)? ")
+				else:
+					yn = "y"
 				if (yn.lower() == "y") or (yn == ""):
 					with open(reference_filename, "wb") as f:
 						f.write(produced)
@@ -93,10 +96,13 @@ class CmdRunner():
 					raise RuntimeError(f"Command returned different output than expected: {cmd.regular_cmdline}")
 		except FileNotFoundError:
 			print(f"No {channel} reference found for command: {cmd.regular_cmdline}")
-			if self._args.interactive:
-				print(f"This was produced on {channel}:")
-				print(produced.decode("utf-8"))
-				yn = input("{channel} OK (y/n)? ")
+			if self._args.interactive or self._args.accept_all:
+				if not self._args.accept_all:
+					print(f"This was produced on {channel}:")
+					print(produced.decode("utf-8"))
+					yn = input("{channel} OK (y/n)? ")
+				else:
+					yn = "y"
 				if (yn.lower() == "y") or (yn == ""):
 					with open(reference_filename, "wb") as f:
 						f.write(produced)
@@ -278,5 +284,6 @@ $digtick mutate -r G1,G2,G3,G4,G5,G6 examples/mutate_me.circ
 parser = FriendlyArgumentParser(description = "Run the digtick command line tool and verify it produces correct output.")
 parser.add_argument("-c", "--coverage", action = "store_true", help = "Append coverage information")
 parser.add_argument("-i", "--interactive", action = "store_true", help = "Interactive query if output is acceptable")
+parser.add_argument("-a", "--accept-all", action = "store_true", help = "When deviations from expected test output occur, just accept them")
 args = parser.parse_args(sys.argv[1:])
 CmdRunner(args).run(cmds)
