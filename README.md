@@ -315,6 +315,34 @@ the following macros to be defined in your document:
 #let bnot(body) = $overline(#v(1em)#h(0em) body)$
 ```
 
+Similar to tables, some expression formats also have customizable flavors:
+
+| Format      | Option           | Type                          | Description                                                                                                                                   |
+| ----------- | ---------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| text        | pretty           | bool                          | Produce machine readable output (default) or pretty-printed output (using Unicode chars).                                                     |
+| text        | implicit-and     | bool                          | Use a space as substitute for an AND symbol (default) or use the explicit AND operator.                                                       |
+| tex         | implicit-and     | bool                          | Use a space as substitute for an AND symbol (default) or use the explicit AND operator.                                                       |
+| tex         | math-operators   | bool                          | For operators, use the mathematical symbol (e.g., `¬` for negation) instead of technical notation (e.g., overlines for negation -- default).  |
+| tex         | math-constants   | bool                          | For constants, use the mathematical symbols (i.e., `⊥` and `⊤`) instead of technical notation (`0` and `1` -- default).                       |
+| tex         | use-mathrm       | bool                          | Wrap expressions in `mathrm` so variables are upright and not italics. Default true.                                                          |
+| typst       | implicit-and     | bool                          | Use a space as substitute for an AND symbol (default) or use the explicit AND operator.                                                       |
+| typst       | math-operators   | bool                          | For operators, use the mathematical symbol (e.g., `¬` for negation) instead of technical notation (e.g., overlines for negation -- default).  |
+| typst       | math-constants   | bool                          | For constants, use the mathematical symbols (i.e., `⊥` and `⊤`) instead of technical notation (`0` and `1` -- default).                       |
+| typst       | literals-upright | bool                          | Wrap variable names in `upright` function so they appear upright and not italics. Default true.                                               |
+
+Example usage:
+
+```
+$ digtick parse --expr-format typst -F implicit-and=0 -F math-constants=1 'A 1 !B'
+upright(A) and top and bnot(upright(B))
+
+$ digtick parse --expr-format typst -F implicit-and=0 -F math-constants=1 -F literals-upright=0 'A 1 !B'
+A and top and bnot(B)
+
+$ digtick parse --expr-format typst -F implicit-and=0 -F math-operators=1 'A 1 !B'
+upright(A) and 1 and not upright(B)
+```
+
 
 ## "make-table": generate a truth table from an expression
 `make-table` evaluates a Boolean expression over all input combinations and
