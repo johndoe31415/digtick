@@ -19,15 +19,13 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
-from .ParserTests import ParserTests
-from .ExpressionFormatterTests import ExpressionFormatterTests
-from .QMCTests import QMCTests
-from .ExpressionTreeTests import ExpressionTreeTests
-from .CircuitSimulationTests import CircuitSimulationTests
-from .DTDTests import DTDTests
-from .ValueTableTests import ValueTableTests
-from .ExpressionTransformerTests import ExpressionTransformerTests
-from .ToolsTests import ToolsTests
-from .KVDiagramTests import KVDiagramTests
-from .PRNGTests import PRNGTests
-from .EnumTests import EnumTests
+import unittest
+from digtick.Enums import TableFormatOpts
+
+class EnumTests(unittest.TestCase):
+	def test_optioned_enum(self):
+		tfo = TableFormatOpts(TableFormatOpts.Value.TeX)
+		self.assertIn("'layout'", repr(tfo))
+		self.assertEqual(tfo["layout"], "vertical")
+		with self.assertRaises(KeyError):
+			tfo["foo"]
