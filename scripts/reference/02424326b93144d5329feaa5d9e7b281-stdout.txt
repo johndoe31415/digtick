@@ -1,0 +1,1 @@
+{"source": "/tmp/state_table.txt", "input_vars": ["FF1", "FF2", "FF3", "FF4"], "output_vars": ["FF1'", "FF2'", "FF3'", "FF4'"], "cycles": [{"primary_node": 0, "length": 12}, {"primary_node": 2, "length": 4}], "tail_count": 0, "shortest_cycle_length": 4, "hamming_distance": {"avg": 2.0, "min": 1}}

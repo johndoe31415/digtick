@@ -206,8 +206,58 @@ $digtick transform -t nand -t nor -t nand 'A ^ B'
 $digtick transform -t simplify '(A + 1)(B & 0)((1))'
 $digtick transform -t simplify '(A + 1)(B & 0)((1)) + (!B !C !A) + (A + A) + (A A) + (X @ 1 @ 1)'
 $digtick transform -t simplify '-((A + 1)(B & 0)((1)) + (!B !C !A) + (A + A) + (A A) + (-X @ 1 @ 1))(C 1)(D + 0)((X)+(X))((Y)(Y))(Z % 0 % 0)(K + !K)'
-$digtick transform -t shuffle '-((A + 1)(B & 0)((1)) + (!B !C !A) + (A + A) + (A A) + (-X @ 1 @ 1))(C 1)(D + 0)((X)+(X))((Y)(Y))(Z % 0 % 0)(K + !K)'
+$digtick transform --prng-seed FOOBAR -t shuffle '-((A + 1)(B & 0)((1)) + (!B !C !A) + (A + A) + (A A) + (-X @ 1 @ 1))(C 1)(D + 0)((X)+(X))((Y)(Y))(Z % 0 % 0)(K + !K)'
 $digtick transform -t sort '-((A + 1)(B & 0)((1)) + (!B !C !A) + (A + A) + (A A) + (-X @ 1 @ 1))(C 1)(D + 0)((X)+(X))((Y)(Y))(Z % 0 % 0)(K + !K)'
+""")
+cmds.append(Cmd("$digtick transform -t shuffle '-((A + 1)(B & 0)((1)) + (!B !C !A) + (A + A) + (A A) + (-X @ 1 @ 1))(C 1)(D + 0)((X)+(X))((Y)(Y))(Z % 0 % 0)(K + !K)'", output_deterministic = False))
+
+
+for dev in [ "sr-nand-ff", "d-ff", "jk-ff", "jk-ms-ff" ]:
+	cmds += Cmd.parse_many(f"""
+		$digtick dtd-create --random-seed 12345 -d {dev}
+		$digtick dtd-create --random-seed 23456 -n -d {dev}
+	""")
+
+
+cmds += Cmd.parse_many("""
+$digtick dtd-create -i >/tmp/dtd
+$digtick dtd-create --random-seed blubb -d jk-ff "J=00001111000011110000111100001111"
+-$digtick dtd-create --random-seed blubb -d jk-ff "J=000011110000111100001111000"
+""")
+
+cmds += Cmd.parse_many("""
+rm -f /tmp/dtd.svg; $digtick dtd-render -o /tmp/dtd.svg /tmp/dtd
+-touch /tmp/dtd.svg; $digtick dtd-render -o /tmp/dtd.svg /tmp/dtd
+touch /tmp/dtd.svg; $digtick dtd-render -f -o /tmp/dtd.svg /tmp/dtd
+""")
+
+cmds += Cmd.parse_many("""
+$digtick sim-combinatorial src/digtick/tests/data/awful.circ >/tmp/awful.txt
+
+$digtick sim-sequential -s FF1,FF2,FF3,FF4 src/digtick/tests/data/stateful.circ >/tmp/state_table.txt
+$digtick sim-sequential -s B4,B3,B2,B1,B0 -n main_gates examples/counter_5bit.circ >/tmp/state_table2.txt
+
+$digtick analyze-sequential -vv /tmp/state_table.txt
+$digtick analyze-sequential -vv /tmp/state_table2.txt
+$digtick analyze-sequential -f dot /tmp/state_table.txt
+$digtick analyze-sequential -f json /tmp/state_table.txt
+echo ":FF1,FF2,FF3,FF4,FF5:FF1',FF2',FF3',FF4',FF5':5555000055550000,5555000000005555,4455440044554400,55005500550055,4051514040515140" | $digtick analyze-sequential
+echo ":FF1,FF2,FF3,FF4,FF5:FF1',FF2',FF3',FF4',FF5':5555000055550000,5555000000005555,4455440044554400,55005500550055,4051514040515140" | $digtick analyze-sequential -f dot
+-$digtick analyze-sequential /tmp/table1
+
+-$digtick mutate src/digtick/tests/data/invgate.circ
+$digtick mutate -m G src/digtick/tests/data/invgate.circ
+$digtick mutate -m G:c=AND src/digtick/tests/data/invgate.circ
+$digtick mutate -m G:c=AND,c=OR src/digtick/tests/data/invgate.circ
+-$digtick mutate -m G:inv=foo src/digtick/tests/data/invgate.circ
+-$digtick mutate -m G:comb=foo src/digtick/tests/data/invgate.circ
+-$digtick mutate -m G:randcomb=foo src/digtick/tests/data/invgate.circ
+-$digtick mutate -m G:foo=bar src/digtick/tests/data/invgate.circ
+-$digtick mutate -m G:comb=999 src/digtick/tests/data/invgate.circ
+$digtick mutate -m G:inv=1 src/digtick/tests/data/invgate.circ
+$digtick mutate -m G:inv=1,randcomb=3 src/digtick/tests/data/invgate.circ
+$digtick mutate -m G:inv=1,comb=1,comb=2 --prefix foobar src/digtick/tests/data/invgate.circ
+$digtick mutate -r G1,G2,G3,G4,G5,G6 examples/mutate_me.circ
 """)
 
 CmdRunner(cmds, interactive = True).run()

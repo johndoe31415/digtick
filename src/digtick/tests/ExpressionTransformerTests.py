@@ -123,8 +123,8 @@ class ExpressionTransformerTests(unittest.TestCase):
 		self._assert_simplification("!!A", "A")
 
 	def test_simplify_complex(self):
-		# TODO THIS FAILS
 		self._assert_simplification("A + X + 0", "A + X")
-		#self._assert_simplification("A + 0 + !A !B !C", "A + !A !B !C")
-		#self._assert_simplification("A + X + 0 + !A !B !C", "A + X + !A !B !C")
-		#self._assert_simplification("(A + 1)(B & 0)((1)) + (!B !C !A) + (A + A) + (A A) + (X @ 1 @ 1)", "A + X + !A !B !C")
+		self._assert_simplification("A + 0 + !A !B !C", "A + !A !B !C")
+		self._assert_simplification("A + X + 0 + !A !B !C", "A + X + !A !B !C")
+		self._assert_simplification("(A + 1)(B & 0)((1)) + (!B !C !A) + (A + A) + (A A) + (X @ 1 @ 1)", "A + X + !A !B !C")
+		self._assert_simplification("-((A + 1)(B & 0)((1)) + (!B !C !A) + (A + A) + (A A) + (-X @ 1 @ 1))(C 1)(D + 0)((X)+(X))((Y)(Y))(Z % 0 % 0)(K + !K)", "C D X Y Z !(A + !X + !A !B !C)")

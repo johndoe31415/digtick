@@ -1,0 +1,21 @@
+  0 Cycle(primary_node=0, length=12)
+  1 Cycle(primary_node=0, length=12)
+  2 Cycle(primary_node=2, length=4)
+  3 Cycle(primary_node=0, length=12)
+  4 Cycle(primary_node=0, length=12)
+  5 Cycle(primary_node=2, length=4)
+  6 Cycle(primary_node=0, length=12)
+  7 Cycle(primary_node=0, length=12)
+  8 Cycle(primary_node=0, length=12)
+  9 Cycle(primary_node=0, length=12)
+ 10 Cycle(primary_node=0, length=12)
+ 11 Cycle(primary_node=2, length=4)
+ 12 Cycle(primary_node=2, length=4)
+ 13 Cycle(primary_node=0, length=12)
+ 14 Cycle(primary_node=0, length=12)
+ 15 Cycle(primary_node=0, length=12)
+State transitions: FF1, FF2, FF3, FF4 → FF1', FF2', FF3', FF4'
+   Cycle ID=0 length 12: 0 → 4 → 6 → 7 → 10 → 1 → 9 → 13 → 15 → 14 → 3 → 8 → 0
+   Cycle ID=2 length 4: 2 → 5 → 11 → 12 → 2
+State graph has 2 cycles and 0 tails. Shortest cycle length: 4
+Average Hamming distance between states: 2.0 bits, minimum Hamming ditance: 1 bit
