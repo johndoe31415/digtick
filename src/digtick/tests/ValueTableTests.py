@@ -245,3 +245,7 @@ class ValueTableTests(unittest.TestCase):
 		self.assertEqual(vt1.get_storage("Y"), vt2.get_storage("Z"))
 		self.assertNotEqual(vt1.get_storage("Y"), vt3.get_storage("Q"))
 		self.assertNotEqual(vt1.get_storage("Y"), vt4.get_storage("N"))
+
+		self.assertEqual(CompactStorage.Entry.from_str("WAIT WHAT", permissive = True), None)
+		with self.assertRaises(ValueError):
+			CompactStorage.Entry.from_str("WAIT WHAT")

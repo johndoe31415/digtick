@@ -596,6 +596,9 @@ class CircuitSimulationTests(unittest.TestCase):
 			ComponentMutator(lsl = lsl, component_label = "X4")
 		with self.assertRaises(UnsupportedMutationOperation):
 			ComponentMutator(lsl = lsl, component_label = "T")
+		ComponentMutator(lsl = lsl, component_label = "NAND1")
+		with self.assertRaises(UnsupportedMutationOperation):
+			ComponentMutator(lsl = lsl, component_label = "NAND1", mutation_selector = "foo")
 
 	def test_net_undefined(self):
 		circ = pkgutil.get_data("digtick.tests.data", "undriven_net.circ")
