@@ -167,7 +167,7 @@ class ParseTreeElement():
 
 	@abc.abstractmethod
 	def evaluate(self, var_dict: dict) -> int:
-		pass
+		raise AssertionError("Abstract method called")
 
 	def __invert__(self):
 		return self._Elements["UnaryOperator"](Operator.Not, self)
