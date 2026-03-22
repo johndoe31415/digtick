@@ -78,3 +78,9 @@ class ExpressionTreeTests(unittest.TestCase):
 		self.assertTrue(parse_expression("1").complements(parse_expression("0")))
 		self.assertFalse(parse_expression("1").complements(parse_expression("1")))
 		self.assertTrue(parse_expression("A B 0").complements(parse_expression("C D + 1")))
+
+	def test_satisfiability(self):
+		self.assertTrue(parse_expression("A B 1").satisfyable())
+		self.assertFalse(parse_expression("A 0 B").satisfyable())
+		self.assertTrue(parse_expression("A + !A").satisfyable())
+		self.assertFalse(parse_expression("A !A").satisfyable())
