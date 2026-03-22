@@ -1,0 +1,5 @@
+CDNF: A B C
+DNF 1/1: A B C
+
+CDNF: (A + B + !C) (A + !B + C) (A + !B + !C) (!A + B + !C) (!A + !B + C)
+CNF 1/1: A B C

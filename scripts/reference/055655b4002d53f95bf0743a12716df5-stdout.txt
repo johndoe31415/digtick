@@ -1,0 +1,10 @@
+A	B	C	>Y	>Eval	>Sat
+0	0	0	*	0	1
+0	0	1	0	0	1
+0	1	0	0	0	1
+0	1	1	0	0	1
+1	0	0	*	0	1
+1	0	1	0	0	1
+1	1	0	0	0	1
+1	1	1	1	1	1
+The given expression satisfies the truth table.

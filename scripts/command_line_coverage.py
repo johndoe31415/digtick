@@ -33,7 +33,17 @@ class Cmd():
 	@classmethod
 	def parse_many(cls, multiline_cmd_str: str):
 		cmds = multiline_cmd_str.strip("\r\n").split("\n")
-		return [ cls(cmdline = cmd) for cmd in cmds ]
+		parsed_cmds = [ ]
+		for cmd in cmds:
+			cmd = cmd.strip()
+			if cmd == "":
+				continue
+
+			if cmd.startswith("-"):
+				parsed_cmds.append(cls(cmdline = cmd[1:], expect_success = False))
+			else:
+				parsed_cmds.append(cls(cmdline = cmd))
+		return parsed_cmds
 
 
 	@property
@@ -139,5 +149,54 @@ cmds.append(Cmd("cat /tmp/table1 | $digtick print-table -f tex -F layout=wrong",
 for tbl_fmt in [ "tex", "typst" ]:
 	for layout in [ "horizontal", "vertical" ]:
 		cmds.append(Cmd(f"cat /tmp/table1 | $digtick print-table -f {tbl_fmt} -F layout={layout}"))
+
+
+cmds += Cmd.parse_many("""
+$digtick print-table -L examples/logisim_full_adder.txt
+
+$digtick make-table 'A B + !B C' >/tmp/table2
+$digtick make-table 'A B + !B C + A !B !C' >/tmp/table3
+$digtick diff-table /tmp/table2 /tmp/table3
+-echo ':A,B,C:Z:5404' | $digtick diff /tmp/table2
+-echo ':A,D,C:Y:5404' | $digtick diff /tmp/table2
+
+$digtick kv /tmp/table1
+-$digtick kv -o P /tmp/table1
+$digtick kv -r /tmp/table1
+$digtick kv -x 1 -y 2 -X -Y -d BCA /tmp/table1
+$digtick kv -x 1 -y 2 -X -Y -d C,B,A /tmp/table1
+-cat /tmp/table1 | head -n -1 | $digtick kv -x 1 -y 2 -X -Y -d BCA
+cat /tmp/table1 | head -n -1 | $digtick kv -x 1 -y 2 -X -Y -d BCA --unused-value-is '*'
+-$digtick kv -x 1 -y 2 -X -Y -d BCAA /tmp/table1
+-$digtick kv -x 1 -y 2 -X -Y -d BCAX /tmp/table1
+$digtick kv -x 1 -y 2 -X -Y -d BCA -O /tmp/kv.svg /tmp/table1
+$digtick kv --render-indices -x 1 -y 2 -X -Y -d BCA -O /tmp/kv.svg /tmp/table1
+
+$digtick synth /tmp/table1
+$digtick synth /tmp/table1 --show-all-solutions
+
+-$digtick sat /tmp/table1 'A B'
+$digtick sat /tmp/table1 'A B C'
+
+-$digtick eq 'A B C' 'A B !C'
+$digtick eq 'A(B C)' 'B(A C)'
+
+$digtick random-expr 4 10
+$digtick random-expr --allow-nand-nor-xor 4 10
+$digtick random-table 4
+$digtick random-table -1 100 -0 0 4
+$digtick random-table -1 100 -0 0 -o Z 4
+-$digtick random-table -1 100 -0 50 4
+
+$digtick transform -t simplify 'A C B'
+$digtick transform -t nand 'A ^ B'
+$digtick transform -t nor 'A ^ B'
+$digtick transform -t nand -t nor -t nand 'A ^ B'
+$digtick transform -t simplify '(A + 1)(B & 0)((1))'
+$digtick transform -t simplify '(A + 1)(B & 0)((1)) + (!B !C !A) + (A + A) + (A A) + (X @ 1 @ 1)'
+$digtick transform -t simplify '-((A + 1)(B & 0)((1)) + (!B !C !A) + (A + A) + (A A) + (-X @ 1 @ 1))(C 1)(D + 0)((X)+(X))((Y)(Y))(Z % 0 % 0)(K + !K)'
+$digtick transform -t shuffle '-((A + 1)(B & 0)((1)) + (!B !C !A) + (A + A) + (A A) + (-X @ 1 @ 1))(C 1)(D + 0)((X)+(X))((Y)(Y))(Z % 0 % 0)(K + !K)'
+$digtick transform -t sort '-((A + 1)(B & 0)((1)) + (!B !C !A) + (A + A) + (A A) + (-X @ 1 @ 1))(C 1)(D + 0)((X)+(X))((Y)(Y))(Z % 0 % 0)(K + !K)'
+""")
 
 CmdRunner(cmds, interactive = True).run()
