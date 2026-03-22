@@ -434,34 +434,3 @@ def parse_expression(expr: str, default_empty: str | None = None) -> ParseTreeEl
 	parser = ExpressionParser()
 	parse_result = parser(expr)
 	return parse_result
-
-if __name__ == "__main__":
-	parser = ExpressionParser()
-
-	testcases = [
-			"A + B",
-			"A + B + C",
-			"A + (B + C)",
-			"A * B + C",
-			"A + B * C",
-			"A + B ^ C",
-			"A ^ B ^ C",
-			"A ^ B + C",
-			"A B C + !A !B !C + A !B C Foo",
-			"A ^ !B",
-			"A ^ !B + C",
-			"A ^ !(B + C)",
-			"!(A ^ B)",
-			"A + 1 + 0",
-	]
-	for input_value in testcases:
-		try:
-			parsed = parser(input_value)
-			print(parsed)
-		except Exception as e:	# pragma unreachable
-			print(tpg.exc())	# pragma unreachable
-			raise				# pragma unreachable
-
-	A = Variable("A")
-	Zero = Constant(0)
-	print((A & 1) | (A & 0) == A)

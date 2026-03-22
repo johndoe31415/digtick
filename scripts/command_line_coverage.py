@@ -24,6 +24,8 @@ import os
 import dataclasses
 import subprocess
 import hashlib
+import sys
+from FriendlyArgumentParser import FriendlyArgumentParser
 
 @dataclasses.dataclass
 class Cmd():
@@ -47,17 +49,24 @@ class Cmd():
 		return parsed_cmds
 
 	@property
-	def show_cmdline(self):
+	def regular_cmdline(self):
 		return self.cmdline.replace("$digtick", "digtick")
+
+	@property
+	def manual_cmdline(self):
+		return self.cmdline.replace("$digtick", "python3 -m digtick.__main__")
+
+	@property
+	def coverage_cmdline(self):
+		return self.cmdline.replace("$digtick", "coverage run -a --source digtick --omit=tpg.py,PrefixMatcher.py,RandomDist.py,TableFormatter.py,MultiCommand.py,FriendlyArgumentParser.py -m digtick.__main__")
 
 	@property
 	def hash(self):
 		return hashlib.md5(self.cmdline.encode("utf-8")).hexdigest()
 
 class CmdRunner():
-	def __init__(self, cmds: list[Cmd], interactive: bool = False):
-		self._cmds = cmds
-		self._interactive = interactive
+	def __init__(self, args):
+		self._args = args
 		self._reference_output_dir = "scripts/reference/"
 		self._produced_output_dir = "/tmp/output/"
 		os.makedirs(self._produced_output_dir, exist_ok = True)
@@ -70,24 +79,24 @@ class CmdRunner():
 			with open(reference_filename, "rb") as f:
 				ref = f.read()
 			if ref != produced:
-				print(f"Different {channel} output in {cmd.show_cmdline}")
+				print(f"Different {channel} output in {cmd.regular_cmdline}")
 				print(f"Reference: {reference_filename}")
 				print(ref.decode("utf-8"))
 				print(f"Produced : {produced_filename}")
 				print(produced.decode("utf-8"))
 				print()
-				yn = input("Output OK (y/n)? ")
+				yn = input("{channel} OK (y/n)? ")
 				if (yn.lower() == "y") or (yn == ""):
 					with open(reference_filename, "wb") as f:
 						f.write(produced)
 				else:
-					raise RuntimeError(f"Command returned different output than expected: {cmd.show_cmdline}")
+					raise RuntimeError(f"Command returned different output than expected: {cmd.regular_cmdline}")
 		except FileNotFoundError:
-			print(f"No {channel} reference found for command: {cmd.show_cmdline}")
-			if self._interactive:
+			print(f"No {channel} reference found for command: {cmd.regular_cmdline}")
+			if self._args.interactive:
 				print(f"This was produced on {channel}:")
 				print(produced.decode("utf-8"))
-				yn = input("Output OK (y/n)? ")
+				yn = input("{channel} OK (y/n)? ")
 				if (yn.lower() == "y") or (yn == ""):
 					with open(reference_filename, "wb") as f:
 						f.write(produced)
@@ -95,13 +104,13 @@ class CmdRunner():
 				raise
 
 	def _run(self, cmd: Cmd):
-		print(cmd)
-		cmdline = cmd.cmdline.replace("$digtick", "digtick")
+		print(cmd.regular_cmdline)
+		cmdline = cmd.coverage_cmdline if self._args.coverage else cmd.manual_cmdline
 		proc = subprocess.run(cmdline, shell = True, check = False, capture_output = True)
 		if cmd.expect_success and (proc.returncode != 0):
-			raise RuntimeError(f"Command expected success but failed: {cmdline}")
+			raise RuntimeError(f"Command expected success but failed: {cmd.regular_cmdline}")
 		elif (not cmd.expect_success) and (proc.returncode == 0):
-			raise RuntimeError(f"Command expected failure but returned successful: {cmdline}")
+			raise RuntimeError(f"Command expected failure but returned successful: {cmd.regular_cmdline}")
 
 		if cmd.expect_success and cmd.output_deterministic:
 			produced_stdout_filename = f"{self._produced_output_dir}{cmd.hash}-stdout.txt"
@@ -113,8 +122,8 @@ class CmdRunner():
 			self._compare(cmd, "stderr", proc.stderr, produced_stderr_filename, reference_stderr_filename)
 
 
-	def run(self):
-		for cmd in self._cmds:
+	def run(self, cmds: list[Cmd]):
+		for cmd in cmds:
 			self._run(cmd)
 
 cmds = [ ]
@@ -266,4 +275,8 @@ $digtick mutate -m G:inv=1,comb=1,comb=2 --prefix foobar src/digtick/tests/data/
 $digtick mutate -r G1,G2,G3,G4,G5,G6 examples/mutate_me.circ
 """)
 
-CmdRunner(cmds, interactive = True).run()
+parser = FriendlyArgumentParser(description = "Run the digtick command line tool and verify it produces correct output.")
+parser.add_argument("-c", "--coverage", action = "store_true", help = "Append coverage information")
+parser.add_argument("-i", "--interactive", action = "store_true", help = "Interactive query if output is acceptable")
+args = parser.parse_args(sys.argv[1:])
+CmdRunner(args).run(cmds)
