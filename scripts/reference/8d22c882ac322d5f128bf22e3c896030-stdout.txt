@@ -1,1 +1,1 @@
-C D X Y Z 1 !(A + !X + 0 + !A !B !C)
+C D X Y Z !(A + !X + !A !B !C)
