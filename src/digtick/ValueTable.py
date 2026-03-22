@@ -442,7 +442,7 @@ class ValueTable():
 			row = [ str(bit) for bit in inputs ] + [ "|" ] + [ logisim_chars[output_bit] for output_bit in outputs ]
 			print(" ".join(row))
 
-	def print(self, table_format: TableFormatOpts | None):
+	def print(self, table_format: TableFormatOpts | None = None):
 		if table_format is None:
 			table_format = TableFormatOpts(TableFormatOpts.Value.Text)
 		method = getattr(self, f"_print_{table_format.value.replace('-', '_')}")

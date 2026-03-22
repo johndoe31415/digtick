@@ -227,3 +227,21 @@ class ValueTableTests(unittest.TestCase):
 
 		vt = ValueTable.from_compact_representation(":A,B,C,D:Y:55544554")
 		self.assertEqual(vt.cdnf("Y"), parse_expression("(A + !B + !C + D)(A + B + C + D)(!A + B + C + D)"))
+
+	def test_default_dump(self):
+		vt = ValueTable.from_compact_representation(":A,B,C,D:Y:55554555")
+		f = io.StringIO()
+		with contextlib.redirect_stdout(f):
+			vt.print()
+		self.assertIn("A	B	C	D	>Y", f.getvalue())
+
+	def test_compactstorage_entries(self):
+		self.assertEqual(CompactStorage.Entry.from_str("*"), CompactStorage.Entry.DontCare)
+		self.assertEqual(CompactStorage.Entry.from_str("-"), CompactStorage.Entry.DontCare)
+		vt1 = ValueTable.from_compact_representation(":A,B,C,D:Y:55554555")
+		vt2 = ValueTable.from_compact_representation(":A,B,C,D:Z:55554555")
+		vt3 = ValueTable.from_compact_representation(":A,B,C,D,E:Q:55554555")
+		vt4 = ValueTable.from_compact_representation(":A,B,C,D:N:45554555")
+		self.assertEqual(vt1.get_storage("Y"), vt2.get_storage("Z"))
+		self.assertNotEqual(vt1.get_storage("Y"), vt3.get_storage("Q"))
+		self.assertNotEqual(vt1.get_storage("Y"), vt4.get_storage("N"))
