@@ -2,18 +2,18 @@
 [![Test status](https://github.com/johndoe31415/digtick/actions/workflows/tests.yml/badge.svg)](https://github.com/johndoe31415/digtick/actions/workflows/tests.yml)
 [![Code coverage](https://codecov.io/github/johndoe31415/digtick/graph/badge.svg?token=6K32VGSNF8)](https://codecov.io/github/johndoe31415/digtick)
 
-digtick (the mnemonic for "dig tk", i.e., digital toolkit) is a
-command-line-tool tool for creating and solving digital logic design tasks.
-The primary target audiences are educators (who can use it to create and
-validate exam questions) and students who want to improve their skills.  The
-toolkit allows you to specify, parse and reformat Boolean equations (e.g.,
-output in LaTeX form for easy inclusion in documents). It can create truth
-tables from a given Boolean expression and rendering Karnaugh–Veitch (KV) maps
-with an arbitrary number of variables, both as SVG and to the command line. The
-output format is highly customizable to match your specific preference. It can
-check Boolean equations for equivalance and validate if expressions satisfy a
-given truth table (with counterexamples). A Quine-McCluskey implementation is
-used to minify expressions. digtick is able to read a subset of [Logisim
+digtick (the mnemonic for "dig tk", i.e., digital toolkit) is a command-line
+tool for creating and solving digital logic design tasks.  The primary target
+audiences are educators (who can use it to create and validate exam questions)
+and students who want to improve their skills.  The toolkit allows you to
+specify, parse and reformat Boolean equations (e.g., output in LaTeX form for
+easy inclusion in documents). It can create truth tables from a given Boolean
+expression and rendering Karnaugh–Veitch (KV) maps with an arbitrary number of
+variables, both as SVG and to the command line. The output format is highly
+customizable to match your specific preference. It can check Boolean equations
+for equivalence and validate if expressions satisfy a given truth table (with
+counterexamples). A Quine-McCluskey implementation is used to minify
+expressions. digtick is able to read a subset of [Logisim
 Evolution](https://github.com/logisim-evolution/logisim-evolution) circuit
 files and is also able to simulate them natively (i.e., without relying on
 Logisim at all). The reason for implementing this natively within digtick is
@@ -35,7 +35,7 @@ You can express `OR` as `+` or `|`, `AND` as `*` or `&`, and XOR as `^`.
 Negation can be written as `!`, `~`, or `-` prefix. The parser also accepts
 NAND `@` and NOR `%` as explicit operators.
 
-Note that neither NAND nor NOR are associative. Their precendence in parsing is
+Note that neither NAND nor NOR are associative. Their precedence in parsing is
 as following, from strongest to weakest:
 
   1. Parenthesis: explicit `()` or implicit `<>`
@@ -295,7 +295,7 @@ $ digtick parse --expr-format tex-math '!(A B)'
 ```
 
 When you are interested in the internal parse tree of an expression, you can
-emit the expression as Graphviz-compatible format and have it rendererd by dot
+emit the expression as Graphviz-compatible format and have it rendered by dot
 into a graph:
 
 ```
@@ -695,7 +695,7 @@ although it is clearly covered by "A".
 
 Expressions can also be rearranged/shuffled. This is useful to prepare
 randomized student questions which are all identical (but different). Note that
-there is an iteration paraemter that you can use as well to generate multiple
+there is an iteration parameter that you can use as well to generate multiple
 variants:
 
 ```
@@ -739,13 +739,12 @@ Q  = 1    1    00 1    000 11    000000    1111 11    11111111    00
 !Q = 1    0    11 1    111 11    111111    0000 11    00000000    11
 ```
 
-As you can see, it created a diagram along with notational markers that show
-when the flipflop was set, when it was reset and where an illegal state
-transition occurred. Note that for the SR-NAND-FF it is *not* illegal for both
-inputs to become active (i.e., LOW) at the same time, this is well-defined
-behavior. Undefined behavior occurs only when out of this state there is a
-simultaneous transition into the "keep" state (both inputs inactive, i.e.,
-HIGH).
+As you can see, it created a diagram along with position markers that show when
+the flipflop was set, when it was reset and where an illegal state transition
+occurred. Note that for the SR-NAND-FF it is *not* illegal for both inputs to
+become active (i.e., LOW) at the same time, this is well-defined behavior.
+Undefined behavior occurs only when out of this state there is a simultaneous
+transition into the "keep" state (both inputs inactive, i.e., HIGH).
 
 You can also predefine certain values if you wish, but the specified signal
 length must match exactly with the length of the graph you choose:
@@ -955,7 +954,7 @@ A mutation specifier is a comma-separated list which may contain the following i
     inverted at all.
   - `comb=INDEX`: Select a specific combination out of the enumeration. For
     example, if nothing else is specified for a standard gate, this needs to be
-    a number inbetween 0..23.
+    a number in between 0..23.
   - `randcomb=COUNT`: Select `COUNT` random indices out of the pool of
     combinations.
 
