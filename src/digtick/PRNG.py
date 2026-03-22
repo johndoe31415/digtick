@@ -72,7 +72,7 @@ class PRNG():
 	def gauss(self, mu = 0.0, sigma = 1.0) -> float:
 		while True:
 			(u1, u2) = (self.random(), self.random())
-			if u1 == 0:
+			if u1 == 0:		# pragma unreachable -- this is *exceptionally* unlikely, we cannot sensibly test it
 				continue
 			z = math.sqrt(-2 * math.log(u1)) * math.cos(2 * math.pi * u2)
 			return mu + (sigma * z)
@@ -84,7 +84,7 @@ class PRNG():
 
 	def sample(self, population: list, k: int) -> list:
 		if k > len(population):
-			raise ValueError("Sample larger than population or is negative")
+			raise AssertionError("Sample larger than population or is negative")
 		listcopy = [ element for element in population ]
 		self.shuffle(listcopy)
 		return listcopy[:k]

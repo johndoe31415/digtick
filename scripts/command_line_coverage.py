@@ -236,6 +236,7 @@ $digtick random-table --prng-seed foobar -1 100 -0 0 -o Z 4
 
 cmds += Cmd.parse_many("""
 $digtick transform -t simplify 'A C B'
+$digtick transform -t nand 'A B'
 $digtick transform -t nand 'A ^ B'
 $digtick transform -t nor 'A ^ B'
 $digtick transform -t nand -t nor -t nand 'A ^ B'
