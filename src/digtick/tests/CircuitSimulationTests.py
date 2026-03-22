@@ -27,7 +27,7 @@ import contextlib
 from digtick.sim import Circuit, CmpSource, CmpNOT, CmpSink, CmpAND, CmpOR, CmpXOR, CmpNAND, CmpDFlipFlop, LogisimLoader, ComponentMutator
 from digtick.sim.LogisimInterface import Vec2D
 from digtick.ExpressionParser import parse_expression
-from digtick.Exceptions import CircuitAstableException, DuplicateLabelException, WrongCircuitPowerStateException, UnknownComponentException, NoSuchCircuitException, NoSuchPinException, InputPinUnconnectedException, UnsupportedMutationOperation
+from digtick.Exceptions import CircuitAstableException, DuplicateLabelException, WrongCircuitPowerStateException, UnknownComponentException, NoSuchCircuitException, NoSuchPinException, InputPinUnconnectedException, UnsupportedMutationOperation, UndefinedInputUsedException
 from digtick.ValueTable import ValueTable
 
 _run_slow_tests = (os.getenv("UNITTEST_RUN_ALL") == "1")
@@ -478,9 +478,11 @@ class CircuitSimulationTests(unittest.TestCase):
 	def test_circuit_snake(self):
 		circ = pkgutil.get_data("digtick.tests.data", "notgatesnake.circ")
 		logisim_loader = LogisimLoader.load_from_xmldata(circ)
-		logisim_loader.parse()
+		circuit = logisim_loader.parse()
 		with contextlib.redirect_stderr(io.StringIO()):
 			logisim_loader.dump_nets()
+		with contextlib.redirect_stdout(None):
+			circuit.dump()
 
 	def test_circuit_unknown_component(self):
 		circ = pkgutil.get_data("digtick.tests.data", "unknown_component.circ")
@@ -594,3 +596,18 @@ class CircuitSimulationTests(unittest.TestCase):
 			ComponentMutator(lsl = lsl, component_label = "X4")
 		with self.assertRaises(UnsupportedMutationOperation):
 			ComponentMutator(lsl = lsl, component_label = "T")
+
+	def test_net_undefined(self):
+		circ = pkgutil.get_data("digtick.tests.data", "undriven_net.circ")
+		circuit = LogisimLoader.load_from_xmldata(circ).parse()
+		sink1 = circuit["V"]
+		sink2 = circuit["W"]
+		self.assertEqual(sink1["IN"], sink2["IN"])
+		net = sink1["IN"]
+		with self.assertRaises(UndefinedInputUsedException):
+			net.level
+
+		f = io.StringIO()
+		with contextlib.redirect_stdout(f):
+			circuit.dump()
+		self.assertIn("(BADBOI): AND UNCONNECTED", f.getvalue())
