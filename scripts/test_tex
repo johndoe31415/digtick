@@ -11,13 +11,15 @@ EOF
 
 while read formula; do
 	TEXT=$(digtick parse -f text "${formula}")
-	TEX_TECH=$(digtick parse -f tex-tech "${formula}")
-	TEX_MATH=$(digtick parse -f tex-math "${formula}")
+	TEX_TECH=$(digtick parse -f tex "${formula}")
+	TEX_MATH1=$(digtick parse -f tex -F math-operators "${formula}")
+	TEX_MATH2=$(digtick parse -f tex -F math-operators -F math-constants "${formula}")
 	
 	echo "\\begin{verbatim} $formula \\end{verbatim}"
 	echo "\\begin{verbatim} $TEXT \\end{verbatim}"
 	echo  "\[ ${TEX_TECH} \]"
-	echo  "\[ ${TEX_MATH} \]"
+	echo  "\[ ${TEX_MATH1} \]"
+	echo  "\[ ${TEX_MATH2} \]"
 done <<EOF
 A B
 A !B !C + B C
@@ -28,6 +30,7 @@ A C !(B + D) + E + !F
 A C !(B + !(D + !E)) + E + !F
 A B !C D !E F !G !H !I !J
 A @ B % C
+A B C + !A !B !C + (!1 + !0) @ Z % W
 EOF
 
 cat <<EOF

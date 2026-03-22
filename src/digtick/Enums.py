@@ -137,10 +137,13 @@ class ExpressionFormatOpts(OptionedEnum):
 		Value.TeX: {
 			"implicit-and": (_parse_bool, True),
 			"math-operators": (_parse_bool, False),
+			"math-constants": (_parse_bool, False),
 			"use-mathrm": (_parse_bool, True),
 		},
 		Value.Typst: {
 			"implicit-and": (_parse_bool, True),
 			"math-operators": (_parse_bool, False),
+			"math-constants": (_parse_bool, False),
+			"literals-upright": (_parse_bool, True),
 		},
 	}

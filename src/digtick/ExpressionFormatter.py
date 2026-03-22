@@ -25,9 +25,6 @@ from .ExpressionParser import ParseTreeElement, Operator, Variable, Constant, Un
 class ExpressionFormatterTex():
 	def __init__(self, expression_format: ExpressionFormatOpts):
 		self._format = expression_format
-#		self._format["neg-overline"] = neg_overline
-#		self._format["implicit-and"] = implicit_and
-#		self._format["use-mathrm"] = use_mathrm
 		self._ops = {
 			Operator.Or: " \\vee ",
 			Operator.And: " \\wedge ",
@@ -71,7 +68,12 @@ class ExpressionFormatterTex():
 				rhs_needs_parenthesis = (expr.rhs.precedence > expr.precedence)
 				return (f"{self._op(expr.op)}{self._parenthesize(expr.rhs, rhs_needs_parenthesis)[0]}", False)
 		elif isinstance(expr, Constant):
-			return (str(expr), False)
+			if not self._format["math-constants"]:
+				return (str(expr), False)
+			elif expr.value == 0:
+				return ("\\bot", False)
+			else:
+				return ("\\top", False)
 		elif isinstance(expr, Parenthesis):
 			return (f"({self._format_expression(expr.inner)[0]})", False)
 		raise NotImplementedError(expr)
@@ -84,11 +86,8 @@ class ExpressionFormatterTex():
 
 
 class ExpressionFormatterTypst():
-#	def __init__(self, neg_overline: bool = True, implicit_and: bool = True):
 	def __init__(self, expression_format: ExpressionFormatOpts):
 		self._format = expression_format
-#		self._format["neg-overline"] = neg_overline
-#		self._format["implicit-and"] = implicit_and
 		self._ops = {
 			Operator.Or: " or ",
 			Operator.And: " and ",
@@ -111,10 +110,16 @@ class ExpressionFormatterTypst():
 
 	def _format_expression(self, expr: ParseTreeElement):
 		if isinstance(expr, Variable):
-			if len(expr.varname) == 1:
-				return (f"upright({expr.varname})", False)
+			if self._format["literals-upright"]:
+				if len(expr.varname) == 1:
+					return (f"upright({expr.varname})", False)
+				else:
+					return (f"upright(\"{expr.varname}\")", False)
 			else:
-				return (f"upright(\"{expr.varname}\")", False)
+				if len(expr.varname) == 1:
+					return (expr.varname, False)
+				else:
+					return (f"\"{expr.varname}\"", False)
 		elif isinstance(expr, BinaryOperator):
 			lhs_needs_parenthesis = expr.lhs.precedence > expr.precedence
 			rhs_needs_parenthesis = (expr.rhs.precedence > expr.precedence) or ((expr.rhs.precedence == expr.precedence) and (not expr.op.associative or (expr.op != expr.rhs.op)))
@@ -135,7 +140,12 @@ class ExpressionFormatterTypst():
 				rhs_needs_parenthesis = (expr.rhs.precedence > expr.precedence)
 				return (f"{self._op(expr.op)}{self._parenthesize(expr.rhs, rhs_needs_parenthesis)[0]}", False)
 		elif isinstance(expr, Constant):
-			return (str(expr), False)
+			if not self._format["math-constants"]:
+				return (str(expr), False)
+			elif expr.value == 0:
+				return ("bot", False)
+			else:
+				return ("top", False)
 		elif isinstance(expr, Parenthesis):
 			return (f"({self._format_expression(expr.inner)[0]})", False)
 		raise NotImplementedError(expr)

@@ -142,6 +142,7 @@ $digtick parse -f text "A B C"
 """)
 for expr_fmt in [ "text", "tex", "typst", "dot", "internal" ]:
 	cmds.append(Cmd(f"$digtick parse -f {expr_fmt} \"A B C\""))
+	cmds.append(Cmd(f"$digtick parse -f {expr_fmt} \"A B C + !A !B !C + (!1 + !0) @ Z % W\""))
 cmds.append(Cmd("""
 (
 	echo "A B C"
