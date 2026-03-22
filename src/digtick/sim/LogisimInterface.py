@@ -88,6 +88,8 @@ class LogisimLoader():
 			raise NoSuchCircuitException(f"Unable to find a circuit named \"{self._circuit_name}\" in the provided file.")
 		self._libraries = { }
 		self._circuit = None
+		self._components = None
+		self._named_components = None
 
 	def write_to_file(self, filename: str):
 		self._doc.write(filename, encoding = "utf-8", xml_declaration = True)
@@ -392,6 +394,10 @@ class LogisimLoader():
 		return self._circuit
 
 	def get_component(self, label: str) -> dict:
+		if self._named_components is None:
+			raise NoSuchCircuitException("Circuit not yet loaded, unable to retrieve component.")
+		if label not in self._named_components:
+			raise UnknownComponentException(f"Circuit has no component named \"{label}\"")
 		return self._named_components[label]
 
 	def _rewire_nets(self, replacement_dict: dict):

@@ -24,10 +24,10 @@ import os
 import unittest
 import pkgutil
 import contextlib
-from digtick.sim import Circuit, CmpSource, CmpNOT, CmpSink, CmpAND, CmpOR, CmpXOR, CmpNAND, CmpDFlipFlop, LogisimLoader
+from digtick.sim import Circuit, CmpSource, CmpNOT, CmpSink, CmpAND, CmpOR, CmpXOR, CmpNAND, CmpDFlipFlop, LogisimLoader, ComponentMutator
 from digtick.sim.LogisimInterface import Vec2D
 from digtick.ExpressionParser import parse_expression
-from digtick.Exceptions import CircuitAstableException, DuplicateLabelException, WrongCircuitPowerStateException, UnknownComponentException, NoSuchCircuitException, NoSuchPinException, InputPinUnconnectedException
+from digtick.Exceptions import CircuitAstableException, DuplicateLabelException, WrongCircuitPowerStateException, UnknownComponentException, NoSuchCircuitException, NoSuchPinException, InputPinUnconnectedException, UnsupportedMutationOperation
 from digtick.ValueTable import ValueTable
 
 _run_slow_tests = (os.getenv("UNITTEST_RUN_ALL") == "1")
@@ -583,3 +583,14 @@ class CircuitSimulationTests(unittest.TestCase):
 		with contextlib.redirect_stderr(f):
 			circuit = LogisimLoader.load_from_xmldata(circ, verbose_component_pin_debug = True).parse()
 		self.assertIn("Pin locations for ", f.getvalue())
+
+	def test_mutation_error(self):
+		circ = pkgutil.get_data("digtick.tests.data", "awful.circ")
+		lsl = LogisimLoader.load_from_xmldata(circ)
+		with self.assertRaises(NoSuchCircuitException):
+			ComponentMutator(lsl = lsl, component_label = "X4")
+		lsl.parse()
+		with self.assertRaises(UnknownComponentException):
+			ComponentMutator(lsl = lsl, component_label = "X4")
+		with self.assertRaises(UnsupportedMutationOperation):
+			ComponentMutator(lsl = lsl, component_label = "T")

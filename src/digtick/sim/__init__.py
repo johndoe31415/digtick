@@ -22,3 +22,4 @@
 from .CircuitSimulation import Circuit
 from .Components import Component, CmpSource, CmpSink, CmpNOT, CmpAND, CmpOR, CmpXOR, CmpNAND, CmpNOR, CmpDFlipFlop
 from .LogisimInterface import LogisimLoader
+from .Mutator import ComponentMutator
