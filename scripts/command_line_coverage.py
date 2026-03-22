@@ -111,7 +111,7 @@ class CmdRunner():
 
 	def _run(self, cmd: Cmd):
 		print(cmd.regular_cmdline)
-		cmdline = cmd.coverage_cmdline if self._args.coverage else cmd.manual_cmdline
+		cmdline = cmd.manual_cmdline if self._args.no_coverage else cmd.coverage_cmdline
 		proc = subprocess.run(cmdline, shell = True, check = False, capture_output = True)
 		if cmd.expect_success and (proc.returncode != 0):
 			raise RuntimeError(f"Command expected success but failed: {cmd.regular_cmdline}")
@@ -284,7 +284,7 @@ $digtick mutate -r G1,G2,G3,G4,G5,G6 examples/mutate_me.circ
 """)
 
 parser = FriendlyArgumentParser(description = "Run the digtick command line tool and verify it produces correct output.")
-parser.add_argument("-c", "--coverage", action = "store_true", help = "Append coverage information")
+parser.add_argument("-c", "--no-coverage", action = "store_true", help = "Do not collect coverage information")
 parser.add_argument("-i", "--interactive", action = "store_true", help = "Interactive query if output is acceptable")
 parser.add_argument("-a", "--accept-all", action = "store_true", help = "When deviations from expected test output occur, just accept them")
 args = parser.parse_args(sys.argv[1:])
