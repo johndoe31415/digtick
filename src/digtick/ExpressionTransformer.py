@@ -142,6 +142,10 @@ class NORLogicTransformer(ExpressionTransformer):
 class SimplificationTransformer(ExpressionTransformer):
 	_Name = "simplify"
 
+	def _debug(self, msg: str):
+		pass
+		#print(msg)
+
 	def _transform_parenthesis(self, expr: "Expression"):
 		# Parenthesis are never a needed element since the AST already
 		# represents the order of operations perfectly. For simplifications,
@@ -149,10 +153,15 @@ class SimplificationTransformer(ExpressionTransformer):
 		return self._transform(expr.inner)
 
 	def _transform_unary(self, expr: "Expression"):
+		self._debug(f"Transform unary: {expr}")
 		match (expr.op, expr.rhs):
 			case (Operator.Not, Constant(value)):
 				return Constant(value ^ 1)
 
+			case (Operator.Not, UnaryOperator(Operator.Not, rhs)):
+				return rhs
+
+		self._debug("Unary recursion")
 		return UnaryOperator(expr.op, self._transform(expr.rhs))
 
 	@classmethod
@@ -169,60 +178,76 @@ class SimplificationTransformer(ExpressionTransformer):
 			return (subexpression.precedence, )
 
 	def _transform_binary(self, expr: "Expression"):
+		self._debug(f"Transform binary: {expr}")
 		match expr:
 			# Annulment
 			case BinaryOperator(_, Operator.And, Constant(0)) | BinaryOperator(Constant(0), Operator.And, _):
+				self._debug("  -> Annullment 0")
 				return Constant(0)
 
 			# Identity
 			case BinaryOperator(side, Operator.And, Constant(1)) | BinaryOperator(Constant(1), Operator.And, side):
+				self._debug(f"  -> Identity AND {side}")
 				return side
 
 			# Annulment
 			case BinaryOperator(_, Operator.Or, Constant(1)) | BinaryOperator(Constant(1), Operator.Or, _):
+				self._debug("  -> Annullment 1")
 				return Constant(1)
 
 			# Identity
 			case BinaryOperator(side, Operator.Or, Constant(0)) | BinaryOperator(Constant(0), Operator.Or, side):
+				self._debug(f"  -> Identity OR {side}")
 				return side
 
 			# Idempotence
 			case BinaryOperator(lhs, Operator.Or, rhs) if lhs.identical_to(rhs):
+				self._debug(f"  -> Idempotence OR {lhs}")
 				return lhs
 
 			# Idempotence
 			case BinaryOperator(lhs, Operator.And, rhs) if lhs.identical_to(rhs):
+				self._debug(f"  -> Idempotence AND {lhs}")
 				return lhs
 
 			# Cascaded NAND inverter
 			case BinaryOperator(BinaryOperator(other, Operator.Nand, Constant(1)), Operator.Nand, Constant(1)):
+				self._debug(f"  -> Cascaded NAND {other}")
 				return other
 
 			# Cascaded NOR inverter
 			case BinaryOperator(BinaryOperator(other, Operator.Nor, Constant(0)), Operator.Nor, Constant(0)):
+				self._debug(f"  -> Cascaded NOR {other}")
 				return other
 
 			# Complement
 			case BinaryOperator(lhs, Operator.And, rhs) if lhs.complements(rhs):
+				self._debug(f"  -> Complement 0")
 				return Constant(0)
 
 			# Complement
 			case BinaryOperator(_, Operator.Or, _) if expr.is_tautology():
+				self._debug(f"  -> Complement 1")
 				return Constant(1)
 
 			# Sort subexpressions alphabetically
 			case BinaryOperator(_, op, _) if op in [ Operator.And, Operator.Or ]:
 				terms = expr.gather()
+				self._debug(f"  -> Sort subexpressions {op.name} (count = {len(terms)})")
 				sorted_terms = sorted(set(self._transform(term) for term in terms), key = self.subexpression_sort_key)
 				return BinaryOperator.join(op, sorted_terms)
 
+		self._debug("Binary recursion")
 		return BinaryOperator(self._transform(expr.lhs), expr.op, self._transform(expr.rhs))
 
 	def transform(self, expression: ParseTreeElement):
 		while True:
+			self._debug(f"Simplification run INPUT  = {expression}")
 			transformed = self._transform(expression)
+			self._debug(f"Simplification run OUTPUT = {expression}")
 			if transformed.identical_to(expression):
 				# No more simplification possible
+				self._debug("Simplification finished.")
 				break
 			else:
 				expression = transformed

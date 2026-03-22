@@ -260,6 +260,8 @@ class Constant(ParseTreeElement):
 		return str(self.value)
 
 class UnaryOperator(ParseTreeElement):
+	__match_args__ = ("op", "rhs")
+
 	def __init__(self, op, rhs):
 		if isinstance(op, Operator):
 			self._op = op

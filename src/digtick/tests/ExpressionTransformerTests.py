@@ -23,6 +23,7 @@ import unittest
 from digtick.ExpressionParser import parse_expression, Variable
 from digtick.ExpressionFormatter import format_expression
 from digtick.ExpressionTransformer import ExpressionTransformer
+from digtick.Enums import ExpressionFormatOpts
 
 class ExpressionTransformerTests(unittest.TestCase):
 	def setUp(self):
@@ -39,8 +40,11 @@ class ExpressionTransformerTests(unittest.TestCase):
 		simplified = self._simplify(complex_expr_str)
 		simplified_str = format_expression(simplified)
 		if simplified_str != expected_simplified_str:
-			with open("/tmp/failed_expression_simplification.txt", "w") as f:
-				print(format_expression(simplified, "dot"), file = f)
+			filename = "/tmp/failed_expression_simplification.txt"
+			print()
+			print(f"Testcase failed. Wrote expression as DOT to {filename}: dot -Tpng -o/tmp/failed_expression_simplification.png <{filename}")
+			with open(filename, "w") as f:
+				print(format_expression(simplified, ExpressionFormatOpts(ExpressionFormatOpts.Value.Dot)), file = f)
 		self.assertEqual(simplified_str, expected_simplified_str)
 
 	def test_simplify_remove_parenthesis(self):
@@ -114,3 +118,13 @@ class ExpressionTransformerTests(unittest.TestCase):
 		noop_transform = ExpressionTransformer()
 		transformed = noop_transform.transform(expr)
 		self.assertTrue(transformed.identical_to(expr))
+
+	def test_simplify_double_negative(self):
+		self._assert_simplification("!!A", "A")
+
+	def test_simplify_complex(self):
+		# TODO THIS FAILS
+		self._assert_simplification("A + X + 0", "A + X")
+		#self._assert_simplification("A + 0 + !A !B !C", "A + !A !B !C")
+		#self._assert_simplification("A + X + 0 + !A !B !C", "A + X + !A !B !C")
+		#self._assert_simplification("(A + 1)(B & 0)((1)) + (!B !C !A) + (A + A) + (A A) + (X @ 1 @ 1)", "A + X + !A !B !C")
