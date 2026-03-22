@@ -608,7 +608,7 @@ class CircuitSimulationTests(unittest.TestCase):
 		self.assertEqual(sink1["IN"], sink2["IN"])
 		net = sink1["IN"]
 		with self.assertRaises(UndefinedInputUsedException):
-			net.level
+			_ = net.level
 
 		f = io.StringIO()
 		with contextlib.redirect_stdout(f):

@@ -28,4 +28,4 @@ class EnumTests(unittest.TestCase):
 		self.assertIn("'layout'", repr(tfo))
 		self.assertEqual(tfo["layout"], "vertical")
 		with self.assertRaises(KeyError):
-			tfo["foo"]
+			_ = tfo["foo"]
