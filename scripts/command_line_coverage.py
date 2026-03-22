@@ -106,8 +106,8 @@ $digtick parse "A B C"
 $digtick parse -F implicit-and=0 "A B C"
 $digtick parse -f text "A B C"
 """)
-for fmt in[ "text", "tex", "typst", "dot", "internal" ]:
-	cmds.append(Cmd(f"$digtick parse -f {fmt} \"A B C\""))
+for expr_fmt in [ "text", "tex", "typst", "dot", "internal" ]:
+	cmds.append(Cmd(f"$digtick parse -f {expr_fmt} \"A B C\""))
 cmds.append(Cmd("""
 (
 	echo "A B C"
@@ -123,6 +123,10 @@ cmds.append(Cmd("""
 	echo "A !B C"
 ) | $digtick parse --read-as-filename --validate-equivalence -
 """, expect_success = False))
+
+cmds.append(Cmd("$digtick make-table 'A B C' '!B !C' >/tmp/table1"))
+for tbl_fmt in [ "text", "tex", "typst", "compact", "logisim" ]:
+	cmds.append(Cmd(f"cat /tmp/table1 | $digtick print-table -f {tbl_fmt}"))
 
 
 CmdRunner(cmds, interactive = True).run()
