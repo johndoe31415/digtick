@@ -26,7 +26,8 @@
 import random
 
 class RandomDist():
-	def __init__(self, distribution):
+	def __init__(self, distribution: dict[str, int], random_source = None):
+		self._random_source = random if (random_source is None) else random_source
 		self._sum = 0
 		self._values = [ ]
 		for (key, value) in distribution.items():
@@ -34,12 +35,11 @@ class RandomDist():
 				self._sum += value
 				self._values.append((key, self._sum))
 
-	@classmethod
-	def coinflip(cls):
-		return random.randint(0, 1) == 0
+	def coinflip(self):
+		return self._random_source.randint(0, 1) == 0
 
 	def event(self):
-		randval = random.random() * self._sum
+		randval = self._random_source.random() * self._sum
 		for (key, value) in self._values:
 			if randval < value:
 				return key
@@ -60,5 +60,3 @@ if __name__ == "__main__":
 		events[x] = events.get(x, 0) + 1
 	for (event, cnt) in events.items():
 		print("%-8s %7.4f%%" % (event, cnt / total * 100))
-
-

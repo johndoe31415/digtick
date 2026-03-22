@@ -19,14 +19,15 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
-import random
 import string
 from .MultiCommand import BaseAction
 from .ValueTable import ValueTable, CompactStorage
 from .Enums import TableFormatOpts
+from .PRNG import PRNG
 
 class ActionRandomTable(BaseAction):
 	def run(self):
+		prng = PRNG.randomize() if (self._args.prng_seed is None) else PRNG(self._args.prng_seed.encode("utf-8"))
 		table_format = TableFormatOpts(self._args.tbl_format, self._args.tbl_format_option)
 		if (self._args.zero_percentage + self._args.one_percentage) > 100:
 			raise ValueError(f"With {self._args.zero_percentage}% chance to get a zero and {self._args.one_percentage}% chance to get a zero the total proability is greater than 100% ({self._args.zero_percentage + self._args.one_percentage}%).")
@@ -46,7 +47,7 @@ class ActionRandomTable(BaseAction):
 		output_values = [ ]
 		for output_var_name in output_var_names:
 			entries = ([ 0 ] * zero_entries) + ([ 1 ] * one_entries) + ([ "*" ] * dc_entries)
-			random.shuffle(entries)
+			prng.shuffle(entries)
 			storage = CompactStorage(len(variable_names))
 			for (index, entry) in enumerate(entries):
 				storage[index] = entry

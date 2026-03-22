@@ -19,6 +19,8 @@
 #
 #	Johannes Bauer <JohannesBauer@gmx.de>
 
+import os
+import math
 import hashlib
 
 class PRNG():
@@ -28,6 +30,10 @@ class PRNG():
 		self._key = self._HASH_FNC(seed).digest()
 		self._counter = 0
 		self._buffer = bytearray()
+
+	@classmethod
+	def randomize(cls):
+		return cls(seed = os.urandom(16))
 
 	def _block(self) -> bytes:
 		block = self._HASH_FNC(self._key + self._counter.to_bytes(length = 4, byteorder = "little")).digest()
@@ -40,7 +46,7 @@ class PRNG():
 		(result, self._buffer) = (self._buffer[:length], self._buffer[length:])
 		return result
 
-	def randint(self, minval: int, maxval: int):
+	def randint(self, minval: int, maxval: int) -> int:
 		irange = maxval - minval + 1
 		bits = (irange - 1).bit_length()
 		mask = (1 << bits) - 1
@@ -51,7 +57,34 @@ class PRNG():
 			if value < irange:
 				return value + minval
 
+	def randrange(self, length: int):
+		return self.randint(0, length - 1)
+
+	def random(self) -> float:
+		bits = 80
+		while True:
+			value = self.randrange(2 ** bits) / (2 ** bits)
+			if value < 1:
+				# This may happen because we request more bits than the float
+				# can carry
+				return value
+
+	def gauss(self, mu = 0.0, sigma = 1.0) -> float:
+		while True:
+			(u1, u2) = (self.random(), self.random())
+			if u1 == 0:
+				continue
+			z = math.sqrt(-2 * math.log(u1)) * math.cos(2 * math.pi * u2)
+			return mu + (sigma * z)
+
 	def shuffle(self, data: list):
 		for i in range(len(data) - 1):
 			j = self.randint(i, len(data) - 1)
 			(data[i], data[j]) = (data[j], data[i])
+
+	def sample(self, population: list, k: int) -> list:
+		if k > len(population):
+			 raise ValueError("Sample larger than population or is negative")
+		listcopy = [ element for element in population ]
+		self.shuffle(listcopy)
+		return listcopy[:k]

@@ -123,11 +123,13 @@ def main():
 		parser.add_argument("-n", "--allow-nand-nor-xor", action = "store_true", help = "Allow that expressions contain NAND, NOR and XOR.")
 		parser.add_argument("-a", "--allow-trivial", action = "store_true", help = "Allow expressions which simplify to something compartively simple, like tautologies. By default, when such an expression is generated, another try is started.")
 		parser.add_argument("-v", "--verbose", action = "count", default = 0, help = "Increase verbosity. Can be given multiple times.")
+		parser.add_argument("-p", "--prng-seed", metavar = "seedstr", help = "Use a PRNG with this particular seed to generate randomness. By default, is fully randomized at runtime.")
 		parser.add_argument("var_count", type = int, help = "Number of variables in expression")
 		parser.add_argument("complexity", type = int, help = "Number of complexity iteration steps to take")
 	mc.register("random-expr", "Generate a randomized expression", genparser, action = ActionRandomExpression)
 
 	def genparser(parser):
+		parser.add_argument("-p", "--prng-seed", metavar = "seedstr", help = "Use a PRNG with this particular seed to generate randomness. By default, is fully randomized at runtime.")
 		parser.add_argument("-f", "--tbl-format", choices = list(TableFormatOpts.Value), type = TableFormatOpts.Value, default = TableFormatOpts.Value.Text, help = "Print the table in the desired format. Can be one of %(choices)s, defaults to %(default)s.")
 		parser.add_argument("-F", "--tbl-format-option", metavar = "key[=value]", action = "append", default = [ ], help = "Table-format specific options. Valid options depend on the chosen table format. When \"value\" is omitted, defaults to the Boolean \"True\" value.")
 		parser.add_argument("-o", "--output-variable-name", metavar = "name", action = "append", default = [ ], help = "Name the output variable. Can be specified multiple times to generate a table that has multiple outputs. If omitted, a single output named \"Y\" is generated.")

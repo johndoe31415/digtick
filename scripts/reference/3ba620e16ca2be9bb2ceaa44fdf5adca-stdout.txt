@@ -1,0 +1,2 @@
+Expression: ((!D + !A + B + !C + C + A + B) @ D A @ !D % (A + !B) + A !D) !C !D !B + !B D A C + !B A !C !D ^ B !C !A D
+Simplified: A !B !C !D + !A B !C D + A !B C D

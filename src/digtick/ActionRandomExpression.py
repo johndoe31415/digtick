@@ -24,6 +24,7 @@ from .ExpressionFormatter import format_expression
 from .ValueTable import ValueTable
 from .QuineMcCluskey import QuineMcCluskey
 from .RandomExpressionGenerator import RandomExpressionGenerator
+from .PRNG import PRNG
 
 class ActionRandomExpression(BaseAction):
 	def run(self):
@@ -37,7 +38,8 @@ class ActionRandomExpression(BaseAction):
 				"or": 10,
 			}
 
-		reg = RandomExpressionGenerator(self._args.var_count, operator_distribution = operator_distribution)
+		prng = PRNG.randomize() if (self._args.prng_seed is None) else PRNG(self._args.prng_seed.encode("utf-8"))
+		reg = RandomExpressionGenerator(self._args.var_count, operator_distribution = operator_distribution, random_source = prng)
 		try_no = 0
 		while True:
 			try_no += 1

@@ -29,6 +29,7 @@ import hashlib
 class Cmd():
 	cmdline: str
 	expect_success: bool = True
+	output_deterministic: bool = True
 
 	@classmethod
 	def parse_many(cls, multiline_cmd_str: str):
@@ -44,7 +45,6 @@ class Cmd():
 			else:
 				parsed_cmds.append(cls(cmdline = cmd))
 		return parsed_cmds
-
 
 	@property
 	def show_cmdline(self):
@@ -97,7 +97,7 @@ class CmdRunner():
 		elif (not cmd.expect_success) and (proc.returncode == 0):
 			raise RuntimeError(f"Command expected failure but returned successful: {cmdline}")
 
-		if cmd.expect_success:
+		if cmd.expect_success and cmd.output_deterministic:
 			produced_stdout_filename = f"{self._produced_output_dir}{cmd.hash}-stdout.txt"
 			produced_stderr_filename = f"{self._produced_output_dir}{cmd.hash}-stderr.txt"
 			reference_stdout_filename = f"{self._reference_output_dir}{cmd.hash}-stdout.txt"
@@ -180,14 +180,25 @@ $digtick sat /tmp/table1 'A B C'
 
 -$digtick eq 'A B C' 'A B !C'
 $digtick eq 'A(B C)' 'B(A C)'
+""")
 
-$digtick random-expr 4 10
-$digtick random-expr --allow-nand-nor-xor 4 10
-$digtick random-table 4
-$digtick random-table -1 100 -0 0 4
-$digtick random-table -1 100 -0 0 -o Z 4
+cmds.append(Cmd("$digtick random-expr 4 10", output_deterministic = False))
+cmds += Cmd.parse_many("""
+$digtick random-expr --prng-seed foobar 4 10
+$digtick random-expr --prng-seed foobar --allow-nand-nor-xor 4 10
+""")
+
+
+
+cmds.append(Cmd("$digtick random-table 4", output_deterministic = False))
+cmds += Cmd.parse_many("""
+$digtick random-table --prng-seed foobar 4
+$digtick random-table --prng-seed foobar -1 100 -0 0 4
+$digtick random-table --prng-seed foobar -1 100 -0 0 -o Z 4
 -$digtick random-table -1 100 -0 50 4
+""")
 
+cmds += Cmd.parse_many("""
 $digtick transform -t simplify 'A C B'
 $digtick transform -t nand 'A ^ B'
 $digtick transform -t nor 'A ^ B'

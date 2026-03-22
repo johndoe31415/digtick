@@ -36,14 +36,15 @@ class RandomExpressionGenerator():
 		"nor": 2,
 	}
 
-	def __init__(self, var_count: int, operator_distribution: dict | None = None):
+	def __init__(self, var_count: int, operator_distribution: dict | None = None, random_source = None):
 		self._var_count = var_count
 		self._variables = [ Variable(string.ascii_uppercase[i]) for i in range(self._var_count) ]
-		self._op_dist = RandomDist(self._DEFAULT_OPERATOR_DISTRIBUTION if (operator_distribution is None) else operator_distribution)
+		self._op_dist = RandomDist(self._DEFAULT_OPERATOR_DISTRIBUTION if (operator_distribution is None) else operator_distribution, random_source = random_source)
+		self._random_source = random if (random_source is None) else random_source
 
 	def _gen_term(self):
-		disjunctive = RandomDist.coinflip()
-		var_count = round(abs(random.gauss(0.75 * len(self._variables), 2)))
+		disjunctive = self._op_dist.coinflip()
+		var_count = round(abs(self._random_source.gauss(0.75 * len(self._variables), 2)))
 		if var_count < 1:
 			var_count = 1
 		elif var_count > len(self._variables):
@@ -52,11 +53,11 @@ class RandomExpressionGenerator():
 		if var_count == len(self._variables):
 			variables = list(self._variables)
 		else:
-			variables = random.sample(self._variables, var_count)
-		random.shuffle(variables)
+			variables = self._random_source.sample(self._variables, var_count)
+		self._random_source.shuffle(variables)
 
-		variables = [ ~var if RandomDist.coinflip() else var for var in variables  ]
-		if RandomDist.coinflip():
+		variables = [ ~var if self._op_dist.coinflip() else var for var in variables  ]
+		if self._op_dist.coinflip():
 			return BinaryOperator.join(Operator.Or, variables)
 		else:
 			return BinaryOperator.join(Operator.And, variables)
