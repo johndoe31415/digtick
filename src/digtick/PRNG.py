@@ -84,7 +84,7 @@ class PRNG():
 
 	def sample(self, population: list, k: int) -> list:
 		if k > len(population):
-			 raise ValueError("Sample larger than population or is negative")
+			raise ValueError("Sample larger than population or is negative")
 		listcopy = [ element for element in population ]
 		self.shuffle(listcopy)
 		return listcopy[:k]

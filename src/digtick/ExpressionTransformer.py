@@ -225,12 +225,12 @@ class SimplificationTransformer(ExpressionTransformer):
 
 			# Complement
 			case BinaryOperator(lhs, Operator.And, rhs) if lhs.complements(rhs):
-				self._debug(f"  -> Complement 0")
+				self._debug("  -> Complement 0")
 				expr = Constant(0)
 
 			# Complement
 			case BinaryOperator(_, Operator.Or, _) if expr.is_tautology():
-				self._debug(f"  -> Complement 1")
+				self._debug("  -> Complement 1")
 				expr = Constant(1)
 
 			# Sort subexpressions alphabetically
