@@ -86,7 +86,7 @@ class CmdRunner():
 				print(produced.decode("utf-8"))
 				if not self._args.accept_all:
 					print()
-					yn = input("{channel} OK (y/n)? ")
+					yn = input(f"{channel} OK (y/n)? ")
 				else:
 					yn = "y"
 				if (yn.lower() == "y") or (yn == ""):
@@ -100,7 +100,7 @@ class CmdRunner():
 				if not self._args.accept_all:
 					print(f"This was produced on {channel}:")
 					print(produced.decode("utf-8"))
-					yn = input("{channel} OK (y/n)? ")
+					yn = input(f"{channel} OK (y/n)? ")
 				else:
 					yn = "y"
 				if (yn.lower() == "y") or (yn == ""):
@@ -136,6 +136,8 @@ cmds = [ ]
 cmds += Cmd.parse_many("""
 $digtick parse "A B C"
 $digtick parse -F implicit-and=0 "A B C"
+$digtick parse -F pretty "<A + B> C"
+$digtick parse -f tex -F math-operators "<A + B> C"
 $digtick parse -f text "A B C"
 """)
 for expr_fmt in [ "text", "tex", "typst", "dot", "internal" ]:
