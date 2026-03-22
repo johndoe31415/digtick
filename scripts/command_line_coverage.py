@@ -87,13 +87,14 @@ class CmdRunner():
 		elif (not cmd.expect_success) and (proc.returncode == 0):
 			raise RuntimeError(f"Command expected failure but returned successful: {cmdline}")
 
-		produced_stdout_filename = f"{self._produced_output_dir}{cmd.hash}-stdout.txt"
-		produced_stderr_filename = f"{self._produced_output_dir}{cmd.hash}-stderr.txt"
-		reference_stdout_filename = f"{self._reference_output_dir}{cmd.hash}-stdout.txt"
-		reference_stderr_filename = f"{self._reference_output_dir}{cmd.hash}-stderr.txt"
+		if cmd.expect_success:
+			produced_stdout_filename = f"{self._produced_output_dir}{cmd.hash}-stdout.txt"
+			produced_stderr_filename = f"{self._produced_output_dir}{cmd.hash}-stderr.txt"
+			reference_stdout_filename = f"{self._reference_output_dir}{cmd.hash}-stdout.txt"
+			reference_stderr_filename = f"{self._reference_output_dir}{cmd.hash}-stderr.txt"
 
-		self._compare(cmd, "stdout", proc.stdout, produced_stdout_filename, reference_stdout_filename)
-		self._compare(cmd, "stderr", proc.stderr, produced_stderr_filename, reference_stderr_filename)
+			self._compare(cmd, "stdout", proc.stdout, produced_stdout_filename, reference_stdout_filename)
+			self._compare(cmd, "stderr", proc.stderr, produced_stderr_filename, reference_stderr_filename)
 
 
 	def run(self):
@@ -127,6 +128,16 @@ cmds.append(Cmd("""
 cmds.append(Cmd("$digtick make-table 'A B C' '!B !C' >/tmp/table1"))
 for tbl_fmt in [ "text", "tex", "typst", "compact", "logisim" ]:
 	cmds.append(Cmd(f"cat /tmp/table1 | $digtick print-table -f {tbl_fmt}"))
-
+cmds.append(Cmd("cat /tmp/table1 | $digtick print-table -f text -F pretty"))
+cmds.append(Cmd("cat /tmp/table1 | $digtick print-table -f text -F pretty=true"))
+cmds.append(Cmd("cat /tmp/table1 | $digtick print-table -f text -F pretty=1"))
+cmds.append(Cmd("cat /tmp/table1 | $digtick print-table -f text -F pretty=0"))
+cmds.append(Cmd("cat /tmp/table1 | $digtick print-table -f text -F pretty=slop", expect_success = False))
+cmds.append(Cmd("cat /tmp/table1 | $digtick print-table -f text -F blah=true", expect_success = False))
+cmds.append(Cmd("cat /tmp/table1 | $digtick print-table -f logisim -F pretty", expect_success = False))
+cmds.append(Cmd("cat /tmp/table1 | $digtick print-table -f tex -F layout=wrong", expect_success = False))
+for tbl_fmt in [ "tex", "typst" ]:
+	for layout in [ "horizontal", "vertical" ]:
+		cmds.append(Cmd(f"cat /tmp/table1 | $digtick print-table -f {tbl_fmt} -F layout={layout}"))
 
 CmdRunner(cmds, interactive = True).run()
