@@ -576,3 +576,10 @@ class CircuitSimulationTests(unittest.TestCase):
 	def test_circuit_wide_gates(self):
 		vt = ValueTable.from_compact_representation(":A:Y:5")
 		self._test_loadfile_conforms_to("widebois.circ", vt)
+
+	def test_debug_messages(self):
+		circ = pkgutil.get_data("digtick.tests.data", "awful.circ")
+		f = io.StringIO()
+		with contextlib.redirect_stderr(f):
+			circuit = LogisimLoader.load_from_xmldata(circ, verbose_component_pin_debug = True).parse()
+		self.assertIn("Pin locations for ", f.getvalue())

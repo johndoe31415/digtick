@@ -93,14 +93,14 @@ class LogisimLoader():
 		self._doc.write(filename, encoding = "utf-8", xml_declaration = True)
 
 	@classmethod
-	def load_from_file(cls, filename: str, circuit_name: str = "main"):
+	def load_from_file(cls, filename: str, **kwargs):
 		doc = xml.etree.ElementTree.parse(filename)
-		return cls(doc = doc, circuit_name = circuit_name)
+		return cls(doc = doc, **kwargs)
 
 	@classmethod
-	def load_from_xmldata(cls, xmldata: bytes, circuit_name: str = "main"):
+	def load_from_xmldata(cls, xmldata: bytes, **kwargs):
 		doc = xml.etree.ElementTree.ElementTree(xml.etree.ElementTree.fromstring(xmldata))
-		return cls(doc = doc, circuit_name = circuit_name)
+		return cls(doc = doc, **kwargs)
 
 	def _pin_debugmsg(self, msg: str):
 		if self._verbose_component_pin_debug:
