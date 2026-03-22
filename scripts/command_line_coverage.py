@@ -196,6 +196,7 @@ $digtick diff-table /tmp/table2 /tmp/table3
 -echo ':A,D,C:Y:5404' | $digtick diff /tmp/table2
 
 $digtick kv /tmp/table1
+$digtick kv --render-indices /tmp/table1
 -$digtick kv -o P /tmp/table1
 $digtick kv -r /tmp/table1
 $digtick kv -x 1 -y 2 -X -Y -d BCA /tmp/table1

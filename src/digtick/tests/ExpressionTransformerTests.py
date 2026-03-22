@@ -39,7 +39,7 @@ class ExpressionTransformerTests(unittest.TestCase):
 	def _assert_simplification(self, complex_expr_str: str, expected_simplified_str: str):
 		simplified = self._simplify(complex_expr_str)
 		simplified_str = format_expression(simplified)
-		if simplified_str != expected_simplified_str:
+		if simplified_str != expected_simplified_str:	# pragma unreachable -- this only happens when tests fail!
 			filename = "/tmp/failed_expression_simplification.txt"
 			print()
 			print(f"Testcase failed. Wrote expression as DOT to {filename}: dot -Tpng -o/tmp/failed_expression_simplification.png <{filename}")
