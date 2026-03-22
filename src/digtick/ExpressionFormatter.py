@@ -195,10 +195,7 @@ class ExpressionFormatterText():
 			return f"{self._parenthesize(expr.lhs, lhs_needs_parenthesis)}{self._op(expr.op)}{self._parenthesize(expr.rhs, rhs_needs_parenthesis)}"
 		elif isinstance(expr, UnaryOperator):
 			if isinstance(expr.rhs, Variable) or isinstance(expr.rhs, Constant):
-				if self._format["pretty"] and (expr.op == Operator.Not):
-					return f"{self.format_expression(expr.rhs)}\u0305"
-				else:
-					return f"{self._op(expr.op)}{self.format_expression(expr.rhs)}"
+				return f"{self._op(expr.op)}{self.format_expression(expr.rhs)}"
 			else:
 				return f"{self._op(expr.op)}{self._parenthesize(expr.rhs, needs_parenthesis = not isinstance(expr.rhs, Parenthesis))}"
 		elif isinstance(expr, Constant):

@@ -1,1 +1,0 @@
-A B C \vee \neg A \neg B \neg C \vee (\neg \top \vee \neg \bot)\overset{\sim}{\wedge}Z\overset{\sim}{\vee}W

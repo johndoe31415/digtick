@@ -1,1 +1,0 @@
-A and B and C or not A and not B and not C or (not top or not bot) bnand Z bnor W
