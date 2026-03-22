@@ -1,0 +1,1 @@
+\mathrm{A B C \vee \overline{A}\,\overline{B}\,\overline{C} \vee (\overline{1} \vee \overline{0})\overset{\sim}{\wedge}Z\overset{\sim}{\vee}W}

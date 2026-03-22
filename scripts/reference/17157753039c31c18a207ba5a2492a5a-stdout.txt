@@ -1,0 +1,1 @@
+upright(A) upright(B) upright(C) or not upright(A) not upright(B) not upright(C) or (not top or not bot) bnand upright(Z) bnor upright(W)

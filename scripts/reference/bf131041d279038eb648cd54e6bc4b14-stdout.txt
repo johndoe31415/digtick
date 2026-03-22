@@ -1,0 +1,1 @@
+upright(A) upright(B) upright(C) or bnot(upright(A)) thin bnot(upright(B)) thin bnot(upright(C)) or (bnot(1) or bnot(0)) bnand upright(Z) bnor upright(W)

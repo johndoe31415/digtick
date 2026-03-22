@@ -143,6 +143,17 @@ $digtick parse -f text "A B C"
 for expr_fmt in [ "text", "tex", "typst", "dot", "internal" ]:
 	cmds.append(Cmd(f"$digtick parse -f {expr_fmt} \"A B C\""))
 	cmds.append(Cmd(f"$digtick parse -f {expr_fmt} \"A B C + !A !B !C + (!1 + !0) @ Z % W\""))
+
+expr = "A B C + !A !B !C + (!1 + !0) @ Z % W"
+cmds.append(Cmd(f"$digtick parse -f tex -F math-operators \"{expr}\""))
+cmds.append(Cmd(f"$digtick parse -f tex -F math-operators -F math-constants \"{expr}\""))
+cmds.append(Cmd(f"$digtick parse -f tex -F math-operators -F math-constants -F use-mathrm=0 \"{expr}\""))
+cmds.append(Cmd(f"$digtick parse -f tex -F math-operators -F math-constants -F use-mathrm=0 -F implicit-and=0 \"{expr}\""))
+cmds.append(Cmd(f"$digtick parse -f typst -F math-operators \"{expr}\""))
+cmds.append(Cmd(f"$digtick parse -f typst -F math-operators -F math-constants \"{expr}\""))
+cmds.append(Cmd(f"$digtick parse -f typst -F math-operators -F math-constants -F literals-upright=0 \"{expr}\""))
+cmds.append(Cmd(f"$digtick parse -f typst -F math-operators -F math-constants -F literals-upright=0 -F implicit-and=0 \"{expr}\""))
+
 cmds.append(Cmd("""
 (
 	echo "A B C"
