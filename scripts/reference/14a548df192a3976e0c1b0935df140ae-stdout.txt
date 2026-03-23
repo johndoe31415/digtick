@@ -1,1 +1,1 @@
-A \wedge B \wedge C \vee \neg A \wedge \neg B \wedge \neg C \vee (\neg \top \vee \neg \bot)\overset{\sim}{\wedge}Z\overset{\sim}{\vee}W \vee Foobar \vee (a \vee b) \wedge C \vee F_{12} \vee F_9
+A \wedge B \wedge C \vee \neg A \wedge \neg B \wedge \neg C \vee (\neg \top \vee \neg \bot) \bnand Z \bnor W \vee Foobar \vee (a \vee b) \wedge C \vee F_{12} \vee F_9

@@ -30,8 +30,8 @@ class ExpressionFormatterTex():
 			Operator.And: " \\wedge ",
 			Operator.Xor: " \\oplus ",
 			Operator.Not: "\\neg ",
-			Operator.Nand: "\\overset{\\sim}{\\wedge}",
-			Operator.Nor: "\\overset{\\sim}{\\vee}",
+			Operator.Nand: " \\bnand ",
+			Operator.Nor: " \\bnor ",
 		}
 		if self._format["implicit-and"]:
 			self._ops[Operator.And] = " "
@@ -72,7 +72,7 @@ class ExpressionFormatterTex():
 			return (f"{formatted_lhs}{op_str}{formatted_rhs}", rhs_inverted)
 		elif isinstance(expr, UnaryOperator):
 			if self._format["neg-overline"]:
-				return (f"\\overline{{{self._format_expression(expr.rhs)[0]}}}", True)
+				return (f"\\bnot{{{self._format_expression(expr.rhs)[0]}}}", True)
 			else:
 				rhs_needs_parenthesis = (expr.rhs.precedence > expr.precedence)
 				return (f"{self._op(expr.op)}{self._parenthesize(expr.rhs, rhs_needs_parenthesis)[0]}", False)

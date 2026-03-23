@@ -38,16 +38,16 @@ This document shows several formulas in their raw form (i.e., how they were supp
 #text(weight: "medium")[Raw digtick input:]
 #v(4pt)
 #sourcebox(align(center, [
-	`A !B !C D !E + !<AB> + (!A + !C) (!B + !(C + BD) + !<!A + !B + C + D>)`
+	`A !B !C D !E + !<A B> + (!A + !C) (!B + !(C + BD) + !<!A + !B + C + D>)`
 ]))
 
 Default rendering:
 #renderedbox([
-	$ upright(A) bnot(upright(B)) thin bnot(upright(C)) upright(D) bnot(upright(E)) or bnot(upright("AB")) or (bnot(upright(A)) or bnot(upright(C))) (bnot(upright(B)) or bnot((upright(C) or upright("BD"))) or bnot(bnot(upright(A)) or bnot(upright(B)) or upright(C) or upright(D))) $
+	$ upright(A) bnot(upright(B)) thin bnot(upright(C)) upright(D) bnot(upright(E)) or bnot(upright(A) upright(B)) or (bnot(upright(A)) or bnot(upright(C))) (bnot(upright(B)) or bnot((upright(C) or upright("BD"))) or bnot(bnot(upright(A)) or bnot(upright(B)) or upright(C) or upright(D))) $
 ])
 Using math operators:
 #renderedbox([
-	$ upright(A) not upright(B) not upright(C) upright(D) not upright(E) or not upright("AB") or (not upright(A) or not upright(C)) (not upright(B) or not (upright(C) or upright("BD")) or not (not upright(A) or not upright(B) or upright(C) or upright(D))) $
+	$ upright(A) not upright(B) not upright(C) upright(D) not upright(E) or not (upright(A) upright(B)) or (not upright(A) or not upright(C)) (not upright(B) or not (upright(C) or upright("BD")) or not (not upright(A) or not upright(B) or upright(C) or upright(D))) $
 ])
 ]
 #v(2cm)

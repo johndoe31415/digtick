@@ -1,1 +1,1 @@
-\mathrm{A B C \vee \overline{A}\,\overline{B}\,\overline{C} \vee (\overline{1} \vee \overline{0})\overset{\sim}{\wedge}Z\overset{\sim}{\vee}W}
+\mathrm{A B C \vee \bnot{A}\,\bnot{B}\,\bnot{C} \vee (\bnot{1} \vee \bnot{0}) \bnand Z \bnor W}

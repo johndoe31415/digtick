@@ -32,7 +32,7 @@ class ExpressionRenderer():
 	def __init__(self, args):
 		self._args = args
 		self._expr = [
-			"A !B !C D !E + !<AB> + (!A + !C) (!B + !(C + BD) + !<!A + !B + C + D>)",
+			"A !B !C D !E + !<A B> + (!A + !C) (!B + !(C + BD) + !<!A + !B + C + D>)",
 			"(A + B + 0) (C D 1)",
 			"A + B * C",
 			"<A + B> ~C",
@@ -85,9 +85,14 @@ class ExpressionRenderer():
 			\documentclass{article}
 			\usepackage[utf8]{inputenc}
 			\usepackage{amsmath}
+			\usepackage{stackengine}
 			\usepackage{xcolor}
 			\usepackage{tcolorbox}
 			\begin{document}
+
+			\newcommand{\bnot}[1]{\overline{#1}}
+			\newcommand{\bnand}{\ \stackon[-5pt]{$\wedge$}{$\sim$}\ }
+			\newcommand{\bnor}{\ \stackon[-5pt]{$\vee$}{$\sim$}\ }
 
 			\definecolor{sourceboxbg}{RGB}{247,247,247}
 			\definecolor{boxframe}{RGB}{180,188,196}

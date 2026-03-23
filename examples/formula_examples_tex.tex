@@ -1,9 +1,14 @@
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
+\usepackage{stackengine}
 \usepackage{xcolor}
 \usepackage{tcolorbox}
 \begin{document}
+
+\newcommand{\bnot}[1]{\overline{#1}}
+\newcommand{\bnand}{\ \stackon[-5pt]{$\wedge$}{$\sim$}\ }
+\newcommand{\bnor}{\ \stackon[-5pt]{$\vee$}{$\sim$}\ }
 
 \definecolor{sourceboxbg}{RGB}{247,247,247}
 \definecolor{boxframe}{RGB}{180,188,196}
@@ -25,11 +30,11 @@ This document shows several formulas in their raw form (i.e., how they were supp
 
 \begin{minipage}{\linewidth}
 Input to digtick:
-\begin{sourcebox}\texttt{A !B !C D !E + !<AB> + (!A + !C) (!B + !(C + BD) + !<!A + !B + C + D>)}\end{sourcebox}
+\begin{sourcebox}\texttt{A !B !C D !E + !<A B> + (!A + !C) (!B + !(C + BD) + !<!A + !B + C + D>)}\end{sourcebox}
 Default rendering:
-\begin{renderedbox}$\mathrm{A \overline{B}\,\overline{C} D \overline{E} \vee \overline{AB} \vee (\overline{A} \vee \overline{C}) (\overline{B} \vee \overline{(C \vee BD)} \vee \overline{\overline{A} \vee \overline{B} \vee C \vee D})}$\end{renderedbox}
+\begin{renderedbox}$\mathrm{A \bnot{B}\,\bnot{C} D \bnot{E} \vee \bnot{A B} \vee (\bnot{A} \vee \bnot{C}) (\bnot{B} \vee \bnot{(C \vee BD)} \vee \bnot{\bnot{A} \vee \bnot{B} \vee C \vee D})}$\end{renderedbox}
 Using math operators:
-\begin{renderedbox}$\mathrm{A \neg B \neg C D \neg E \vee \neg AB \vee (\neg A \vee \neg C) (\neg B \vee \neg (C \vee BD) \vee \neg (\neg A \vee \neg B \vee C \vee D))}$\end{renderedbox}
+\begin{renderedbox}$\mathrm{A \neg B \neg C D \neg E \vee \neg (A B) \vee (\neg A \vee \neg C) (\neg B \vee \neg (C \vee BD) \vee \neg (\neg A \vee \neg B \vee C \vee D))}$\end{renderedbox}
 \end{minipage}
 \vspace{2cm}
 
@@ -55,7 +60,7 @@ Default rendering:
 Input to digtick:
 \begin{sourcebox}\texttt{<A + B> \~{}C}\end{sourcebox}
 Default rendering:
-\begin{renderedbox}$\mathrm{(A \vee B) \overline{C}}$\end{renderedbox}
+\begin{renderedbox}$\mathrm{(A \vee B) \bnot{C}}$\end{renderedbox}
 Using math operators:
 \begin{renderedbox}$\mathrm{(A \vee B) \neg C}$\end{renderedbox}
 \end{minipage}
@@ -73,9 +78,9 @@ Default rendering:
 Input to digtick:
 \begin{sourcebox}\texttt{A \^{} B \% !C @ D}\end{sourcebox}
 Default rendering:
-\begin{renderedbox}$\mathrm{A \oplus B\overset{\sim}{\vee}\overline{C}\overset{\sim}{\wedge}D}$\end{renderedbox}
+\begin{renderedbox}$\mathrm{A \oplus B \bnor \bnot{C} \bnand D}$\end{renderedbox}
 Using math operators:
-\begin{renderedbox}$\mathrm{A \oplus B\overset{\sim}{\vee}\neg C\overset{\sim}{\wedge}D}$\end{renderedbox}
+\begin{renderedbox}$\mathrm{A \oplus B \bnor \neg C \bnand D}$\end{renderedbox}
 \end{minipage}
 \vspace{2cm}
 
@@ -83,7 +88,7 @@ Using math operators:
 Input to digtick:
 \begin{sourcebox}\texttt{F\_15 !F\_4 !F\_2 + F\_4 F\_1 !F\_0 + !<F\_2 F\_3>}\end{sourcebox}
 Default rendering:
-\begin{renderedbox}$\mathrm{F_{15} \overline{F_4}\,\overline{F_2} \vee F_4 F_1 \overline{F_0} \vee \overline{F_2 F_3}}$\end{renderedbox}
+\begin{renderedbox}$\mathrm{F_{15} \bnot{F_4}\,\bnot{F_2} \vee F_4 F_1 \bnot{F_0} \vee \bnot{F_2 F_3}}$\end{renderedbox}
 Using math operators:
 \begin{renderedbox}$\mathrm{F_{15} \neg F_4 \neg F_2 \vee F_4 F_1 \neg F_0 \vee \neg (F_2 F_3)}$\end{renderedbox}
 \end{minipage}

@@ -84,16 +84,16 @@ class CmdRunner():
 				print(ref.decode("utf-8"))
 				print(f"Produced : {produced_filename}")
 				print(produced.decode("utf-8"))
-				if not self._args.accept_all:
+				if (self._interactive) and (not self._args.accept_all):
 					print()
 					yn = input(f"{channel} OK (y/n)? ")
-				else:
+				elif self._args.accept_all:
 					yn = "y"
+				else:
+					raise RuntimeError(f"Command returned different output than expected: {cmd.regular_cmdline}")
 				if (yn.lower() == "y") or (yn == ""):
 					with open(reference_filename, "wb") as f:
 						f.write(produced)
-				else:
-					raise RuntimeError(f"Command returned different output than expected: {cmd.regular_cmdline}")
 		except FileNotFoundError:
 			print(f"No {channel} reference found for command: {cmd.regular_cmdline}")
 			if self._args.interactive or self._args.accept_all:

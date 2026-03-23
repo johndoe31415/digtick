@@ -314,6 +314,18 @@ Which will produce the following `ast.png` file:
 
 ![Parse tree of expression](https://raw.githubusercontent.com/johndoe31415/digtick/main/docs/expression_ast.png)
 
+
+For producing TeX equations, the following definitions are necessary up front:
+
+```tex
+\usepackage{amsmath}
+\usepackage{stackengine}
+
+\newcommand{\bnot}[1]{\overline{#1}}
+\newcommand{\bnand}{\ \stackon[-5pt]{$\wedge$}{$\sim$}\ }
+\newcommand{\bnor}{\ \stackon[-5pt]{$\vee$}{$\sim$}\ }
+```
+
 digtick is also able to produce Typst-compatible output, but note that it needs
 the following macros to be defined in your document:
 
