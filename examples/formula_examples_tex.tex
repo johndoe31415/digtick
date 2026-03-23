@@ -1,0 +1,92 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\begin{document}
+
+\definecolor{sourceboxbg}{RGB}{247,247,247}
+\definecolor{boxframe}{RGB}{180,188,196}
+\setlength{\parindent}{0pt}
+
+\newtcolorbox{sourcebox}{colback=sourceboxbg, colframe=boxframe, boxrule=0.5pt, arc=1mm, left=1.2mm, right=1.2mm, top=1mm, bottom=1mm, halign=center}
+\newtcolorbox{renderedbox}{colback=white, colframe=boxframe, boxrule=0.5pt, arc=1mm, left=1.2mm, right=1.2mm, top=1mm, bottom=1mm, halign=center}
+
+\begin{center}
+	{\LARGE\bfseries \texttt{digtick} {\LaTeX} formula showcase}\par
+	\vspace{0.5em}
+	{\large digtick v0.1.1rc0 / pdflatex {\the\pdftexversion.\pdftexrevision} \fmtversion}
+\end{center}
+
+\section{Purpose}
+This document shows several formulas in their raw form (i.e., how they were supplied directly to \texttt{digtick}) and the rendered {\LaTeX} output that \texttt{digtick} produces from them, usually with multiple variants.
+
+\section{Examples}
+
+\begin{minipage}{\linewidth}
+Input to digtick:
+\begin{sourcebox}\texttt{A !B !C D !E + !<AB> + (!A + !C) (!B + !(C + BD) + !<!A + !B + C + D>)}\end{sourcebox}
+Default rendering:
+\begin{renderedbox}$\mathrm{A \overline{B}\,\overline{C} D \overline{E} \vee \overline{AB} \vee (\overline{A} \vee \overline{C}) (\overline{B} \vee \overline{(C \vee BD)} \vee \overline{\overline{A} \vee \overline{B} \vee C \vee D})}$\end{renderedbox}
+Using math operators:
+\begin{renderedbox}$\mathrm{A \neg B \neg C D \neg E \vee \neg AB \vee (\neg A \vee \neg C) (\neg B \vee \neg (C \vee BD) \vee \neg (\neg A \vee \neg B \vee C \vee D))}$\end{renderedbox}
+\end{minipage}
+\vspace{2cm}
+
+\begin{minipage}{\linewidth}
+Input to digtick:
+\begin{sourcebox}\texttt{(A + B + 0) (C D 1)}\end{sourcebox}
+Default rendering:
+\begin{renderedbox}$\mathrm{(A \vee B \vee 0) (C D 1)}$\end{renderedbox}
+Using math operators and constants:
+\begin{renderedbox}$\mathrm{(A \vee B \vee \bot) (C D \top)}$\end{renderedbox}
+\end{minipage}
+\vspace{2cm}
+
+\begin{minipage}{\linewidth}
+Input to digtick:
+\begin{sourcebox}\texttt{A + B * C}\end{sourcebox}
+Default rendering:
+\begin{renderedbox}$\mathrm{A \vee B C}$\end{renderedbox}
+\end{minipage}
+\vspace{2cm}
+
+\begin{minipage}{\linewidth}
+Input to digtick:
+\begin{sourcebox}\texttt{<A + B> \~{}C}\end{sourcebox}
+Default rendering:
+\begin{renderedbox}$\mathrm{(A \vee B) \overline{C}}$\end{renderedbox}
+Using math operators:
+\begin{renderedbox}$\mathrm{(A \vee B) \neg C}$\end{renderedbox}
+\end{minipage}
+\vspace{2cm}
+
+\begin{minipage}{\linewidth}
+Input to digtick:
+\begin{sourcebox}\texttt{<<<<A + <B>>>>> C}\end{sourcebox}
+Default rendering:
+\begin{renderedbox}$\mathrm{(A \vee B) C}$\end{renderedbox}
+\end{minipage}
+\vspace{2cm}
+
+\begin{minipage}{\linewidth}
+Input to digtick:
+\begin{sourcebox}\texttt{A \^{} B \% !C @ D}\end{sourcebox}
+Default rendering:
+\begin{renderedbox}$\mathrm{A \oplus B\overset{\sim}{\vee}\overline{C}\overset{\sim}{\wedge}D}$\end{renderedbox}
+Using math operators:
+\begin{renderedbox}$\mathrm{A \oplus B\overset{\sim}{\vee}\neg C\overset{\sim}{\wedge}D}$\end{renderedbox}
+\end{minipage}
+\vspace{2cm}
+
+\begin{minipage}{\linewidth}
+Input to digtick:
+\begin{sourcebox}\texttt{F\_7 !F\_4 !F\_2 + F\_4 F\_1 !F\_0 + !<F\_2 F\_3>}\end{sourcebox}
+Default rendering:
+\begin{renderedbox}$\mathrm{F_7 \overline{F_4}\,\overline{F_2} \vee F_4 F_1 \overline{F_0} \vee \overline{F_2 F_3}}$\end{renderedbox}
+Using math operators:
+\begin{renderedbox}$\mathrm{F_7 \neg F_4 \neg F_2 \vee F_4 F_1 \neg F_0 \vee \neg (F_2 F_3)}$\end{renderedbox}
+\end{minipage}
+\vspace{2cm}
+
+\end{document}

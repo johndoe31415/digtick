@@ -112,6 +112,13 @@ $ digtick parse --expr-format pretty-text 'A B C + A !B C + C !A'
 A B C ∨ A B̅ C ∨ C A̅
 ```
 
+Examples how TeX or Typst formulas look can be found in the `examples` subdirectory:
+
+  - LaTeX: [Source](https://raw.githubusercontent.com/johndoe31415/digtick/main/examples/formula_examples_tex.tex) [Rendered PDF](https://raw.githubusercontent.com/johndoe31415/digtick/main/examples/formula_examples_tex.pdf)
+  - Typst: [Source](https://raw.githubusercontent.com/johndoe31415/digtick/main/examples/formula_examples_typst.typ) [Rendered PDF](https://raw.githubusercontent.com/johndoe31415/digtick/main/examples/formula_examples_typst.pdf)
+
+Those example source documents have been created using the script found in
+`scripts/create_example_tex_typst`.
 
 ## Operator precedence within Python
 Note that, when importing `digtick` and using it to perform changes under the

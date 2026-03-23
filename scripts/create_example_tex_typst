@@ -1,0 +1,202 @@
+#!/usr/bin/python3
+#       digtick - Digital logic design toolkit: simplify, minimize and transform Boolean expressions, draw KV-maps, etc.
+#       Copyright (C) 2022-2026 Johannes Bauer
+#
+#       This file is part of digtick.
+#
+#       digtick is free software; you can redistribute it and/or modify
+#       it under the terms of the GNU General Public License as published by
+#       the Free Software Foundation; this program is ONLY licensed under
+#       version 3 of the License, later versions are explicitly excluded.
+#
+#       digtick is distributed in the hope that it will be useful,
+#       but WITHOUT ANY WARRANTY; without even the implied warranty of
+#       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#       GNU General Public License for more details.
+#
+#       You should have received a copy of the GNU General Public License
+#       along with digtick; if not, write to the Free Software
+#       Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#       Johannes Bauer <JohannesBauer@gmx.de>
+
+import sys
+import digtick
+from digtick.ExpressionParser import parse_expression
+from digtick.ExpressionFormatter import format_expression
+from digtick.Enums import ExpressionFormatOpts
+import textwrap
+from FriendlyArgumentParser import FriendlyArgumentParser
+
+class ExpressionRenderer():
+	def __init__(self, args):
+		self._args = args
+		self._expr = [
+			"A !B !C D !E + !<AB> + (!A + !C) (!B + !(C + BD) + !<!A + !B + C + D>)",
+			"(A + B + 0) (C D 1)",
+			"A + B * C",
+			"<A + B> ~C",
+			"<<<<A + <B>>>>> C",
+			"A ^ B % !C @ D",
+			"F_7 !F_4 !F_2 + F_4 F_1 !F_0 + !<F_2 F_3>",
+		] + self._args.expression
+		if self._args.language == "tex":
+			self._variants = [
+				("Default rendering", ExpressionFormatOpts(ExpressionFormatOpts.Value.TeX)),
+				("Using math operators", ExpressionFormatOpts(ExpressionFormatOpts.Value.TeX, [ "math-operators" ])),
+				("Using math operators and constants", ExpressionFormatOpts(ExpressionFormatOpts.Value.TeX, [ "math-operators", "math-constants" ])),
+			]
+		else:
+			self._variants = [
+				("Default rendering", ExpressionFormatOpts(ExpressionFormatOpts.Value.Typst)),
+				("Using math operators", ExpressionFormatOpts(ExpressionFormatOpts.Value.Typst, [ "math-operators" ])),
+				("Using math operators and constants", ExpressionFormatOpts(ExpressionFormatOpts.Value.Typst, [ "math-operators", "math-constants" ])),
+			]
+
+	def _print(self, multiline_str: str):
+		print(textwrap.dedent(multiline_str).strip())
+
+	def _tex(self, text: str):
+		text = text.replace("^", "\\^{}")
+		text = text.replace("%", "\\%")
+		text = text.replace("~", "\\~{}")
+		text = text.replace("_", "\\_")
+		return text
+
+	def _render_tex_formula(self, expr_str: str):
+		print("\\begin{minipage}{\\linewidth}")
+		print("Input to digtick:")
+		print(f"\\begin{{sourcebox}}\\texttt{{{self._tex(expr_str)}}}\\end{{sourcebox}}")
+		expr = parse_expression(expr_str)
+		seen = set()
+		for (text, variant) in self._variants:
+			rendered = format_expression(expr, variant)
+			if rendered in seen:
+				continue
+			seen.add(rendered)
+			print(f"{text}:")
+			print(f"\\begin{{renderedbox}}${rendered}$\\end{{renderedbox}}")
+		print("\\end{minipage}")
+		print("\\vspace{2cm}")
+		print()
+
+	def _run_tex(self):
+		self._print(r"""
+			\documentclass{article}
+			\usepackage[utf8]{inputenc}
+			\usepackage{amsmath}
+			\usepackage{xcolor}
+			\usepackage{tcolorbox}
+			\begin{document}
+
+			\definecolor{sourceboxbg}{RGB}{247,247,247}
+			\definecolor{boxframe}{RGB}{180,188,196}
+			\setlength{\parindent}{0pt}
+
+			\newtcolorbox{sourcebox}{colback=sourceboxbg, colframe=boxframe, boxrule=0.5pt, arc=1mm, left=1.2mm, right=1.2mm, top=1mm, bottom=1mm, halign=center}
+			\newtcolorbox{renderedbox}{colback=white, colframe=boxframe, boxrule=0.5pt, arc=1mm, left=1.2mm, right=1.2mm, top=1mm, bottom=1mm, halign=center}
+
+			\begin{center}
+				{\LARGE\bfseries \texttt{digtick} {\LaTeX} formula showcase}\par
+				\vspace{0.5em}
+				{\large digtick v%(version)s / pdflatex {\the\pdftexversion.\pdftexrevision} \fmtversion}
+			\end{center}
+
+			\section{Purpose}
+			This document shows several formulas in their raw form (i.e., how they were supplied directly to \texttt{digtick}) and the rendered {\LaTeX} output that \texttt{digtick} produces from them, usually with multiple variants.
+
+			\section{Examples}
+		""" % { "version": digtick.VERSION })
+		print()
+		for expr in self._expr:
+			self._render_tex_formula(expr)
+
+		self._print(r"""
+			\end{document}
+		""")
+
+	def _render_typst_formula(self, expr_str: str):
+		self._print("""
+			#block(breakable: false)[
+			#text(weight: "medium")[Raw digtick input:]
+			#v(4pt)
+			#sourcebox(align(center, [
+				`%(expr_str)s`
+			]))
+		""" % { "expr_str": expr_str })
+		print()
+
+		expr = parse_expression(expr_str)
+		seen = set()
+		for (text, variant) in self._variants:
+			rendered = format_expression(expr, variant)
+			if rendered in seen:
+				continue
+			seen.add(rendered)
+			self._print("""
+				%(text)s:
+				#renderedbox([
+					$ %(rendered)s $
+				])
+			""" % {
+				"text": text,
+				"rendered": rendered,
+			})
+		print("]")
+		print("#v(2cm)")
+		print()
+		print()
+
+	def _run_typst(self):
+		self._print(r"""
+			#let bnand = box(width: 1em, height: 0.6em)[#place(center, dy: -0.1em)[#sym.and] #place(center, dy: -0.1em)[#text(size: 0.85em)[#sym.tilde]]]
+			#let bnor = box(width: 1em, height: 0.6em)[#place(center, dy: -0.1em)[#sym.or] #place(center, dy: -0.1em)[#text(size: 0.85em)[#sym.tilde]]]
+			#let bnot(body) = $overline(#v(1em)#h(0em) body)$
+
+			#let boxframe = rgb("#b4bcc4")
+
+			#let sourcebox(body) = block(
+				inset: 8pt,
+				radius: 3pt,
+				stroke: (paint: boxframe, thickness: 0.6pt),
+				fill: rgb("#f7f7f7"),
+				width: 100%%,
+				body,
+			)
+			#let renderedbox(body) = block(
+				inset: 8pt,
+				radius: 3pt,
+				stroke: (paint: boxframe, thickness: 0.6pt),
+				fill: rgb("#ffffff"),
+				width: 100%%,
+				body,
+			)
+
+			#align(center)[
+				#text(24pt, weight: "bold")[`digtick` Typst formula showcase]
+				#v(12pt)
+				#text(16pt)[digtick v%(version)s / Typst #sys.version]
+				#v(28pt)
+			]
+
+
+			= Purpose
+			This document shows several formulas in their raw form (i.e., how they were supplied directly to `digtick`) and the rendered Typst output that `digtick` produces from them, usually with multiple variants.
+
+			= Examples
+		""" % { "version": digtick.VERSION })
+		print()
+		for expr in self._expr:
+			self._render_typst_formula(expr)
+
+	def run(self):
+		if self._args.language == "tex":
+			return self._run_tex()
+		else:
+			return self._run_typst()
+
+parser = FriendlyArgumentParser(description = "Showcase digtick TeX/Typst output capabilities.")
+parser.add_argument("-e", "--expression", metavar = "expr", action = "append", default = [ ], help = "Also render this custom expression. Can be supplied multiple times.")
+parser.add_argument("language", choices = [ "tex", "typst" ], help = "Produce this type of output document.")
+args = parser.parse_args(sys.argv[1:])
+ExpressionRenderer(args).run()
