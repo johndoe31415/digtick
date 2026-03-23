@@ -6,3 +6,5 @@ src/digtick.egg-info/
 .coverage
 htmlcov
 .tpp_state.json
+examples/formula_examples_tex.aux
+examples/formula_examples_tex.log

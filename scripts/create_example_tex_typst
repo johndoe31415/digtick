@@ -38,7 +38,7 @@ class ExpressionRenderer():
 			"<A + B> ~C",
 			"<<<<A + <B>>>>> C",
 			"A ^ B % !C @ D",
-			"F_7 !F_4 !F_2 + F_4 F_1 !F_0 + !<F_2 F_3>",
+			"F_15 !F_4 !F_2 + F_4 F_1 !F_0 + !<F_2 F_3>",
 		] + self._args.expression
 		if self._args.language == "tex":
 			self._variants = [

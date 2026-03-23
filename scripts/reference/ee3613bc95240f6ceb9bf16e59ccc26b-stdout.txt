@@ -1,0 +1,1 @@
+upright(A) upright(B) upright(C) or not upright(A) not upright(B) not upright(C) or (not 1 or not 0) bnand upright(Z) bnor upright(W) or upright("Foobar") or (upright(a) or upright(b)) upright(C) or upright(F)_12 or upright(F)_9

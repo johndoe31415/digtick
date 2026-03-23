@@ -1,0 +1,1 @@
+A B C or not A not B not C or (not top or not bot) bnand Z bnor W or "Foobar" or (a or b) C or F_12 or F_9

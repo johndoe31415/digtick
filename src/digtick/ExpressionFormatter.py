@@ -47,7 +47,16 @@ class ExpressionFormatterTex():
 
 	def _format_expression(self, expr: ParseTreeElement):
 		if isinstance(expr, Variable):
-			return (expr.varname, False)
+			if "_" in expr.varname:
+				(varname, index) = expr.varname.split("_", maxsplit = 1)
+			else:
+				(varname, index) = (expr.varname, None)
+			if index is not None:
+				if len(index) == 1:
+					varname = f"{varname}_{index}"
+				else:
+					varname = f"{varname}_{{{index}}}"
+			return (varname, False)
 		elif isinstance(expr, BinaryOperator):
 			lhs_needs_parenthesis = expr.lhs.precedence > expr.precedence
 			rhs_needs_parenthesis = (expr.rhs.precedence > expr.precedence) or ((expr.rhs.precedence == expr.precedence) and (not expr.op.associative or (expr.op != expr.rhs.op)))
@@ -110,16 +119,19 @@ class ExpressionFormatterTypst():
 
 	def _format_expression(self, expr: ParseTreeElement):
 		if isinstance(expr, Variable):
-			if self._format["literals-upright"]:
-				if len(expr.varname) == 1:
-					return (f"upright({expr.varname})", False)
-				else:
-					return (f"upright(\"{expr.varname}\")", False)
+			if "_" in expr.varname:
+				(varname, index) = expr.varname.split("_", maxsplit = 1)
 			else:
-				if len(expr.varname) == 1:
-					return (expr.varname, False)
-				else:
-					return (f"\"{expr.varname}\"", False)
+				(varname, index) = (expr.varname, None)
+
+			if len(varname) > 1:
+				varname = f"\"{varname}\""
+			if self._format["literals-upright"]:
+				varname = f"upright({varname})"
+
+			if index is not None:
+				varname = f"{varname}_{index}"
+			return (varname, False)
 		elif isinstance(expr, BinaryOperator):
 			lhs_needs_parenthesis = expr.lhs.precedence > expr.precedence
 			rhs_needs_parenthesis = (expr.rhs.precedence > expr.precedence) or ((expr.rhs.precedence == expr.precedence) and (not expr.op.associative or (expr.op != expr.rhs.op)))

@@ -144,7 +144,7 @@ for expr_fmt in [ "text", "tex", "typst", "dot", "internal" ]:
 	cmds.append(Cmd(f"$digtick parse -f {expr_fmt} \"A B C\""))
 	cmds.append(Cmd(f"$digtick parse -f {expr_fmt} \"A B C + !A !B !C + (!1 + !0) @ Z % W\""))
 
-expr = "A B C + !A !B !C + (!1 + !0) @ Z % W + Foobar + <a + b> C"
+expr = "A B C + !A !B !C + (!1 + !0) @ Z % W + Foobar + <a + b> C + F_12 + F_9"
 cmds.append(Cmd(f"$digtick parse -f tex -F math-operators \"{expr}\""))
 cmds.append(Cmd(f"$digtick parse -f tex -F math-operators -F math-constants \"{expr}\""))
 cmds.append(Cmd(f"$digtick parse -f tex -F math-operators -F math-constants -F use-mathrm=0 \"{expr}\""))

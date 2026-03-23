@@ -144,16 +144,16 @@ Using math operators:
 #text(weight: "medium")[Raw digtick input:]
 #v(4pt)
 #sourcebox(align(center, [
-	`F_7 !F_4 !F_2 + F_4 F_1 !F_0 + !<F_2 F_3>`
+	`F_15 !F_4 !F_2 + F_4 F_1 !F_0 + !<F_2 F_3>`
 ]))
 
 Default rendering:
 #renderedbox([
-	$ upright("F_7") bnot(upright("F_4")) thin bnot(upright("F_2")) or upright("F_4") upright("F_1") bnot(upright("F_0")) or bnot(upright("F_2") upright("F_3")) $
+	$ upright(F)_15 bnot(upright(F)_4) thin bnot(upright(F)_2) or upright(F)_4 upright(F)_1 bnot(upright(F)_0) or bnot(upright(F)_2 upright(F)_3) $
 ])
 Using math operators:
 #renderedbox([
-	$ upright("F_7") not upright("F_4") not upright("F_2") or upright("F_4") upright("F_1") not upright("F_0") or not (upright("F_2") upright("F_3")) $
+	$ upright(F)_15 not upright(F)_4 not upright(F)_2 or upright(F)_4 upright(F)_1 not upright(F)_0 or not (upright(F)_2 upright(F)_3) $
 ])
 ]
 #v(2cm)

@@ -1,0 +1,1 @@
+\mathrm{A B C \vee \neg A \neg B \neg C \vee (\neg 1 \vee \neg 0)\overset{\sim}{\wedge}Z\overset{\sim}{\vee}W \vee Foobar \vee (a \vee b) C \vee F_{12} \vee F_9}
