@@ -6,15 +6,16 @@ digtick (the mnemonic for "dig tk", i.e., digital toolkit) is a command-line
 tool for creating and solving digital logic design tasks.  The primary target
 audiences are educators (who can use it to create and validate exam questions)
 and students who want to improve their skills.  The toolkit allows you to
-specify, parse and reformat Boolean equations (e.g., output in LaTeX form for
-easy inclusion in documents). It can create truth tables from a given Boolean
-expression and rendering Karnaugh–Veitch (KV) maps with an arbitrary number of
-variables, both as SVG and to the command line. The output format is highly
-customizable to match your specific preference. It can check Boolean equations
-for equivalence and validate if expressions satisfy a given truth table (with
-counterexamples). A Quine-McCluskey implementation is used to minify
-expressions. digtick is able to read a subset (combinatorial logic, D-FF, and
-JK-FF) of [Logisim Evolution](https://github.com/logisim-evolution/logisim-evolution)
+specify, parse and reformat Boolean equations (e.g., print them in LaTeX or
+Typst syntax for easy inclusion in documents). It can create truth tables from
+a given Boolean expression and can render Karnaugh–Veitch (KV) maps with an
+arbitrary number of variables, both as SVG and to the command line. The KV
+layout is highly customizable to match your specific preference. digtick can
+check Boolean equations for equivalence and validate if expressions satisfy a
+given truth table (with counterexamples). A Quine-McCluskey implementation is
+used to minify expressions. digtick is able to read a subset (combinatorial
+logic, D-FF, and JK-FF) of
+[Logisim Evolution](https://github.com/logisim-evolution/logisim-evolution)
 circuit files and is also able to simulate them natively (i.e., without relying
 on Logisim at all). The reason for implementing this natively within digtick is
 that it allows for headless interaction with circuits, e.g., to create state
