@@ -13,10 +13,10 @@ variables, both as SVG and to the command line. The output format is highly
 customizable to match your specific preference. It can check Boolean equations
 for equivalence and validate if expressions satisfy a given truth table (with
 counterexamples). A Quine-McCluskey implementation is used to minify
-expressions. digtick is able to read a subset of [Logisim
-Evolution](https://github.com/logisim-evolution/logisim-evolution) circuit
-files and is also able to simulate them natively (i.e., without relying on
-Logisim at all). The reason for implementing this natively within digtick is
+expressions. digtick is able to read a subset (combinatorial logic, D-FF, and
+JK-FF) of [Logisim Evolution](https://github.com/logisim-evolution/logisim-evolution)
+circuit files and is also able to simulate them natively (i.e., without relying
+on Logisim at all). The reason for implementing this natively within digtick is
 that it allows for headless interaction with circuits, e.g., to create state
 diagrams from circuits in an automatic fashion (see documentation of
 "sim-sequential" and "analyze-sequential" to make this clearer). Furthermore,
