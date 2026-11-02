@@ -52,7 +52,7 @@ class ActionSynthesize(BaseAction):
 			if self._args.compute == "both":
 				print()
 			ccnf = vt.ccnf(self._args.output_variable_name)
-			print(f"CDNF: {self._formatter(ccnf)}")
+			print(f"CCNF: {self._formatter(ccnf)}")
 			opt_expressions = qmc.all_solutions(emit_dnf = False)
 			for (expr_no, opt_expression) in enumerate(opt_expressions, 1):
 				opt_expr_str = self._formatter(opt_expression)
